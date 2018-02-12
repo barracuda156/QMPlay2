@@ -27,6 +27,13 @@ set(PortAudio_SRC
     PortAudioWriter.cpp
 )
 
+if(APPLE)
+    list(APPEND PortAudio_SRC
+        3rdparty/CoreAudio/AudioDevice.mm
+        3rdparty/CoreAudio/AudioDeviceList.cpp
+    )
+endif()
+
 set(PortAudio_RESOURCES
     icon.qrc
 )
@@ -69,6 +76,9 @@ if(WIN32 AND CUSTOM_PORTAUDIO_LIBRARIES)
     target_link_libraries(${PROJECT_NAME} ${CUSTOM_PORTAUDIO_LIBRARIES})
 else()
     target_link_libraries(${PROJECT_NAME} ${LIBPORTAUDIO_LIBRARIES})
+    if(APPLE)
+        target_link_libraries(${PROJECT_NAME} "-framework CoreAudio -framework Foundation")
+    endif()
 endif()
 
 install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${MODULES_INSTALL_PATH})

@@ -41,6 +41,10 @@ extern "C"
 #endif
 }
 
+#ifndef AV_INPUT_BUFFER_PADDING_SIZE
+	#define AV_INPUT_BUFFER_PADDING_SIZE FF_INPUT_BUFFER_PADDING_SIZE
+#endif
+
 #if LIBAVFORMAT_VERSION_MAJOR > 55
 static void matroska_fix_ass_packet(AVRational stream_timebase, AVPacket *pkt)
 {
@@ -70,7 +74,7 @@ static void matroska_fix_ass_packet(AVRational stream_timebase, AVPacket *pkt)
 		es     = ec / 100;
 		ec    -= 100 * es;
 		*ptr++ = '\0';
-		len    = 50 + end - ptr + FF_INPUT_BUFFER_PADDING_SIZE;
+		len    = 50 + end - ptr + AV_INPUT_BUFFER_PADDING_SIZE;
 		if (!(line = av_buffer_alloc(len)))
 			return;
 		snprintf((char *)line->data, len, "Dialogue: %s,%d:%02d:%02d.%02d,%d:%02d:%02d.%02d,%s\r\n", layer, sh, sm, ss, sc, eh, em, es, ec, ptr);
@@ -651,7 +655,7 @@ bool FormatContext::read(Packet &encoded, int &idx)
 #endif
 
 	if (!packet->buf || forceCopy) //Buffer isn't reference-counted, so copy the data
-		encoded.assign(packet->data, packet->size, packet->size + FF_INPUT_BUFFER_PADDING_SIZE);
+		encoded.assign(packet->data, packet->size, packet->size + AV_INPUT_BUFFER_PADDING_SIZE);
 	else
 	{
 		encoded.assign(packet->buf, packet->size);
@@ -933,7 +937,7 @@ StreamInfo *FormatContext::getStreamInfo(AVStream *stream) const
 
 	if (codecParams(stream)->extradata_size)
 	{
-		streamInfo->data.reserve(codecParams(stream)->extradata_size + FF_INPUT_BUFFER_PADDING_SIZE);
+		streamInfo->data.reserve(codecParams(stream)->extradata_size + AV_INPUT_BUFFER_PADDING_SIZE);
 		streamInfo->data.resize(codecParams(stream)->extradata_size);
 		memcpy(streamInfo->data.data(), codecParams(stream)->extradata, streamInfo->data.capacity());
 		av_free(codecParams(stream)->extradata);

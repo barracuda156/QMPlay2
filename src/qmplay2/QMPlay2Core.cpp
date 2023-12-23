@@ -36,7 +36,7 @@
 #if defined Q_OS_WIN
 	#include <windows.h>
 	#include <powrprof.h>
-#elif defined Q_OS_MAC
+#elif defined Q_OS_MAC && (QT_VERSION > QT_VERSION_CHECK(5, 0, 0))
 	#include <QStandardPaths>
 #endif
 
@@ -179,7 +179,7 @@ void QMPlay2CoreClass::init(bool loadModules, bool modulesInSubdirs, const QStri
 	{
 #if defined(Q_OS_WIN)
 		settingsDir = QFileInfo(QSettings(QSettings::IniFormat, QSettings::UserScope, QString()).fileName()).absolutePath() + "/QMPlay2/";
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_MAC) && (QT_VERSION > QT_VERSION_CHECK(5, 0, 0))
 		settingsDir = Functions::cleanPath(QStandardPaths::standardLocations(QStandardPaths::DataLocation).value(0, settingsDir));
 #else
 		settingsDir = QDir::homePath() + "/.qmplay2/";

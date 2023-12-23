@@ -124,7 +124,7 @@ if(USE_TAGLIB)
     list(APPEND GUI_SRC TagEditor.cpp)
 endif()
 
-if(NOT APPLE)
+if(APPLE)
     add_definitions(-DQMPLAY2_ALLOW_ONLY_ONE_INSTANCE)
 endif()
 

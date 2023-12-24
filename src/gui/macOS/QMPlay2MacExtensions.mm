@@ -1,12 +1,19 @@
 #include "QMPlay2MacExtensions.hpp"
 
 #include <QAbstractNativeEventFilter>
-#include <QGuiApplication>
-#include <QWindow>
+
+#if QT_VERSION >= 0x050000
+    #include <QGuiApplication>
+    #include <QWindow>
+#else
+    #include <QCoreApplication>
+#endif
 
 #include <IOKit/hidsystem/ev_keymap.h>
 #include <AppKit/NSApplication.h>
-#include <AppKit/NSScreen.h>
+#if QT_VERSION >= 0x050000
+    #include <AppKit/NSScreen.h>
+#else
 #include <AppKit/NSEvent.h>
 
 class MediaKeysFilter : public QAbstractNativeEventFilter
@@ -23,7 +30,7 @@ private:
 		if (eventType == "mac_generic_NSEvent")
 		{
 			NSEvent *event = static_cast<NSEvent *>(message);
-#if defined(MAC_OS_X_VERSION_10_12) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_12)
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 10200
 			if ([event type] == NSEventTypeSystemDefined)
 #else
 			if ([event type] == NSSystemDefined)
@@ -89,9 +96,9 @@ void QMPlay2MacExtensions::unregisterMacOSMediaKeys()
 	}
 }
 
-void QMPlay2MacExtensions::showSystemUi(QWindow *mainWindow, bool visible)
+void QMPlay2MacExtensions::showSystemUi(bool visible)
 {
-#if defined(MAC_OS_X_VERSION_10_9) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_9)
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
 	if (mainWindow && mainWindow->screen() != QGuiApplication::primaryScreen() && ![NSScreen screensHaveSeparateSpaces])
 		return;
 #endif

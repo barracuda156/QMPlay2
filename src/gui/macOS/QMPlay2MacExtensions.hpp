@@ -21,7 +21,10 @@
 #include <functional>
 
 class QString;
-class QWindow;
+
+#if QT_VERSION >= 0x050000
+    class QWindow;
+#endif
 
 namespace QMPlay2MacExtensions
 {
@@ -32,5 +35,5 @@ namespace QMPlay2MacExtensions
 	void registerMacOSMediaKeys(const MediaKeysCallback &fn);
 	void unregisterMacOSMediaKeys();
 
-	void showSystemUi(QWindow *mainWindow, bool visible);
+	void showSystemUi(bool visible);
 }

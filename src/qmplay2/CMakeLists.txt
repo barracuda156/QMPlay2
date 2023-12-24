@@ -143,10 +143,10 @@ set(QMPLAY2_RESOURCES
     languages.qrc
 )
 
-pkg_check_modules(LIBAVFORMAT libavformat>=55.33.100 REQUIRED)
-pkg_check_modules(LIBAVCODEC libavcodec>=55.52.102 REQUIRED)
-pkg_check_modules(LIBSWSCALE libswscale>=2.5.102 REQUIRED)
-pkg_check_modules(LIBAVUTIL libavutil>=52.66.100 REQUIRED)
+pkg_check_modules(LIBAVFORMAT libavformat>=57.40.101 REQUIRED)
+pkg_check_modules(LIBAVCODEC libavcodec>=57.48.101 REQUIRED)
+pkg_check_modules(LIBSWSCALE libswscale>=4.1.100 REQUIRED)
+pkg_check_modules(LIBAVUTIL libavutil>=55.27.100 REQUIRED)
 
 if(USE_LIBASS)
     add_definitions(-DQMPLAY2_LIBASS)
@@ -180,12 +180,12 @@ include_directories(
 
 if(USE_AVRESAMPLE)
     add_definitions(-DQMPLAY2_AVRESAMPLE)
-    pkg_check_modules(LIBAVRESAMPLE libavresample>=1.2.0 REQUIRED)
+    pkg_check_modules(LIBAVRESAMPLE libavresample>=4.0.0 REQUIRED)
     list(APPEND LIBQMPLAY2_LIBS ${LIBAVRESAMPLE_LIBRARIES})
     include_directories(${LIBAVRESAMPLE_INCLUDE_DIRS})
     link_directories(${LIBAVRESAMPLE_LIBRARY_DIRS})
 else()
-    pkg_check_modules(LIBSWRESAMPLE libswresample>=0.18.100 REQUIRED)
+    pkg_check_modules(LIBSWRESAMPLE libswresample>=2.1.100 REQUIRED)
     list(APPEND LIBQMPLAY2_LIBS ${LIBSWRESAMPLE_LIBRARIES})
     include_directories(${LIBSWRESAMPLE_INCLUDE_DIRS})
     link_directories(${LIBSWRESAMPLE_LIBRARY_DIRS})

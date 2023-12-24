@@ -83,7 +83,10 @@ set(GUI_RESOURCES
     resources.qrc
 )
 
-if(APPLE)
+if(APPLE AND USE_QT5)
+    find_library(APPKIT_LIBRARY AppKit REQUIRED)
+    find_package(Qt5MacExtras REQUIRED)
+
     list(APPEND GUI_HDR
         macOS/QMPlay2MacExtensions.hpp
     )

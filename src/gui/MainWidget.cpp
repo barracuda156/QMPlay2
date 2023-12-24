@@ -16,6 +16,14 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if QT_VERSION >= 0x050000 && defined Q_OS_WIN
+	#define QT5_WINDOWS
+#endif
+
+#if QT_VERSION >= 0x050000 && defined Q_OS_MAC
+	#define QT5_MAC
+#endif
+
 #include <QApplication>
 #include <QToolBar>
 #include <QFrame>
@@ -30,7 +38,7 @@
 #include <QFileDialog>
 #include <QTreeWidget>
 #include <QListWidget>
-#ifdef Q_OS_MAC
+#ifdef QT5_MAC
 	#include <QProcess>
 	#include <QScreen>
 	#include <QWindow>
@@ -55,7 +63,7 @@
 #include <ShortcutHandler.hpp>
 #include <VolWidget.hpp>
 #include <ScreenSaver.hpp>
-#ifdef Q_OS_MAC
+#ifdef QT5_MAC
 	#include <QMPlay2MacExtensions.hpp>
 #endif
 
@@ -69,10 +77,6 @@ using Functions::timeToStr;
 #include <IPC.hpp>
 
 #include <cmath>
-
-#if QT_VERSION >= 0x050000 && defined Q_OS_WIN
-	#define QT5_WINDOWS
-#endif
 
 /* Qt5 or (Qt4 in Windows) */
 #if (QT_VERSION >= 0x050000 || defined Q_OS_WIN)
@@ -96,7 +100,7 @@ public:
 };
 #endif
 
-#ifndef Q_OS_MAC
+#if !(defined Q_OS_MAC) || QT_VERSION < 0x050000
 static void copyMenu(QMenu *dest, QMenu *src, QMenu *dontCopy = nullptr)
 {
 	QMenu *newMenu = new QMenu(src->title(), dest);
@@ -411,7 +415,7 @@ MainWidget::MainWidget(QPair<QStringList, QStringList> &arguments) :
 			playStateChanged(false);
 	}
 
-#ifdef Q_OS_MAC
+#ifdef QT5_MAC
 	qApp->installEventFilter(this);
 	fileOpenTimer.setSingleShot(true);
 	connect(&fileOpenTimer, &QTimer::timeout, this, &MainWidget::fileOpenTimerTimeout);
@@ -424,7 +428,7 @@ MainWidget::MainWidget(QPair<QStringList, QStringList> &arguments) :
 }
 MainWidget::~MainWidget()
 {
-#ifdef Q_OS_MAC
+#ifdef QT5_MAC
 	QMPlay2MacExtensions::unregisterMacOSMediaKeys();
 #endif
 	QMPlay2Extensions::closeExtensions();
@@ -691,7 +695,11 @@ void MainWidget::toggleVisibility()
 #ifndef Q_OS_MAC
 			showMinimized();
 #else
+#if QT_VERSION < 0x050000
+			QMPlay2MacExtensions::hideApplication();
+#else
 			QMPlay2MacExtensions::setApplicationVisible(false);
+#endif
 #endif
 		}
 		else
@@ -1043,7 +1051,7 @@ void MainWidget::toggleFullScreen()
 		fullScreen = false;
 
 #ifndef Q_OS_ANDROID
-#ifdef Q_OS_MAC
+#ifdef QT5_MAC
 		QMPlay2MacExtensions::showSystemUi(windowHandle(), true);
 		setWindowFlags(Qt::Window);
 #else

@@ -32,8 +32,8 @@ public:
 
 	inline void inhibit()
 	{
-		m_okDisp = (IOPMAssertionCreateWithName(kIOPMAssertPreventUserIdleDisplaySleep, kIOPMAssertionLevelOn, QMPLAY2_MEDIA_PLAYBACK, &m_idDisp) == kIOReturnSuccess);
-		m_okSys  = (IOPMAssertionCreateWithName(kIOPMAssertPreventUserIdleSystemSleep,  kIOPMAssertionLevelOn, QMPLAY2_MEDIA_PLAYBACK, &m_idSys)  == kIOReturnSuccess);
+		m_okDisp = (IOPMAssertionCreateWithName(kIOPMAssertionTypeNoDisplaySleep, kIOPMAssertionLevelOn, QMPLAY2_MEDIA_PLAYBACK, &m_idDisp) == kIOReturnSuccess);
+		m_okSys  = (IOPMAssertionCreateWithName(kIOPMAssertionTypeNoIdleSleep, kIOPMAssertionLevelOn, QMPLAY2_MEDIA_PLAYBACK, &m_idSys) == kIOReturnSuccess);
 	}
 	inline void unInhibit()
 	{

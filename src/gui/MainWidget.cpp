@@ -68,6 +68,11 @@ using Functions::timeToStr;
 #include <SubsDec.hpp>
 #include <IPC.hpp>
 
+#ifdef Q_OS_MAC
+#include <Carbon/Carbon.h>
+extern void qt_mac_set_dock_menu(QMenu *);
+#endif
+
 #include <cmath>
 
 #if QT_VERSION >= 0x050000 && defined Q_OS_WIN

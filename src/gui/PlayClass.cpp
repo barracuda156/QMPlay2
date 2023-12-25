@@ -33,7 +33,18 @@
 #include <Decoder.hpp>
 #include <Reader.hpp>
 
+#if QT_VERSION >= 0x050000
+	#define USE_QRAWFONT
+#endif
+
 #include <QCoreApplication>
+
+#ifdef USE_QRAWFONT
+	#include <QRawFont>
+#else
+	#include <QFontDatabase>
+#endif
+
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QTextCodec>
@@ -384,9 +395,20 @@ void PlayClass::loadSubsFile(const QString &fileName)
 					{
 						const QByteArray fontData = f.readAll();
 						f.close();
+#ifdef USE_QRAWFONT
 						const QString fontName = QRawFont(fontData, 0.0).familyName();
 						if (!fontName.isEmpty())
 							ass->addFont(fontName.toUtf8(), fontData);
+#else // For Qt older than 5.0
+						const int fontID = QFontDatabase::addApplicationFontFromData(fontData);
+						if (fontID != -1)
+						{
+							const QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontID);
+							QFontDatabase::removeApplicationFont(fontID);
+							if (!fontFamilies.isEmpty())
+								ass->addFont(fontFamilies.first().toUtf8(), fontData);
+						}
+#endif
 					}
 				}
 

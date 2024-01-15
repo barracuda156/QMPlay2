@@ -134,8 +134,9 @@ namespace Functions
 
 	QByteArray convertToASS(QString txt);
 
-	bool chkMimeData(const QMimeData *);
-	QStringList getUrlsFromMimeData(const QMimeData *);
+	bool chkMimeData(const QMimeData *mimeData);
+	QStringList getUrlsFromMimeData(const QMimeData *mimeData, const bool checkExtensionsForUrl = true);
+	QString maybeExtensionAddress(const QString &url);
 
 	bool splitPrefixAndUrlIfHasPluginPrefix(const QString &entireUrl, QString *addressPrefixName, QString *url, QString *param = nullptr);
 	void getDataIfHasPluginPrefix(const QString &entireUrl, QString *url = nullptr, QString *name = nullptr, QIcon *icon = nullptr, IOController<> *ioCtrl = nullptr, const DemuxersInfo &demuxersInfo = DemuxersInfo());

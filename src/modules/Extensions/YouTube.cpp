@@ -353,19 +353,22 @@ QList<int> *YouTube::getQualityPresets()
 	static bool firstTime = true;
 	if (firstTime)
 	{
-		qualityPresets[_2160p60] << 315 << 299 << 303 << 298 << 302;
-		qualityPresets[_1080p60] << 299 << 303 << 298 << 302;
-		qualityPresets[_720p60] << 298 << 302;
+		qualityPresets[_720p60]  << 298 << 302;
+		qualityPresets[_1080p60] << 299 << 303 << qualityPresets[_720p60];
+		qualityPresets[_1440p60] << 308 << qualityPresets[_1080p60];
+		qualityPresets[_2160p60] << 315 << qualityPresets[_1440p60];
 
-		qualityPresets[_2160p] << 266 << 313 << 137 << 248 << 136 << 247 << 135;
-		qualityPresets[_1080p] << 137 << 248 << 136 << 247 << 135;
-		qualityPresets[_720p] << 136 << 247 << 135;
-		qualityPresets[_480p] << 135;
+		qualityPresets[_480p]  << 135;
+		qualityPresets[_720p]  << 136 << 247 << qualityPresets[_480p];
+		qualityPresets[_1080p] << 137 << 248 << qualityPresets[_720p];
+		qualityPresets[_1440p] << 264 << 271 << qualityPresets[_1080p];
+		qualityPresets[_2160p] << 266 << 313 << qualityPresets[_1440p];
 
-		//Append also non-60 FPS itags to 60 FPS itags
-		qualityPresets[_2160p60] += qualityPresets[_2160p];
+		// Append also non-60 FPS itags to 60 FPS itags
+		qualityPresets[_720p60]  += qualityPresets[_720p];
 		qualityPresets[_1080p60] += qualityPresets[_1080p];
-		qualityPresets[_720p60] += qualityPresets[_720p];
+		qualityPresets[_1440p60] += qualityPresets[_1440p];
+		qualityPresets[_2160p60] += qualityPresets[_2160p];
 
 		firstTime = false;
 	}
@@ -415,9 +418,11 @@ YouTube::YouTube(Module &module) :
 
 	QActionGroup *qualityGroup = new QActionGroup(this);
 	qualityGroup->addAction("2160p 60FPS");
+	qualityGroup->addAction("1440p 60FPS");
 	qualityGroup->addAction("1080p 60FPS");
 	qualityGroup->addAction("720p 60FPS");
 	qualityGroup->addAction("2160p");
+	qualityGroup->addAction("1440p");
 	qualityGroup->addAction("1080p");
 	qualityGroup->addAction("720p");
 	qualityGroup->addAction("480p");
@@ -431,7 +436,7 @@ YouTube::YouTube(Module &module) :
 		act->setCheckable(true);
 		qualityMenu->addAction(act);
 	}
-	qualityMenu->insertSeparator(qualityMenu->actions().at(3));
+	qualityMenu->insertSeparator(qualityMenu->actions().at(4));
 
 	QToolButton *qualityB = new QToolButton;
 	qualityB->setPopupMode(QToolButton::InstantPopup);

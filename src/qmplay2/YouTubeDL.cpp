@@ -33,21 +33,6 @@ constexpr char g_name[] = "YouTubeDL";
 
 static QReadWriteLock g_lock;
 
-/**/
-
-static void exportCookiesFromJSON(const QString &jsonData, const QString &url)
-{
-	const Json json = Json::parse(jsonData.toUtf8());
-	const QByteArray urlData = url.toUtf8();
-	for (const Json &formats : json["formats"].array_items())
-	{
-		if (urlData == formats["url"].string_value())
-			QMPlay2Core.addCookies(url, formats["http_headers"]["Cookie"].string_value());
-	}
-}
-
-/**/
-
 QString YouTubeDL::getFilePath()
 {
 	return QMPlay2Core.getSettingsDir() + "youtube-dl"
@@ -140,7 +125,7 @@ void YouTubeDL::addr(const QString &url, const QString &param, QString *streamUr
 	}
 }
 
-QStringList YouTubeDL::exec(const QString &url, const QStringList &args, QString *silentErr, bool canUpdate)
+QStringList YouTubeDL::exec(const QString &url, const QStringList &args, QString *silentErr, bool canUpdate, bool rawOutput)
 {
 #ifndef Q_OS_ANDROID
 	enum class Lock
@@ -201,16 +186,25 @@ QStringList YouTubeDL::exec(const QString &url, const QStringList &args, QString
 		"--no-check-certificate", //Ignore SSL errors
 	};
 
-	const bool useQMPlay2UserAgent = url.contains("vidfile.net/");
+	const bool isVIDFile = url.contains("vidfile.net/");
+	constexpr const char *mozillaUserAgent = "Mozilla";
 
-	if (useQMPlay2UserAgent)
-		commonArgs += {"--user-agent", Version::userAgent()};
+	if (isVIDFile)
+		commonArgs += {"--user-agent", mozillaUserAgent};
 
 	const char *httpProxy = getenv("http_proxy");
 	if (httpProxy && *httpProxy)
 		commonArgs += {"--proxy", httpProxy};
 
-	m_process.start(ytDlPath, QStringList() << url << "-g" << args << commonArgs << "-j");
+    QStringList processArgs;
+    processArgs += url;
+    if (!rawOutput)
+        processArgs += "-g";
+    processArgs += args;
+    processArgs += commonArgs;
+    if (!rawOutput)
+        processArgs += "-j";
+    m_process.start(ytDlPath, processArgs);
 	if (m_process.waitForFinished() && !m_aborted)
 	{
 		const auto finishWithError = [&](const QString &error) {
@@ -231,25 +225,29 @@ QStringList YouTubeDL::exec(const QString &url, const QStringList &args, QString
 
 		if (isExitOk)
 		{
-			result = QString(m_process.readAllStandardOutput()).split('\n', QString::SkipEmptyParts);
-
-			// Verify if URLs has printable characters, because sometimes we
-			// can get binary garbage at output (especially on Openload).
-			for (const QString &line : result)
+            result = QStringList(m_process.readAllStandardOutput());
+            if (!rawOutput)
 			{
-				if (line.startsWith("http"))
+                result = result[0].split('\n', QString::SkipEmptyParts);
+
+                // Verify if URLs has printable characters, because sometimes we
+                // can get binary garbage at output (especially on Openload).
+                for (const QString &line : asConst(result))
 				{
-					for (const QChar &c : line)
+					if (line.startsWith("http"))
 					{
-						if (!c.isPrint())
+						 for (const QChar &c : line)
 						{
-							error = "Invalid stream URL";
-							isExitOk = false;
-							break;
+                            if (!c.isPrint())
+                            {
+                                error = "Invalid stream URL";
+                                isExitOk = false;
+                                break;
+                            }
 						}
+                        if (!isExitOk)
+                            break;
 					}
-					if (!isExitOk)
-						break;
 				}
 			}
 		}
@@ -324,13 +322,23 @@ QStringList YouTubeDL::exec(const QString &url, const QStringList &args, QString
 			return {};
 		}
 
-		//[Title], url, JSON, [url, JSON]
-		for (int i = result.count() - 1; i >= 0; --i)
+		if (!rawOutput)
 		{
-			if (i > 0 && result.at(i).startsWith('{'))
+            //[Title], url, JSON, [url, JSON]
+            for (int i = result.count() - 1; i >= 0; --i)
 			{
-				exportCookiesFromJSON(result.at(i), result.at(i - 1));
-				result.removeAt(i);
+				if (i > 0 && result.at(i).startsWith('{'))
+				{
+                    const QString url = result.at(i - 1);
+
+                    const QJsonDocument json = QJsonDocument::fromJson(result.at(i).toUtf8());
+                    for (const QJsonValue &formats : json.object()["formats"].toArray())
+                    {
+                        if (url == formats.toObject()["url"].toString())
+                            QMPlay2Core.addCookies(url, formats.toObject()["http_headers"].toObject()["Cookie"].toString().toUtf8());
+                    }
+                    result.removeAt(i);
+                }
 			}
 		}
 
@@ -378,6 +386,8 @@ QStringList YouTubeDL::exec(const QString &url, const QStringList &args, QString
 					}
 				}
 			}
+			if (!m_aborted)
+				emit QMPlay2Core.sendMessage(tr("\"youtube-dl\" download has failed!"), g_name, 3);
 			QMPlay2Core.setWorking(false);
 		}
 	}

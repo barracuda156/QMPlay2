@@ -24,12 +24,13 @@
 
 #include <QTreeWidget>
 #include <QPointer>
-#include <QMap>
+#include <QMutex>
 
+class NetworkReply;
 class QProgressBar;
+class QActionGroup;
 class QToolButton;
 class QCompleter;
-class NetworkReply;
 class YouTubeDL;
 class QSpinBox;
 class LineEdit;
@@ -45,25 +46,16 @@ public:
 	ResultsYoutube();
 	~ResultsYoutube() final;
 
-	QList<int> itags, itagsVideo, itagsAudio;
 private:
-	QTreeWidgetItem *getDefaultQuality(const QTreeWidgetItem *tWI);
-
-	void playOrEnqueue(const QString &param, QTreeWidgetItem *tWI);
-
-	void mouseMoveEvent(QMouseEvent *) override final;
-	void mouseReleaseEvent(QMouseEvent *) override final;
+	void playOrEnqueue(const QString &param, QTreeWidgetItem *tWI, const QString &addrParam = QString());
 
 	QMenu *menu;
-	int pixels;
+
 private slots:
-	void enqueue();
-	void playCurrentEntry();
 	void playEntry(QTreeWidgetItem *tWI);
 
 	void openPage();
 	void copyPageURL();
-	void copyStreamURL();
 
 	void contextMenu(const QPoint &p);
 };
@@ -89,16 +81,8 @@ class YouTube : public QWidget, public QMPlay2Extensions
 	Q_OBJECT
 
 public:
-	enum QUALITY_PRESETS {_2160p60, _1440p60, _1080p60, _720p60, _2160p, _1440p, _1080p, _720p, _480p, QUALITY_PRESETS_COUNT};
-
-	static QList<int> *getQualityPresets();
-	static QStringList getQualityPresetString(int qualityIdx);
-
 	YouTube(Module &module);
 	~YouTube() final;
-
-	enum MediaType {MEDIA_AV, MEDIA_VIDEO, MEDIA_AUDIO};
-	static ItagNames getItagNames(const QStringList &itagList, MediaType mediaType);
 
 	bool set() override final;
 
@@ -113,9 +97,6 @@ public:
 	inline QString getYtDlPath() const;
 
 private slots:
-	void showSettings();
-	void setQualityFromMenu();
-
 	void next();
 	void prev();
 	void chPage();
@@ -128,15 +109,14 @@ private slots:
 	void searchMenu();
 
 private:
-	void setItags();
+	void setItags(int qualityIdx);
 
 	void deleteReplies();
 
 	void setAutocomplete(const QByteArray &data);
 	void setSearchResults(QString data);
 
-	QStringList getYouTubeVideo(const QString &data, const QString &PARAM = QString(), QTreeWidgetItem *tWI = nullptr, const QString &url = QString(), IOController<YouTubeDL> *youtube_dl = nullptr); //jeżeli (tWI == nullptr) to zwraca {URL, file_extension, TITLE}
-	QStringList getUrlByItagPriority(const QList<int> &itags, QStringList ret);
+	QStringList getYouTubeVideo(const QString &param, const QString &url, IOController<YouTubeDL> &youTubeDL);
 
 	void preparePlaylist(const QString &data, QTreeWidgetItem *tWI);
 
@@ -146,7 +126,6 @@ private:
 
 	LineEdit *searchE;
 	QToolButton *searchB;
-	QMenu *qualityMenu;
 	ResultsYoutube *resultsW;
 	QProgressBar *progressB;
 	PageSwitcher *pageSwitcher;
@@ -160,7 +139,14 @@ private:
 	NetworkAccess net;
 
 	QString youtubedl;
-	bool multiStream, subtitles;
+	bool m_allowSubtitles;
+
+	QActionGroup *m_qualityGroup = nullptr, *m_sortByGroup = nullptr;
+
+	int m_sortByIdx = 0;
+
+    QMutex m_itagsMutex;
+    QList<int> m_videoItags, m_audioItags;
 };
 
 #define YouTubeName "YouTube Browser"

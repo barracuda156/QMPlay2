@@ -131,10 +131,12 @@ if(USE_FREEDESKTOP_NOTIFICATIONS)
     endif()
     add_definitions(-DNOTIFIES_FREEDESKTOP)
 elseif(APPLE)
+  if(USE_QT5)
     list(APPEND QMPLAY2_HDR headers/NotifiesMacOS.hpp)
     list(APPEND QMPLAY2_SRC NotifiesMacOS.mm)
     find_package(Qt5MacExtras REQUIRED)
     add_definitions(-DNOTIFIES_MACOS)
+  endif()
 endif()
 
 set(QMPLAY2_RESOURCES

@@ -117,7 +117,8 @@ add_library(${PROJECT_NAME} ${QMPLAY2_MODULE}
 if(USE_QT5)
     qt5_use_modules(${PROJECT_NAME} Gui Widgets ${DBUS})
 else()
-    target_link_libraries(${PROJECT_NAME} Qt4::QtCore Qt4::QtGui ${DBUS})
+    add_definitions(-I/opt/local/include/QJson4)
+    target_link_libraries(${PROJECT_NAME} Qt4::QtCore Qt4::QtGui QJson4 ${DBUS})
 endif()
 
 add_dependencies(${PROJECT_NAME} libqmplay2)

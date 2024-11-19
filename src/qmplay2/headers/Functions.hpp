@@ -158,4 +158,6 @@ namespace Functions
 	void setHeaderSectionResizeMode(QHeaderView *header, int index, int resizeMode);
 
 	QByteArray decryptAes256Cbc(const QByteArray &password, const QByteArray &salt, const QByteArray &ciphered);
+
+	int findJsonEnd(const QByteArray &data, int idx = 0);
 }

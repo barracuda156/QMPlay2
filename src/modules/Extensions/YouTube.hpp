@@ -25,6 +25,7 @@
 #include <QTreeWidget>
 #include <QPointer>
 #include <QMap>
+#include <QJsonDocument.h>
 
 class QProgressBar;
 class QToolButton;
@@ -132,13 +133,15 @@ private:
 	void deleteReplies();
 
 	void setAutocomplete(const QByteArray &data);
-	void setSearchResults(QString data);
+	void setSearchResults(const QByteArray &data);
 
 	QStringList getYouTubeVideo(const QString &data, const QString &PARAM = QString(), QTreeWidgetItem *tWI = nullptr, const QString &url = QString(), IOController<YouTubeDL> *youtube_dl = nullptr); //jeżeli (tWI == nullptr) to zwraca {URL, file_extension, TITLE}
 	QStringList getUrlByItagPriority(const QList<int> &itags, QStringList ret);
 
-	void preparePlaylist(const QString &data, QTreeWidgetItem *tWI);
+	void preparePlaylist(const QByteArray &data, QTreeWidgetItem *tWI);
 
+	QJsonDocument getYtInitialData(const QByteArray &data);
+private:
 	DockWidget *dw;
 
 	QIcon youtubeIcon, videoIcon;

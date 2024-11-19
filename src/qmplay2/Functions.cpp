@@ -912,3 +912,34 @@ QByteArray Functions::decryptAes256Cbc(const QByteArray &password, const QByteAr
 	deciphered.resize(decryptedLen + finalizeLen);
 	return deciphered;
 }
+
+int Functions::findJsonEnd(const QByteArray &data, int idx)
+{
+	const int dataLen = data.length();
+	if (dataLen < 1 || idx < 0 || idx >= dataLen || data.at(idx) != '{')
+		return -1;
+	int brackets = 1;
+	bool inString = false;
+	char prevChr = '\0';
+	for (int i = idx + 1; i < dataLen; ++i)
+	{
+		const char chr = data.at(i);
+		if (chr == '"')
+		{
+			if (!inString)
+				inString = true;
+			else if (prevChr != '\\')
+				inString = false;
+		}
+		prevChr = chr;
+		if (inString)
+			continue;
+		if (chr == '{')
+			++brackets;
+		else if (chr == '}')
+			--brackets;
+		if (brackets == 0)
+			return i + 1;
+	}
+	return -1;
+}

@@ -31,6 +31,10 @@ extern "C"
 	#include <libavutil/pixdesc.h>
 }
 
+#ifndef AV_CODEC_FLAG2_FAST
+	#define AV_CODEC_FLAG2_FAST CODEC_FLAG2_FAST
+#endif
+
 FFDecSW::FFDecSW(QMutex &avcodec_mutex, Module &module) :
 	FFDec(avcodec_mutex),
 	threads(0), lowres(0),
@@ -213,14 +217,14 @@ int FFDecSW::decodeVideo(Packet &encodedPacket, VideoFrame &decoded, QByteArray 
 			codec_ctx->skip_loop_filter = AVDISCARD_ALL;
 			if (hurry_up > 1)
 				codec_ctx->skip_idct = AVDISCARD_NONREF;
-			codec_ctx->flags2 |= CODEC_FLAG2_FAST;
+			codec_ctx->flags2 |= AV_CODEC_FLAG2_FAST;
 		}
 		else
 		{
 			if (!forceSkipFrames)
 				codec_ctx->skip_frame = AVDISCARD_DEFAULT;
 			codec_ctx->skip_loop_filter = codec_ctx->skip_idct = AVDISCARD_DEFAULT;
-			codec_ctx->flags2 &= ~CODEC_FLAG2_FAST;
+			codec_ctx->flags2 &= ~AV_CODEC_FLAG2_FAST;
 		}
 
 		bytes_consumed = avcodec_decode_video2(codec_ctx, frame, &frameFinished, packet);
@@ -304,15 +308,9 @@ bool FFDecSW::decodeSubtitle(const Packet &encodedPacket, double pos, QMPlay2OSD
 			buff->y = av_clip(rect->y, 0, h - buff->h);
 			buff->bitmap.resize((buff->w * buff->h) << 2);
 
-#if LIBAVCODEC_VERSION_MAJOR >= 57
 			const uint8_t  *source   = (uint8_t  *)rect->data[0];
 			const uint32_t *palette  = (uint32_t *)rect->data[1];
 			const int       linesize = rect->linesize[0];
-#else
-			const uint8_t  *source   = (uint8_t  *)rect->pict.data[0];
-			const uint32_t *palette  = (uint32_t *)rect->pict.data[1];
-			const int       linesize = rect->pict.linesize[0];
-#endif
 
 			uint32_t       *dest     = (uint32_t *)buff->bitmap.data();
 			for (int y = 0; y < buff->h; ++y)
@@ -339,8 +337,6 @@ bool FFDecSW::open(StreamInfo &streamInfo, VideoWriter *)
 		return false;
 	if (codec_ctx->codec_type == AVMEDIA_TYPE_VIDEO)
 	{
-		if (codec->capabilities & CODEC_CAP_DR1)
-			codec_ctx->flags |= CODEC_FLAG_EMU_EDGE; //Does nothing since FFmpeg 2.3
 		if ((codec_ctx->thread_count = threads) != 1)
 		{
 			if (!thread_type_slice)

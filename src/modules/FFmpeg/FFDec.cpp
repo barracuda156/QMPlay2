@@ -39,7 +39,7 @@ FFDec::FFDec(QMutex &avcodec_mutex) :
 FFDec::~FFDec()
 {
 	av_frame_free(&frame);
-	FFCommon::freeAVPacket(packet);
+	av_packet_free(&packet);
 	if (codecIsOpen)
 	{
 		avcodec_mutex.lock();
@@ -84,7 +84,7 @@ bool FFDec::openCodec(AVCodec *codec)
 		return false;
 	}
 	avcodec_mutex.unlock();
-	packet = FFCommon::createAVPacket();
+	packet = av_packet_alloc();
 	switch (codec_ctx->codec_type)
 	{
 		case AVMEDIA_TYPE_VIDEO:

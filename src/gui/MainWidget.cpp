@@ -30,11 +30,6 @@
 #include <QFileDialog>
 #include <QTreeWidget>
 #include <QListWidget>
-#ifdef Q_OS_MAC
-	#include <QProcess>
-	#include <QScreen>
-	#include <QWindow>
-#endif
 #include <qevent.h>
 
 /* QMPlay2 gui */
@@ -416,22 +411,11 @@ MainWidget::MainWidget(QPair<QStringList, QStringList> &arguments) :
 			playStateChanged(false);
 	}
 
-#ifdef Q_OS_MAC
-	qApp->installEventFilter(this);
-	fileOpenTimer.setSingleShot(true);
-	connect(&fileOpenTimer, &QTimer::timeout, this, &MainWidget::fileOpenTimerTimeout);
-	if (QMPlay2GUI.pipe) // Register media keys only for first QMPlay2 instance
-		QMPlay2MacExtensions::registerMacOSMediaKeys(std::bind(&MainWidget::processParam, this, std::placeholders::_1, QString()));
-#endif
-
 	if (settings.getBool("AutoUpdates"))
 		updater.downloadUpdate();
 }
 MainWidget::~MainWidget()
 {
-#ifdef Q_OS_MAC
-	QMPlay2MacExtensions::unregisterMacOSMediaKeys();
-#endif
 	QMPlay2Extensions::closeExtensions();
 	emit QMPlay2Core.restoreCursor();
 	Notifies::finalize();
@@ -661,20 +645,11 @@ void MainWidget::resetRotate90()
 
 void MainWidget::visualizationFullScreen()
 {
-	QWidget *senderW = (QWidget *)sender();
-	const auto maybeGoFullScreen = [this, senderW] {
-		if (!fullScreen)
-		{
-			videoDock->setWidget(senderW);
-			toggleFullScreen();
-		}
-	};
-#ifdef Q_OS_MAC
-	// On macOS if full screen is toggled to fast after double click, mouse remains in clicked state...
-	QTimer::singleShot(200, maybeGoFullScreen);
-#else
-	maybeGoFullScreen();
-#endif
+	if (!fullScreen)
+	{
+		videoDock->setWidget((QWidget *)sender());
+		toggleFullScreen();
+	}
 }
 void MainWidget::hideAllExtensions()
 {
@@ -871,7 +846,7 @@ void MainWidget::createMenuBar()
 	copyMenu(secondMenu, menuBar->help);
 	if (tray)
 		tray->setContextMenu(secondMenu);
-#else //On OS X add only the most important menu actions to dock menu
+#else // On OS X add only the most important menu actions to dock menu
 	secondMenu->addAction(menuBar->player->togglePlay);
 	secondMenu->addAction(menuBar->player->stop);
 	secondMenu->addAction(menuBar->player->next);
@@ -879,17 +854,7 @@ void MainWidget::createMenuBar()
 	secondMenu->addSeparator();
 	secondMenu->addAction(menuBar->player->toggleMute);
 	secondMenu->addSeparator();
-	// Copy action, because PreferencesRole doesn't show in dock menu.
-	QAction *settings = new QAction(menuBar->options->settings->icon(), menuBar->options->settings->text(), menuBar->options->settings->parent());
-	connect(settings, &QAction::triggered, menuBar->options->settings, &QAction::trigger);
-	secondMenu->addAction(settings);
-
-	QAction *newInstanceAct = new QAction(tr("New window"), secondMenu);
-	connect(newInstanceAct, &QAction::triggered, [] {
-		QProcess::startDetached(QCoreApplication::applicationFilePath(), {"-noplay"}, QCoreApplication::applicationDirPath());
-	});
-	secondMenu->addSeparator();
-	secondMenu->addAction(newInstanceAct);
+	secondMenu->addAction(menuBar->options->settings);
 
 	qt_mac_set_dock_menu(secondMenu);
 #endif
@@ -957,13 +922,6 @@ void MainWidget::toggleFullScreen()
 #ifndef Q_OS_ANDROID
 	static bool maximized;
 #endif
-#ifdef Q_OS_MAC
-	if (isFullScreen())
-	{
-		showNormal();
-		return;
-	}
-#endif
 	if (!fullScreen)
 	{
 		visible = isVisible();
@@ -1024,14 +982,7 @@ void MainWidget::toggleFullScreen()
 		menuBar->window->toggleFullScreen->setShortcuts(QList<QKeySequence>() << menuBar->window->toggleFullScreen->shortcut() << QKeySequence("ESC"));
 		fullScreen = true;
 
-#ifndef Q_OS_MAC
 		showFullScreen();
-#else
-		setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
-		setGeometry(window()->windowHandle()->screen()->geometry());
-		QMPlay2MacExtensions::showSystemUi(windowHandle(), false);
-		show();
-#endif
 
 		if (playC.isPlaying())
 			QMPlay2GUI.screenSaver->inhibit(1);
@@ -1048,21 +999,11 @@ void MainWidget::toggleFullScreen()
 		fullScreen = false;
 
 #ifndef Q_OS_ANDROID
-#ifdef Q_OS_MAC
-		QMPlay2MacExtensions::showSystemUi(windowHandle(), true);
-		setWindowFlags(Qt::Window);
-#else
 		showNormal();
-#endif // Q_OS_MAC
 		if (maximized)
 			showMaximized();
 		else
-		{
-#ifdef Q_OS_MAC
-			showNormal();
-#endif
 			setGeometry(savedGeo);
-		}
 #else // Q_OS_ANDROID
 		showMaximized();
 #endif
@@ -1610,24 +1551,3 @@ void MainWidget::hideEvent(QHideEvent *)
 #endif
 	menuBar->window->toggleVisibility->setText(tr("&Show"));
 }
-
-#ifdef Q_OS_MAC
-bool MainWidget::eventFilter(QObject *obj, QEvent *event)
-{
-	if (event->type() == QEvent::FileOpen)
-	{
-		filesToAdd.append(((QFileOpenEvent *)event)->file());
-		fileOpenTimer.start(10);
-	}
-	return QMainWindow::eventFilter(obj, event);
-}
-
-void MainWidget::fileOpenTimerTimeout()
-{
-	if (filesToAdd.count() == 1)
-		playlistDock->addAndPlay(filesToAdd.at(0));
-	else
-		playlistDock->addAndPlay(filesToAdd);
-	filesToAdd.clear();
-}
-#endif

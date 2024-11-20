@@ -96,7 +96,11 @@ if(APPLE)
     include_directories("macOS")
 endif()
 
-qt5_wrap_ui(GUI_FORM_HDR ${GUI_FORMS})
+if(USE_QT4)
+    qt4_wrap_ui(GUI_FORM_HDR ${GUI_FORMS})
+else()
+    qt5_wrap_ui(GUI_FORM_HDR ${GUI_FORMS})
+endif()
 set_property(SOURCE ${GUI_FORM_HDR} PROPERTY SKIP_AUTOMOC ON)
 
 include_directories(../qmplay2/headers)

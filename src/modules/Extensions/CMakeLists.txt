@@ -55,7 +55,11 @@ if(USE_MEDIABROWSER)
     set(QML Qt5::Qml)
 endif()
 
-qt5_wrap_ui(Extensions_FORM_HDR ${Extensions_FORMS})
+if(USE_QT4)
+    qt4_wrap_ui(Extensions_FORM_HDR ${Extensions_FORMS})
+else()
+    qt5_wrap_ui(Extensions_FORM_HDR ${Extensions_FORMS})
+endif()
 set_property(SOURCE ${Extensions_FORM_HDR} PROPERTY SKIP_AUTOMOC ON)
 
 include_directories(../../qmplay2/headers
@@ -69,9 +73,15 @@ add_library(${PROJECT_NAME} ${QMPLAY2_MODULE}
     ${Extensions_RESOURCES}
 )
 
+if(USE_QT4)
+    add_definitions(-I/opt/local/include/QJson4)
+    target_link_libraries(${PROJECT_NAME} Qt4::QtCore Qt4::QtGui QJson4)
+else()
+    target_link_libraries(${PROJECT_NAME} ${QML})
+endif()
+
 target_link_libraries(${PROJECT_NAME}
     ${DBUS}
-    ${QML}
     libqmplay2
 )
 

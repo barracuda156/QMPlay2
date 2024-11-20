@@ -12,8 +12,12 @@ else()
     endforeach()
 endif()
 
-find_package(Qt5LinguistTools REQUIRED)
-qt5_add_translation(QM_FILES ${QMPLAY2_TSS})
+if(USE_QT4)
+    qt4_add_translation(QM_FILES ${QMPLAY2_TSS})
+else()
+    find_package(Qt5LinguistTools REQUIRED)
+    qt5_add_translation(QM_FILES ${QMPLAY2_TSS})
+endif()
 
 add_custom_target(translations ALL DEPENDS ${QM_FILES})
 

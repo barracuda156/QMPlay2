@@ -19,9 +19,13 @@ else()
     find_package(DummyPkgConfig REQUIRED)
 endif()
 
-find_package(Qt5Widgets 5.6 REQUIRED)
-if(Qt5Widgets_VERSION VERSION_LESS 5.6.3)
-    message(AUTHOR_WARNING "Qt5 >= 5.6.3, >= 5.9.1 is recommended")
+option(USE_QT4 "Build with Qt4" OFF)
+
+if(USE_QT4)
+    find_package(Qt4 REQUIRED QtCore QtGui)
+    include("${QT_USE_FILE}")
+else()
+    find_package(Qt5Widgets 5.10 REQUIRED)
 endif()
 
 set(CMAKE_LINK_DEPENDS_NO_SHARED ON)
@@ -48,6 +52,10 @@ else()
 endif()
 
 add_definitions(-D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DQT_USE_FAST_OPERATOR_PLUS)
+
+if(APPLE AND USE_QT4)
+    add_definitions(-DQ_OS_MACOS)
+endif()
 
 if(WIN32)
     option(USE_CMD "Show CMD when running QMPlay2" OFF)
@@ -306,7 +314,11 @@ if(USE_MEDIABROWSER)
 endif()
 
 if(NOT ANDROID)
+  if(USE_QT4)
+    find_package(Qt4 QUIET OPTIONAL_COMPONENTS QtSvg)
+  else()
     find_package(Qt5Svg QUIET)
+  endif()
 else()
     find_package(Qt5Svg REQUIRED)
     find_package(Qt5AndroidExtras REQUIRED)
@@ -337,7 +349,7 @@ if(NOT APPLE AND NOT WIN32)
 endif()
 
 # Show warning if QtSvg doesn't exist
-if(NOT Qt5Svg_FOUND)
+if(NOT Qt5Svg_FOUND AND NOT Qt4_FOUND)
     message(WARNING "Missing QtSvg module - SVG icons will not be visible!")
 endif()
 

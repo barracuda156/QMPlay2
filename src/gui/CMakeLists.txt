@@ -65,7 +65,6 @@ set(GUI_SRC
     ShortcutHandler.cpp
     KeyBindingsDialog.cpp
     Updater.cpp
-    EventFilterWorkarounds.cpp
 )
 
 set(GUI_FORMS # *.ui files
@@ -79,10 +78,15 @@ set(GUI_RESOURCES
     resources.qrc
 )
 
-if(NOT WIN32)
+if(NOT USE_QT4)
     list(APPEND GUI_SRC
-        PanGestureEventFilter.cpp
+        EventFilterWorkarounds.cpp
     )
+    if(NOT WIN32)
+        list(APPEND GUI_SRC
+            PanGestureEventFilter.cpp
+        )
+    endif()
 endif()
 
 if(APPLE)
@@ -96,7 +100,11 @@ if(APPLE)
     include_directories("macOS")
 endif()
 
-qt5_wrap_ui(GUI_FORM_HDR ${GUI_FORMS})
+if(USE_QT4)
+    qt4_wrap_ui(GUI_FORM_HDR ${GUI_FORMS})
+else()
+    qt5_wrap_ui(GUI_FORM_HDR ${GUI_FORMS})
+endif()
 set_property(SOURCE ${GUI_FORM_HDR} PROPERTY SKIP_AUTOMOC ON)
 
 include_directories(../qmplay2/headers)
@@ -121,7 +129,7 @@ if(USE_TAGLIB)
     list(APPEND GUI_SRC TagEditor.cpp)
 endif()
 
-if(NOT APPLE)
+if(USE_QT4 OR NOT APPLE)
     add_definitions(-DQMPLAY2_ALLOW_ONLY_ONE_INSTANCE)
 endif()
 

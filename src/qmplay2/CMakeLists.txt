@@ -112,7 +112,7 @@ if(USE_FREEDESKTOP_NOTIFICATIONS)
     qt5_add_dbus_interface(QMPLAY2_SRC org.freedesktop.Notifications.xml notifications_interface)
     add_definitions(-DNOTIFIES_FREEDESKTOP)
     set(DBUS Qt5::DBus)
-elseif(APPLE)
+elseif(APPLE AND NOT USE_QT4)
     list(APPEND QMPLAY2_HDR headers/NotifiesMacOS.hpp)
     list(APPEND QMPLAY2_SRC NotifiesMacOS.mm)
     find_package(Qt5MacExtras REQUIRED)
@@ -195,11 +195,18 @@ add_library(${PROJECT_NAME} SHARED
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
 
 if(APPLE)
-    target_link_libraries(${PROJECT_NAME}
-        PRIVATE
-        Qt5::MacExtras
-        ${APPKIT_LIBRARY}
+    if(USE_QT4)
+        target_link_libraries(${PROJECT_NAME}
+            PRIVATE
+            ${APPKIT_LIBRARY}
     )
+    else()
+        target_link_libraries(${PROJECT_NAME}
+            PRIVATE
+            Qt5::MacExtras
+            ${APPKIT_LIBRARY}
+    )
+    endif()
 endif()
 
 if(WIN32)
@@ -229,14 +236,30 @@ else()
     endif()
 endif()
 
+if(USE_QT4)
+    add_definitions(-I/opt/local/include/QJson4)
+    target_link_libraries(${PROJECT_NAME}
+        PUBLIC
+        Qt4::QtCore
+        Qt4::QtGui
+        Qt4::QtSvg
+        QJson4
+    )
+else()
+    target_link_libraries(${PROJECT_NAME}
+        PUBLIC
+        Qt5::Core
+        Qt5::Gui
+        Qt5::Widgets
+        Qt5::Svg
+        PRIVATE
+        ${QML}
+    )
+endif()
+
 target_link_libraries(${PROJECT_NAME}
-    PUBLIC
-    Qt5::Core
-    Qt5::Gui
-    Qt5::Widgets
     PRIVATE
     ${DBUS}
-    ${QML}
     ${LIBQMPLAY2_LIBS}
 )
 

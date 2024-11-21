@@ -31,6 +31,10 @@
     constexpr double g_defaultHighAudioDelay = 0.1;
 #endif
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+    #define QStringLiteral QLatin1Literal
+#endif
+
 PortAudioWriter::PortAudioWriter(Module &module) :
     stream(nullptr),
     sample_rate(0),

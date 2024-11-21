@@ -70,8 +70,17 @@ void Drawable::draw(const VideoFrame &newVideoFrame, bool canRepaint, bool entir
         update();
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+void Drawable::clr()
+{
+    imgScaler.destroy();
+    img = QImage();
+}
+#endif
+
 void Drawable::resizeEvent(QResizeEvent *e)
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     const qreal dpr = devicePixelRatioF();
     Functions::getImageSize(writer.aspect_ratio, writer.zoom, width(), height(), W, H, &X, &Y);
     Functions::getImageSize(writer.aspect_ratio, writer.zoom, width() * dpr, height() * dpr, imgW, imgH);
@@ -79,6 +88,14 @@ void Drawable::resizeEvent(QResizeEvent *e)
 
     imgScaler.destroy();
     img = QImage();
+#else
+    const qreal scale = QMPlay2Core.getVideoDevicePixelRatio();
+    Functions::getImageSize(writer.aspect_ratio, writer.zoom, width(), height(), W, H, &X, &Y);
+    Functions::getImageSize(writer.aspect_ratio, writer.zoom, width() * scale, height() * scale, imgW, imgH);
+    imgW = Functions::aligned(imgW, 8);
+
+    clr();
+#endif
 
     draw(VideoFrame(), e ? false : true, true);
 }

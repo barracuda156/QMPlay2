@@ -358,7 +358,7 @@ void VideoDock::popup(const QPoint &p)
 {
     if (canPopup)
     {
-#ifdef Q_OS_MACOS
+#if defined Q_OS_MACOS && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
         // Move parent of video adjustment widget from native Mac widget to QMenu
         QWidget *videoAdj = (QWidget *)QMPlay2GUI.videoAdjustment;
         QWidget *parent = videoAdj->parentWidget();

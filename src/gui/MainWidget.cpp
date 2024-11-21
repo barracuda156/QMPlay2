@@ -30,7 +30,7 @@
 #include <QFileDialog>
 #include <QTreeWidget>
 #include <QListWidget>
-#ifdef Q_OS_MACOS
+#if defined Q_OS_MACOS && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     #include <QProcess>
     #include <QScreen>
     #include <QWindow>
@@ -421,7 +421,7 @@ MainWidget::MainWidget(QList<QPair<QString, QString>> &arguments) :
             playStateChanged(false);
     }
 
-#ifdef Q_OS_MACOS
+#if defined Q_OS_MACOS && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     qApp->installEventFilter(this);
     fileOpenTimer.setSingleShot(true);
     connect(&fileOpenTimer, &QTimer::timeout, this, &MainWidget::fileOpenTimerTimeout);
@@ -434,7 +434,7 @@ MainWidget::MainWidget(QList<QPair<QString, QString>> &arguments) :
 }
 MainWidget::~MainWidget()
 {
-#ifdef Q_OS_MACOS
+#if defined Q_OS_MACOS && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     QMPlay2MacExtensions::unregisterMacOSMediaKeys();
 #endif
     QMPlay2Extensions::closeExtensions();
@@ -692,6 +692,7 @@ void MainWidget::resetSpherical()
 
 void MainWidget::visualizationFullScreen()
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     QWidget *senderW = (QWidget *)sender();
     const auto maybeGoFullScreen = [this, senderW] {
         if (!fullScreen)
@@ -705,6 +706,13 @@ void MainWidget::visualizationFullScreen()
     QTimer::singleShot(200, maybeGoFullScreen);
 #else
     maybeGoFullScreen();
+#endif
+#else
+    if (!fullScreen)
+    {
+        videoDock->setWidget((QWidget *)sender());
+        toggleFullScreen();
+    }
 #endif
 }
 void MainWidget::hideAllExtensions()
@@ -921,7 +929,7 @@ void MainWidget::createMenuBar()
     copyMenu(secondMenu, menuBar->help);
     if (tray)
         tray->setContextMenu(secondMenu);
-#else //On OS X add only the most important menu actions to dock menu
+#else // On OS X add only the most important menu actions to dock menu
     secondMenu->addAction(menuBar->player->togglePlay);
     secondMenu->addAction(menuBar->player->stop);
     secondMenu->addAction(menuBar->player->next);
@@ -929,6 +937,7 @@ void MainWidget::createMenuBar()
     secondMenu->addSeparator();
     secondMenu->addAction(menuBar->player->toggleMute);
     secondMenu->addSeparator();
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     // Copy action, because PreferencesRole doesn't show in dock menu.
     QAction *settings = new QAction(menuBar->options->settings->icon(), menuBar->options->settings->text(), menuBar->options->settings->parent());
     connect(settings, &QAction::triggered, menuBar->options->settings, &QAction::trigger);
@@ -940,6 +949,9 @@ void MainWidget::createMenuBar()
     });
     secondMenu->addSeparator();
     secondMenu->addAction(newInstanceAct);
+#else
+    secondMenu->addAction(menuBar->options->settings);
+#endif
 
     qt_mac_set_dock_menu(secondMenu);
 #endif
@@ -1022,7 +1034,7 @@ void MainWidget::toggleFullScreen()
 #ifndef Q_OS_ANDROID
     static bool maximized;
 #endif
-#ifdef Q_OS_MACOS
+#if defined Q_OS_MACOS && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     if (isFullScreen())
     {
         showNormal();
@@ -1089,13 +1101,13 @@ void MainWidget::toggleFullScreen()
         menuBar->window->toggleFullScreen->setShortcuts(QList<QKeySequence>() << menuBar->window->toggleFullScreen->shortcut() << QKeySequence("ESC"));
         fullScreen = true;
 
-#ifndef Q_OS_MACOS
-        showFullScreen();
-#else
+#if defined Q_OS_MACOS && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
         setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
         setGeometry(window()->windowHandle()->screen()->geometry());
         QMPlay2MacExtensions::showSystemUi(windowHandle(), false);
         show();
+#else
+        showFullScreen();
 #endif
 
         if (playC.isPlaying())
@@ -1113,7 +1125,7 @@ void MainWidget::toggleFullScreen()
         fullScreen = false;
 
 #ifndef Q_OS_ANDROID
-#ifdef Q_OS_MACOS
+#if defined Q_OS_MACOS && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
         QMPlay2MacExtensions::showSystemUi(windowHandle(), true);
         setWindowFlags(Qt::Window);
 #else
@@ -1123,7 +1135,7 @@ void MainWidget::toggleFullScreen()
             showMaximized();
         else
         {
-#ifdef Q_OS_MACOS
+#if defined Q_OS_MACOS && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
             showNormal();
 #endif
             setGeometry(savedGeo);
@@ -1778,7 +1790,7 @@ bool MainWidget::eventFilter(QObject *obj, QEvent *event)
         QWheelEvent *we = static_cast<QWheelEvent *>(event);
         volW->changeVolume(we->angleDelta().y() / 30);
     }
-#ifdef Q_OS_MACOS
+#if defined Q_OS_MACOS && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     else if (event->type() == QEvent::FileOpen)
     {
         filesToAdd.append(((QFileOpenEvent *)event)->file());
@@ -1788,7 +1800,7 @@ bool MainWidget::eventFilter(QObject *obj, QEvent *event)
     return QMainWindow::eventFilter(obj, event);
 }
 
-#ifdef Q_OS_MACOS
+#if defined Q_OS_MACOS && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 void MainWidget::fileOpenTimerTimeout()
 {
     if (filesToAdd.count() == 1)

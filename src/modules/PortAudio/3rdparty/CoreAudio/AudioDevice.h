@@ -51,6 +51,11 @@
 
 #include <CoreServices/CoreServices.h>
 #include <CoreAudio/CoreAudio.h>
+#include <AvailabilityMacros.h>
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101100
+    #define DEPRECATED_LISTENER_API
+#endif
 
 #include <qglobal.h>
 

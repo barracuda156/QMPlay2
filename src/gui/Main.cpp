@@ -31,7 +31,9 @@
 #include <Module.hpp>
 #include <IPC.hpp>
 
-#include <QCommandLineParser>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    #include <QCommandLineParser>
+#endif
 #include <QDesktopWidget>
 #include <QApplication>
 #include <QImageReader>
@@ -43,7 +45,11 @@
 #include <QFile>
 #include <QDir>
 #ifdef Q_OS_MACOS
-    #include <QProcess>
+    #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+        #include <QProcess>
+    #else
+        #define exitProcedure unInhibitScreenSaver
+    #endif
 #endif
 #ifdef CHECK_FOR_EGL
     #include <QLibrary>
@@ -54,7 +60,7 @@
 
 static ScreenSaver *g_screenSaver = nullptr;
 static bool g_useGui = true;
-#ifdef Q_OS_MACOS
+#if defined Q_OS_MACOS && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     static QByteArray g_rcdPath("/System/Library/LaunchAgents/com.apple.rcd.plist");
     static bool g_rcdLoad;
 #endif
@@ -734,7 +740,7 @@ int main(int argc, char *argv[])
     HHOOK keyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, MMKeysHookProc, GetModuleHandle(nullptr), 0);
 #endif
 
-#ifdef Q_OS_MACOS
+#if defined Q_OS_MACOS && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     // Unload RCD service (prevent run iTunes on "Play" key)
     {
         QProcess launchctl;

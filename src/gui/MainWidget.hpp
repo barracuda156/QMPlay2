@@ -145,7 +145,7 @@ private:
 
     bool eventFilter(QObject *obj, QEvent *event) override;
 
-#ifdef Q_OS_MACOS
+#if defined Q_OS_MACOS && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     void fileOpenTimerTimeout();
 
     QTimer fileOpenTimer;

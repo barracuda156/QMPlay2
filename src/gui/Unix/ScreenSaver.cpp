@@ -20,7 +20,9 @@
 
 #if defined(Q_OS_UNIX) && !defined(Q_OS_MACOS) && !defined(Q_OS_ANDROID)
 
-#include <QGuiApplication>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    #include <QGuiApplication>
+#endif
 #include <QLibrary>
 
 class ScreenSaverPriv : public QObject
@@ -91,7 +93,9 @@ private:
 ScreenSaver::ScreenSaver() :
     m_priv(new ScreenSaverPriv)
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     if (QGuiApplication::platformName() == "xcb")
+#endif
         m_priv->load();
 }
 ScreenSaver::~ScreenSaver()

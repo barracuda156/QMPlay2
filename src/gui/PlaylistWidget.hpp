@@ -47,7 +47,12 @@ public:
 
     inline bool hasPendingUpdates() const
     {
-        return pendingUpdates > 0;
+// FIXME: is this condition correct?
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+		return pendingUpdates > 0;
+#else
+		return pendingUpdates.load() > 0; // For Qt5 <= 5.2
+#endif
     }
 
 private:

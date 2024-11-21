@@ -138,11 +138,11 @@ void Module::setInstance()
 #define QMPLAY2_MODULES_API_VERSION 10
 
 #define QMPLAY2_EXPORT_MODULE(ModuleClass) \
-    extern "C" Q_DECL_EXPORT quint32 getQMPlay2ModuleAPIVersion() \
+    extern "C" quint32 getQMPlay2ModuleAPIVersion() \
     { \
         return (QT_VERSION << 8) | QMPLAY2_MODULES_API_VERSION; \
     } \
-    extern "C" Q_DECL_EXPORT Module *createQMPlay2ModuleInstance() \
+    extern "C" Module *createQMPlay2ModuleInstance() \
     { \
         return new ModuleClass; \
     }

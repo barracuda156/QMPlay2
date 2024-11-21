@@ -23,6 +23,9 @@
 #include <Functions.hpp>
 
 #include <QPainter>
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+    #include <QX11Info>
+#endif
 
 #include <cmath>
 
@@ -60,7 +63,11 @@ XVIDEO::XVIDEO() :
     clrVars();
     invalidateShm();
     _isOK = false;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     disp = XOpenDisplay(nullptr);
+#else
+    disp = QX11Info::display();
+#endif
     if (!disp || XvQueryAdaptors(disp, DefaultRootWindow(disp), &adaptors, &ai) != Success)
         return;
     if (adaptors < 1)
@@ -72,8 +79,10 @@ XVIDEO::~XVIDEO()
     close();
     if (ai)
         XvFreeAdaptorInfo(ai);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     if (disp)
         XCloseDisplay(disp);
+#endif
     delete priv;
 }
 

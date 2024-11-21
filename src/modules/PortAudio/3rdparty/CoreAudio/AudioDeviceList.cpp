@@ -70,10 +70,10 @@ void AudioDeviceList::BuildList()
                                               kAudioObjectPropertyElementMaster
                                             };
 
-    __Verify_noErr(AudioObjectGetPropertyDataSize(kAudioObjectSystemObject, &theAddress, 0, NULL, &propsize));
+    verify_noerr(AudioObjectGetPropertyDataSize(kAudioObjectSystemObject, &theAddress, 0, NULL, &propsize));
     int nDevices = propsize / sizeof(AudioDeviceID);
     AudioDeviceID *devids = new AudioDeviceID[nDevices];
-    __Verify_noErr(AudioObjectGetPropertyData(kAudioObjectSystemObject, &theAddress, 0, NULL, &propsize, devids));
+    verify_noerr(AudioObjectGetPropertyData(kAudioObjectSystemObject, &theAddress, 0, NULL, &propsize, devids));
 
     for (int i = 0; i < nDevices; ++i) {
         AudioDevice dev(devids[i], true, mForInput);

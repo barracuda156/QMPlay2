@@ -70,32 +70,20 @@ void Drawable::draw(const VideoFrame &newVideoFrame, bool canRepaint, bool entir
         update();
 }
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-void Drawable::clr()
-{
-    imgScaler.destroy();
-    img = QImage();
-}
-#endif
-
 void Drawable::resizeEvent(QResizeEvent *e)
 {
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     const qreal dpr = devicePixelRatioF();
     Functions::getImageSize(writer.aspect_ratio, writer.zoom, width(), height(), W, H, &X, &Y);
     Functions::getImageSize(writer.aspect_ratio, writer.zoom, width() * dpr, height() * dpr, imgW, imgH);
-    imgW = Functions::aligned(imgW, 8);
-
-    imgScaler.destroy();
-    img = QImage();
 #else
     const qreal scale = QMPlay2Core.getVideoDevicePixelRatio();
     Functions::getImageSize(writer.aspect_ratio, writer.zoom, width(), height(), W, H, &X, &Y);
     Functions::getImageSize(writer.aspect_ratio, writer.zoom, width() * scale, height() * scale, imgW, imgH);
-    imgW = Functions::aligned(imgW, 8);
-
-    clr();
 #endif
+    imgW = Functions::aligned(imgW, 8);
+    imgScaler.destroy();
+    img = QImage();
 
     draw(VideoFrame(), e ? false : true, true);
 }
@@ -111,11 +99,19 @@ void Drawable::paintEvent(QPaintEvent *)
     osd_mutex.lock();
     if (!osd_list.isEmpty())
     {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         const qreal dpr = devicePixelRatioF();
         if (!qFuzzyCompare(dpr, 1.0))
             p.scale(1.0 / dpr, 1.0 / dpr);
         p.setClipRect(0, 0, imgW, imgH);
         Functions::paintOSD(true, osd_list, W * dpr / writer.outW, H * dpr / writer.outH, p);
+#else
+		const qreal scale = QMPlay2Core.getVideoDevicePixelRatio();
+		if (!qFuzzyCompare(scale, 1.0))
+			p.scale(1.0 / scale, 1.0 / scale);
+		p.setClipRect(0, 0, imgW, imgH);
+		Functions::paintOSD(true, osd_list, (qreal)W / writer.outW, (qreal)H / writer.outH, p);
+#endif
     }
     osd_mutex.unlock();
 }

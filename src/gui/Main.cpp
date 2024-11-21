@@ -33,6 +33,8 @@
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     #include <QCommandLineParser>
+#else
+    #include <QTextCodec>
 #endif
 #include <QDesktopWidget>
 #include <QApplication>
@@ -57,6 +59,10 @@
 
 #include <csignal>
 #include <ctime>
+
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+    static QPair<QStringList, QStringList> g_arguments;
+#endif
 
 static ScreenSaver *g_screenSaver = nullptr;
 static bool g_useGui = true;
@@ -110,6 +116,7 @@ void QMPlay2GUIClass::saveCover(QByteArray cover)
 
 void QMPlay2GUIClass::setTreeWidgetItemIcon(QTreeWidgetItem *tWI, const QIcon &icon, const int column, QTreeWidget *treeWidget)
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)
     bool setDefaultIcon = icon.name().isEmpty();
     if (!setDefaultIcon)
     {
@@ -122,7 +129,12 @@ void QMPlay2GUIClass::setTreeWidgetItemIcon(QTreeWidgetItem *tWI, const QIcon &i
             setDefaultIcon = true;
     }
     if (setDefaultIcon)
+#else
+    Q_UNUSED(treeWidget)
+#endif
+    {
         tWI->setIcon(column, icon);
+    }
 }
 
 #ifdef UPDATER
@@ -174,7 +186,7 @@ QString QMPlay2GUIClass::getCurrentPth(QString pth, bool leaveFilename)
         pth.remove(0, 7);
     if (!leaveFilename)
         pth = Functions::filePath(pth);
-    if (!QFileInfo::exists(pth))
+    if (!QFileInfo(pth).exists())
         pth = settings->getString("currPth");
     return pth;
 }
@@ -222,6 +234,7 @@ QMPlay2GUIClass::~QMPlay2GUIClass()
 
 /**/
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 static QCommandLineParser *createCmdParser(bool descriptions)
 {
     static constexpr const char *translations[] = {
@@ -274,6 +287,8 @@ static QCommandLineParser *createCmdParser(bool descriptions)
 
     return parser;
 }
+#endif
+
 static QString fileArg(const QString &arg)
 {
     if (!arg.contains("://"))
@@ -284,6 +299,9 @@ static QString fileArg(const QString &arg)
     }
     return arg;
 }
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+
 static QList<QPair<QString, QString>> parseArguments(const QCommandLineParser &parser)
 {
     QList<QPair<QString, QString>> arguments;
@@ -343,9 +361,97 @@ static bool writeToSocket(IPCSocket &socket, QList<QPair<QString, QString>> &arg
     return ret;
 }
 
+#else
+
+static void parseArguments(QStringList &arguments)
+{
+	QString param;
+	while (arguments.count())
+	{
+		const QString arg = arguments.takeFirst();
+		if (arg.startsWith('-'))
+		{
+			param = arg;
+			while (param.startsWith('-'))
+				param.remove(0, 1);
+			if (!param.isEmpty() && !g_arguments.first.contains(param))
+			{
+				g_arguments.first  += param;
+				g_arguments.second += QString();
+			}
+			else
+			{
+				param.clear();
+			}
+		}
+		else if (!param.isEmpty())
+		{
+			QString &data = g_arguments.second.last();
+			if (!data.isEmpty())
+				data += '\n';
+			if (param == "open" || param == "enqueue")
+				data += fileArg(arg);
+			else
+				data += arg;
+		}
+		else if (!g_arguments.first.contains("open"))
+		{
+			param = "open";
+			g_arguments.first  += param;
+			g_arguments.second += fileArg(arg);
+		}
+	}
+}
+static void showHelp()
+{
+	QFile f;
+	f.open(stdout, QFile::WriteOnly);
+	f.write("QMPlay2 - Qt Media Player 2 (" + Version::get() + ")\n");
+	f.write(QObject::tr(
+"  Parameters list:\n"
+"    -open         \"address\"\n"
+"    -enqueue      \"address\"\n"
+"    -profile      \"name\" - starts application with given profile name\n"
+"    -noplay     - doesn't play after run (bypass \"Remember playback position\" option)\n"
+"    -toggle     - toggles play/pause\n"
+"    -show       - ensures that the window will be visible if the application is running\n"
+"    -fullscreen - toggles fullscreen\n"
+"    -volume     - sets volume [0..100]\n"
+"    -speed      - sets playback speed [0.05..100.0]\n"
+"    -seek       - seeks to the specified value [s]\n"
+"    -stop       - stops playback\n"
+"    -next       - plays next on the list\n"
+"    -prev       - plays previous on the list\n"
+"    -quit       - terminates the application"
+	).toLocal8Bit() + "\n");
+}
+static bool writeToSocket(IPCSocket &socket)
+{
+	bool ret = false;
+	for (int i = g_arguments.first.count() - 1; i >= 0; i--)
+	{
+		if (g_arguments.first[i] == "noplay" || g_arguments.first[i] == "profile")
+			continue;
+		else if (g_arguments.first[i] == "open" || g_arguments.first[i] == "enqueue")
+		{
+			if (!g_arguments.second[i].isEmpty())
+				g_arguments.second[i] = Functions::Url(g_arguments.second[i]);
+#ifdef Q_OS_WIN
+			if (g_arguments.second[i].startsWith("file://"))
+				g_arguments.second[i].remove(0, 7);
+#endif
+		}
+		socket.write(QString(g_arguments.first[i] + '\t' + g_arguments.second[i]).toUtf8() + '\0');
+		ret = true;
+	}
+	return ret;
+}
+
+#endif
+
 static inline void exitProcedure()
 {
-#ifdef Q_OS_MACOS
+#if defined Q_OS_MACOS && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     if (g_rcdLoad)
     {
         // Load RCD service again (allow to run iTunes on "Play" key)
@@ -358,7 +464,7 @@ static inline void exitProcedure()
     g_screenSaver = nullptr;
 }
 
-#ifndef Q_OS_WIN
+#if !defined Q_OS_WIN && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     #include <csetjmp>
     static jmp_buf env;
     static bool qAppOK;
@@ -406,7 +512,7 @@ static void signal_handler(int s)
             }
             break;
         case SIGABRT:
-#ifndef Q_OS_WIN
+#if !defined Q_OS_WIN && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
             if (!qAppOK && g_useGui)
             {
                 canDeleteApp = g_useGui = false;
@@ -438,6 +544,14 @@ static void signal_handler(int s)
     }
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+    static inline void noAutoPlay()
+    {
+        g_arguments.first += "noplay";
+        g_arguments.second += QString();
+    }
+#endif
+
 #ifdef Q_OS_WIN
 static LRESULT CALLBACK MMKeysHookProc(int code, WPARAM wparam, LPARAM lparam)
 {
@@ -466,6 +580,8 @@ static LRESULT CALLBACK MMKeysHookProc(int code, WPARAM wparam, LPARAM lparam)
     return CallNextHookEx(nullptr, code, wparam, lparam);
 }
 #endif
+
+QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 
 static QtMessageHandler g_defaultMsgHandler = nullptr;
 static QMutex g_messageHandlerMutex;
@@ -513,6 +629,8 @@ static void messageHandler(QtMsgType type, const QMessageLogContext &context, co
 #endif
     }
 }
+
+#endif
 
 #ifdef CHECK_FOR_EGL
 static void checkForEGL()
@@ -614,21 +732,33 @@ int main(int argc, char *argv[])
     checkForEGL();
 #endif
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
     QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-#ifndef Q_OS_WIN
+#endif
+#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
     QGuiApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 #endif
 
-#ifndef Q_OS_WIN
+#if !defined Q_OS_WIN && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     if (!setjmp(env))
 #endif
-    new QApplication(argc, argv);
-#ifndef Q_OS_WIN
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+		new QApplication(argc, argv, g_useGui);
+#else
+		new QApplication(argc, argv);
+#endif
+#if !defined Q_OS_WIN && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     qAppOK = true;
+#endif
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+	QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
+	QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
 #endif
     QCoreApplication::setApplicationName("QMPlay2");
 
     QMPlay2GUIClass &qmplay2Gui = QMPlay2GUI; //Create "QMPlay2GUI" instance
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     g_defaultMsgHandler = qInstallMessageHandler(messageHandler);
 
     QCommandLineParser *parser = createCmdParser(false);
@@ -638,9 +768,15 @@ int main(int argc, char *argv[])
     const bool help = parser->isSet("help");
     QString cmdLineProfile = parser->value("profile");
     delete parser;
+#else
+    QStringList arguments = QCoreApplication::arguments();
+    arguments.removeFirst();
+    const bool help = arguments.contains("-help") || arguments.contains("-h");
+#endif
 
     if (!help)
     {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         bool useSocket = true;
 
         for (auto &&argument : arguments)
@@ -679,9 +815,43 @@ int main(int argc, char *argv[])
                 delete qApp;
             return 0;
         }
+#else
+		IPCSocket socket(qmplay2Gui.getPipe());
+		parseArguments(arguments);
+		if (socket.open(IPCSocket::WriteOnly))
+		{
+			if (writeToSocket(socket))
+				g_useGui = false;
+			socket.close();
+		}
+		else if (QFile::exists(qmplay2Gui.getPipe()))
+		{
+			QFile::remove(qmplay2Gui.getPipe());
+			noAutoPlay();
+		}
+
+		if (!g_useGui)
+		{
+				delete qApp;
+			return 0;
+		}
+#endif
     }
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     qmplay2Gui.cmdLineProfile = std::move(cmdLineProfile);
+#else
+	for (int i = 0; i < g_arguments.first.count(); ++i)
+	{
+		if (g_arguments.first.at(i) == "profile")
+		{
+			qmplay2Gui.cmdLineProfile = g_arguments.second.at(i);
+			g_arguments.first.removeAt(i);
+			g_arguments.second.removeAt(i);
+			break;
+		}
+	}
+#endif
 
     QString libPath, sharePath = QCoreApplication::applicationDirPath();
     bool cmakeBuildFound = false;
@@ -723,7 +893,9 @@ int main(int argc, char *argv[])
 
     qRegisterMetaType<VideoFrame>("VideoFrame");
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)
     QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+#endif
     QApplication::setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
 
     QDir::setCurrent(QCoreApplication::applicationDirPath()); //Is it really needed?
@@ -759,11 +931,15 @@ int main(int argc, char *argv[])
 
         if (help)
         {
+    #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
             parser = createCmdParser(true);
             parser->setApplicationDescription(QString("QMPlay2 - Qt Media Player 2 (%1)").arg((QString)Version::get()));
             printf("%s", parser->helpText().toLocal8Bit().constData());
             fflush(stdout);
             delete parser;
+    #else
+            showHelp();
+    #endif
             break;
         }
 
@@ -867,7 +1043,11 @@ int main(int argc, char *argv[])
 
         qmplay2Gui.restartApp = qmplay2Gui.removeSettings = qmplay2Gui.noAutoPlay = false;
         qmplay2Gui.newProfileName.clear();
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         new MainWidget(arguments);
+#else
+        new MainWidget(g_arguments);
+#endif
         do
         {
             QCoreApplication::exec();

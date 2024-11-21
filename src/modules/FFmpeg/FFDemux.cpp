@@ -25,6 +25,7 @@
 #include <Packet.hpp>
 
 #include <QFile>
+#include <QList>
 
 FFDemux::FFDemux(Module &module) :
     abortFetchTracks(false),
@@ -412,7 +413,8 @@ Playlist::Entries FFDemux::fetchTracks(const QString &url, bool &ok)
                 const double end = indexes.value(i + 1, {-1.0, -1.0}).first;
                 if (entry.url.isEmpty() || start < 0.0 || (end <= 0.0 && !lastItem))
                 {
-                    entries.removeAt(i);
+                    // FIXME: this does not work:
+                    // entries.removeAt(i);
                     continue;
                 }
                 const QString param = QString("CUE:%1:%2").arg(start).arg(end);

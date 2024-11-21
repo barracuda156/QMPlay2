@@ -27,6 +27,8 @@ static inline bool inhibitScreenSaver(MSG *msg, const bool inhibited)
     return (inhibited && msg->message == WM_SYSCOMMAND && ((msg->wParam & 0xFFF0) == SC_SCREENSAVE || (msg->wParam & 0xFFF0) == SC_MONITORPOWER));
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+
 #include <QAbstractNativeEventFilter>
 
 class ScreenSaverPriv : public QAbstractNativeEventFilter
@@ -63,3 +65,35 @@ void ScreenSaver::unInhibit(int context)
     if (unInhibitHelper(context))
         m_priv->inhibited = false;
 }
+
+#else
+
+static bool inhibited = false;
+
+static bool eventFilter(void *m, long *)
+{
+    return inhibitScreenSaver((MSG *)m, inhibited);
+}
+
+/**/
+
+ScreenSaver::ScreenSaver() :
+    m_priv(nullptr)
+{
+    qApp->setEventFilter(::eventFilter);
+}
+ScreenSaver::~ScreenSaver()
+{}
+
+void ScreenSaver::inhibit(int context)
+{
+    if (inhibitHelper(context))
+        inhibited = true;
+}
+void ScreenSaver::unInhibit(int context)
+{
+    if (unInhibitHelper(context))
+        inhibited = false;
+}
+
+#endif

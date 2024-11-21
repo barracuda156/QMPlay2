@@ -25,6 +25,11 @@
 #include <QToolButton>
 #include <QThread>
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+    // FIXME: QMetaObject is not found regardless
+    #include <qobjectdefs.h> // QMetaObject
+#endif
+
 class QLabel;
 class QProcess;
 class QGridLayout;
@@ -90,7 +95,9 @@ private:
     } *speedProgressW = nullptr;
 
     QProcess *m_convertProcess = nullptr;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     QMetaObject::Connection m_convertProcessConn[2];
+#endif
     bool finished, readyToPlay, m_needsConversion = false;
     QString m_convertPreset;
     QString filePath;

@@ -32,7 +32,7 @@
 #endif
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-    #define QStringLiteral QLatin1Literal
+    #define QStringLiteral QString::fromUtf8
 #endif
 
 PortAudioWriter::PortAudioWriter(Module &module) :

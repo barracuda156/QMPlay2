@@ -166,6 +166,8 @@ bool Classic::toASS(const QByteArray &txt, LibASS *ass, double fps)
 
                 if (use_mDVD_FPS && (s == 0 || s == 1))
                 {
+                // FIXME: this does not work!
+                #if 0
                     use_mDVD_FPS = false;
                     const double newFPS = sub.midRef(0, 6).toDouble();
                     if (newFPS > 0.0 && newFPS < 100.0)
@@ -173,6 +175,7 @@ bool Classic::toASS(const QByteArray &txt, LibASS *ass, double fps)
                         fps = newFPS;
                         continue;
                     }
+                #endif
                 }
 
                 int pos = 0;

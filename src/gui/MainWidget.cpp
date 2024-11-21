@@ -74,10 +74,16 @@ using Functions::timeToStr;
 #include <SubsDec.hpp>
 #include <IPC.hpp>
 
+#ifdef Q_OS_MAC
+    #include <Carbon/Carbon.h>
+    extern void qt_mac_set_dock_menu(QMenu *);
+#endif
+
 #include <cmath>
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 /* MainWidgetTmpStyle -  dock widget separator extent must be larger for touch screens */
-class MainWidgetTmpStyle final : public QCommonStyle
+class MainWidgetTmpStyle : public QCommonStyle
 {
 public:
     ~MainWidgetTmpStyle() = default;
@@ -90,6 +96,7 @@ public:
         return pM;
     }
 };
+#endif
 
 #ifndef Q_OS_MACOS
 static void copyMenu(QMenu *dest, QMenu *src, QMenu *dontCopy = nullptr)
@@ -117,6 +124,7 @@ MainWidget::MainWidget(QList<QPair<QString, QString>> &arguments) :
     QMPlay2GUI.shortcutHandler = new ShortcutHandler(this);
     QMPlay2GUI.mainW = this;
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     /* Looking for touch screen */
     for (const QTouchDevice *touchDev : QTouchDevice::devices())
     {
@@ -128,6 +136,7 @@ MainWidget::MainWidget(QList<QPair<QString, QString>> &arguments) :
             break;
         }
     }
+#endif
 
     setObjectName("MainWidget");
 
@@ -284,9 +293,11 @@ MainWidget::MainWidget(QList<QPair<QString, QString>> &arguments) :
     connect(playlistDock, SIGNAL(play(const QString &)), &playC, SLOT(play(const QString &)));
     connect(playlistDock, SIGNAL(repeatEntry(bool)), &playC, SLOT(repeatEntry(bool)));
     connect(playlistDock, SIGNAL(stop()), &playC, SLOT(stop()));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     connect(playlistDock, &PlaylistDock::addAndPlayRestoreWindow, this, [this] {
         m_restoreWindowOnVideo = true;
     });
+#endif
 
     connect(seekS, SIGNAL(valueChanged(int)), this, SLOT(seek(int)));
     connect(seekS, SIGNAL(mousePosition(int)), this, SLOT(mousePositionOnSlider(int)));
@@ -320,17 +331,23 @@ MainWidget::MainWidget(QList<QPair<QString, QString>> &arguments) :
     connect(&playC, SIGNAL(updateBufferedRange(int, int)), seekS, SLOT(drawRange(int, int)));
     connect(&playC, SIGNAL(updateWindowTitle(const QString &)), this, SLOT(updateWindowTitle(const QString &)));
     connect(&playC, SIGNAL(updateImage(const QImage &)), videoDock, SLOT(updateImage(const QImage &)));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     connect(&playC, &PlayClass::videoStarted, this, &MainWidget::videoStarted);
     connect(&playC, &PlayClass::videoNotStarted, this, [this] {
         m_restoreWindowOnVideo = false;
     });
+#else
+	connect(&playC, SIGNAL(videoStarted()), this, SLOT(videoStarted()));
+#endif
     connect(&playC, SIGNAL(uncheckSuspend()), this, SLOT(uncheckSuspend()));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     connect(&playC, &PlayClass::setVideoCheckState, this, [this](bool rotate90, bool hFlip, bool vFlip, bool spherical) {
         menuBar->playback->videoFilters->rotate90->setChecked(rotate90);
         menuBar->playback->videoFilters->hFlip->setChecked(hFlip);
         menuBar->playback->videoFilters->vFlip->setChecked(vFlip);
         menuBar->playback->videoFilters->spherical->setChecked(spherical);
     });
+#endif
     /**/
 
     if (settings.getBool("MainWidget/TabPositionNorth"))
@@ -787,7 +804,9 @@ void MainWidget::createMenuBar()
     connect(menuBar->window->toggleVisibility, SIGNAL(triggered()), this, SLOT(toggleVisibility()));
     connect(menuBar->window->toggleFullScreen, SIGNAL(triggered()), this, SLOT(toggleFullScreen()));
     connect(menuBar->window->toggleCompactView, SIGNAL(triggered()), this, SLOT(toggleCompactView()));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     connect(menuBar->window->alwaysOnTop, &QAction::triggered, this, &MainWidget::toggleAlwaysOnTop);
+#endif
     connect(menuBar->window->close, SIGNAL(triggered()), this, SLOT(close()));
 
     connect(menuBar->playlist->add->address, SIGNAL(triggered()), this, SLOT(openUrl()));
@@ -802,7 +821,9 @@ void MainWidget::createMenuBar()
     connect(menuBar->playlist->newGroup, SIGNAL(triggered()), playlistDock, SLOT(newGroup()));
     connect(menuBar->playlist->renameGroup, SIGNAL(triggered()), playlistDock, SLOT(renameGroup()));
     connect(menuBar->playlist->lock, SIGNAL(triggered()), playlistDock, SLOT(toggleLock()));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     connect(menuBar->playlist->alwaysSync, &QAction::triggered, playlistDock, &PlaylistDock::alwaysSyncTriggered);
+#endif
     connect(menuBar->playlist->delEntries, SIGNAL(triggered()), playlistDock, SLOT(delEntries()));
     connect(menuBar->playlist->delNonGroupEntries, SIGNAL(triggered()), playlistDock, SLOT(delNonGroupEntries()));
     connect(menuBar->playlist->clear, SIGNAL(triggered()), playlistDock, SLOT(clear()));

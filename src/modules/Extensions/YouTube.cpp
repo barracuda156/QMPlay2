@@ -23,7 +23,6 @@
 
 #include <QStringListModel>
 #include <QDesktopServices>
-#include <QJsonParseError>
 #include <QTextDocument>
 #include <QProgressBar>
 #include <QApplication>

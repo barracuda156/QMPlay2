@@ -21,7 +21,7 @@
 #include <Buffer.hpp>
 #include <PixelFormats.hpp>
 
-class QMPLAY2SHAREDLIB_EXPORT VideoFrameSize
+class VideoFrameSize
 {
 public:
     inline VideoFrameSize(qint32 width, qint32 height, quint8 chromaShiftW = 1, quint8 chromaShiftH = 1) :
@@ -55,7 +55,7 @@ public:
 
 struct AVFrame;
 
-class QMPLAY2SHAREDLIB_EXPORT AVFrameHolder
+class AVFrameHolder
 {
 public:
     AVFrameHolder() = default;
@@ -74,7 +74,7 @@ private:
 
 /**/
 
-class QMPLAY2SHAREDLIB_EXPORT VideoFrame
+class VideoFrame
 {
 public:
     VideoFrame(const VideoFrameSize &size, AVBufferRef *bufferRef[], const qint32 newLinesize[], bool interlaced, bool tff);

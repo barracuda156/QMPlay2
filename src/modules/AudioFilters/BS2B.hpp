@@ -22,17 +22,17 @@
 
 #include <bs2b/bs2b.hpp>
 
-class BS2B final : public AudioFilter
+class BS2B : public AudioFilter
 {
 public:
     BS2B(Module &module);
-    ~BS2B();
+    ~BS2B() final;
 
-    bool set() override;
+    bool set() override final;
 private:
-    bool setAudioParameters(uchar, uint srate) override;
-    void clearBuffers() override;
-    double filter(Buffer &data, bool flush) override;
+    bool setAudioParameters(uchar, uint srate) override final;
+    void clearBuffers() override final;
+    double filter(Buffer &data, bool flush) override final;
 
     void alloc();
 

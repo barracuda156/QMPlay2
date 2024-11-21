@@ -20,15 +20,15 @@
 
 #include <Module.hpp>
 
-class QPainterSW final : public Module
+class QPainterSW : public Module
 {
 public:
     QPainterSW();
 private:
-    QList<Info> getModulesInfo(const bool) const override;
-    void *createInstance(const QString &) override;
+    QList<Info> getModulesInfo(const bool) const override final;
+    void *createInstance(const QString &) override final;
 
-    SettingsWidget *getSettingsWidget() override;
+    SettingsWidget *getSettingsWidget() override final;
 };
 
 /**/
@@ -37,13 +37,13 @@ private:
 
 class QCheckBox;
 
-class ModuleSettingsWidget final : public Module::SettingsWidget
+class ModuleSettingsWidget : public Module::SettingsWidgett
 {
     Q_DECLARE_TR_FUNCTIONS(ModuleSettingsWidget)
 public:
     ModuleSettingsWidget(Module &);
 private:
-    void saveSettings() override;
+    void saveSettings() override final;
 
     QCheckBox *enabledB;
 };

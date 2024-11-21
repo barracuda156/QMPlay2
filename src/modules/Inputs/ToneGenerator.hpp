@@ -20,28 +20,28 @@
 
 #include <Demuxer.hpp>
 
-class ToneGenerator final : public Demuxer
+class ToneGenerator : public Demuxer
 {
     Q_DECLARE_TR_FUNCTIONS(ToneGenerator)
 public:
     ToneGenerator(Module &);
 
-    bool set() override;
+    bool set() override final;
 private:
-    bool metadataChanged() const override;
+    bool metadataChanged() const override final;
 
-    QString name() const override;
-    QString title() const override;
-    double length() const override;
-    int bitrate() const override;
+    QString name() const override final;
+    QString title() const override final;
+    double length() const override final;
+    int bitrate() const override final;
 
-    bool dontUseBuffer() const override;
+    bool dontUseBuffer() const override final;
 
-    bool seek(double, bool) override;
-    bool read(Packet &, int &) override;
-    void abort() override;
+    bool seek(double, bool) override final;
+    bool read(Packet &, int &) override final;
+    void abort() override final;
 
-    bool open(const QString &) override;
+    bool open(const QString &) override final;
 
     /**/
 

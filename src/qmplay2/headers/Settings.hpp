@@ -25,7 +25,7 @@
 #include <QMap>
 #include <QSet>
 
-class QMPLAY2SHAREDLIB_EXPORT Settings : protected QSettings
+class Settings : protected QSettings
 {
     using SettingsMap = QMap<QString, QVariant>;
 public:

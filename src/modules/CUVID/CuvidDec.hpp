@@ -33,7 +33,7 @@ struct AVBSFContext;
 struct SwsContext;
 struct AVPacket;
 
-class CuvidDec final : public Decoder
+class CuvidDec : public Decoder
 {
     Q_DECLARE_TR_FUNCTIONS(CuvidDec)
 
@@ -44,26 +44,24 @@ public:
     static bool canCreateInstance();
 
     CuvidDec(Module &module);
-    ~CuvidDec();
+    ~CuvidDec() final;
 
-    bool set() override;
+    bool set() override final;
 
     int videoSequence(CUVIDEOFORMAT *format);
     int pictureDecode(CUVIDPICPARAMS *picParams);
     int pictureDisplay(CUVIDPARSERDISPINFO *dispInfo);
 
 private:
-    QString name() const override;
+    QString name() const override final;
 
-    VideoWriter *HWAccel() const override;
+    VideoWriter *HWAccel() const override final;
 
-    int decodeVideo(Packet &encodedPacket, VideoFrame &decoded, QByteArray &newPixFmt, bool flush, unsigned hurry_up) override;
+    int decodeVideo(Packet &encodedPacket, VideoFrame &decoded, QByteArray &newPixFmt, bool flush, unsigned hurry_up) override final;
 
-    bool hasCriticalError() const override;
+    bool hasCriticalError() const override final;
 
-    bool open(StreamInfo &streamInfo, VideoWriter *writer = nullptr) override;
-
-    /**/
+    bool open(StreamInfo &streamInfo, VideoWriter *writer = nullptr) override final;
 
     bool testDecoder(const int depth);
 

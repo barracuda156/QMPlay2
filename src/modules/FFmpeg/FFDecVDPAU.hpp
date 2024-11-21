@@ -22,15 +22,15 @@
 
 class VDPAUWriter;
 
-class FFDecVDPAU final : public FFDecHWAccel
+class FFDecVDPAU : public FFDecHWAccel
 {
 public:
     FFDecVDPAU(Module &);
-    ~FFDecVDPAU();
+    ~FFDecVDPAU() final;
 
-    bool set() override;
+    bool set() override final;
 
-    QString name() const override;
+    QString name() const override final;
 
-    bool open(StreamInfo &, VideoWriter *) override;
+    bool open(StreamInfo &, VideoWriter *) override final;
 };

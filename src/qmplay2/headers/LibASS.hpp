@@ -18,8 +18,6 @@
 
 #pragma once
 
-#include <QMPlay2Lib.hpp>
-
 #include <QByteArray>
 #include <QList>
 
@@ -31,7 +29,7 @@ struct ass_track;
 struct ass_event;
 struct ass_renderer;
 
-class QMPLAY2SHAREDLIB_EXPORT LibASS
+class LibASS
 {
 public:
 #if defined Q_OS_WIN && !defined Q_OS_WIN64

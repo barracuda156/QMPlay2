@@ -22,15 +22,15 @@
 
 #include <QList>
 
-class NotifiesMacOS final : public Notifies
+class NotifiesMacOS : public Notifies
 {
 public:
     NotifiesMacOS();
-    ~NotifiesMacOS();
+    ~NotifiesMacOS() final;
 
 private:
-    bool doNotify(const QString &title, const QString &message, const int ms, const QPixmap &pixmap, const int iconId) override;
-    bool doNotify(const QString &title, const QString &message, const int ms, const QImage &image, const int iconId) override;
+    bool doNotify(const QString &title, const QString &message, const int ms, const QPixmap &pixmap, const int iconId) override final;
+    bool doNotify(const QString &title, const QString &message, const int ms, const QImage &image, const int iconId) override final;
 
     void *m_notificationItem;
     QList<void *> m_notifications;

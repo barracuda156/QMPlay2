@@ -22,7 +22,7 @@
 
 #include <memory>
 
-class NotifyService final : public QObject
+class NotifyService : public QObject
 {
     Q_OBJECT
 
@@ -46,14 +46,14 @@ private:
 
 /**/
 
-class NotifyExtension final : public QMPlay2Extensions
+class NotifyExtension : public QMPlay2Extensions
 {
 public:
     NotifyExtension(Module &module);
     ~NotifyExtension();
 
 private:
-    bool set() override;
+    bool set() override final;
 
     std::unique_ptr<NotifyService> m_notifyService;
 };

@@ -23,23 +23,23 @@
 
 #include <QCoreApplication>
 
-class PulseAudioWriter final : public Writer
+class PulseAudioWriter : public Writer
 {
     Q_DECLARE_TR_FUNCTIONS(PulseAudioWriter)
 public:
     PulseAudioWriter(Module &);
-    ~PulseAudioWriter();
+    ~PulseAudioWriter() final;
 private:
-    bool set() override;
+    bool set() override final;
 
-    bool readyWrite() const override;
+    bool readyWrite() const override final;
 
-    bool processParams(bool *paramsCorrected) override;
-    qint64 write(const QByteArray &) override;
+    bool processParams(bool *paramsCorrected) override final;
+    qint64 write(const QByteArray &) override final;
 
-    QString name() const override;
+    QString name() const override final;
 
-    bool open() override;
+    bool open() override final;
 
     /**/
 

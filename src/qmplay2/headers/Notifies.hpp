@@ -18,13 +18,12 @@
 
 #pragma once
 
-#include <QMPlay2Lib.hpp>
-
 class QSystemTrayIcon;
+class QString;
 class QPixmap;
 class QImage;
 
-class QMPLAY2SHAREDLIB_EXPORT Notifies
+class Notifies
 {
 public:
     static void initialize(QSystemTrayIcon *tray);

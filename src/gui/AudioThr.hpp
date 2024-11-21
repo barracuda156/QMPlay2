@@ -28,14 +28,14 @@ class QMPlay2Extensions;
 class PlayClass;
 class AudioFilter;
 
-class AudioThr final : public AVThread
+class AudioThr : public AVThread
 {
     Q_OBJECT
 public:
     AudioThr(PlayClass &, const QStringList &pluginsName = {});
-    ~AudioThr();
+    ~AudioThr() final;
 
-    void stop(bool terminate = false) override;
+    void stop(bool terminate = false) override final;
     void clearVisualizations();
 
     bool setParams(uchar realChn, uint realSRate, uchar chn, uint sRate, bool resamplerFirst);
@@ -47,7 +47,7 @@ public:
         allowAudioDrain = true;
     }
 private:
-    void run() override;
+    void run() override final;
 
     bool resampler_create();
 
@@ -55,7 +55,7 @@ private:
     inline uint currentSampleRate() const;
 
 #ifdef Q_OS_WIN
-    void timerEvent(QTimerEvent *) override;
+    void timerEvent(QTimerEvent *) override final;
 #endif
 
     SndResampler sndResampler;

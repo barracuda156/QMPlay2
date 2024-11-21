@@ -25,7 +25,7 @@
 
 struct SwsContext;
 
-class FFDecSW final : public FFDec
+class FFDecSW : public FFDec
 {
 public:
     FFDecSW(Module &);
@@ -44,19 +44,19 @@ private:
     };
 
 private:
-    ~FFDecSW();
+    ~FFDecSW() final;
 
-    bool set() override;
+    bool set() override final;
 
-    QString name() const override;
+    QString name() const override final;
 
-    void setSupportedPixelFormats(const QMPlay2PixelFormats &pixelFormats) override;
+    void setSupportedPixelFormats(const QMPlay2PixelFormats &pixelFormats) override final;
 
-    int  decodeAudio(Packet &encodedPacket, Buffer &decoded, quint8 &channels, quint32 &sampleRate, bool flush) override;
-    int  decodeVideo(Packet &encodedPacket, VideoFrame &decoded, QByteArray &newPixFmt, bool flush, unsigned hurry_up) override;
-    bool decodeSubtitle(const Packet &encodedPacket, double pos, QMPlay2OSD *&osd, const QSize &size, bool flush) override;
+    int  decodeAudio(Packet &encodedPacket, Buffer &decoded, quint8 &channels, quint32 &sampleRate, bool flush) override final;
+    int  decodeVideo(Packet &encodedPacket, VideoFrame &decoded, QByteArray &newPixFmt, bool flush, unsigned hurry_up) override final;
+    bool decodeSubtitle(const Packet &encodedPacket, double pos, QMPlay2OSD *&osd, const QSize &size, bool flush) override final;
 
-    bool open(StreamInfo &, VideoWriter *) override;
+    bool open(StreamInfo &, VideoWriter *) override final;
 
     /**/
 

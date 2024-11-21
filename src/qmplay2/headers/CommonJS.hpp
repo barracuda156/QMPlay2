@@ -1,7 +1,5 @@
 #pragma once
 
-#include <QMPlay2Lib.hpp>
-
 #include <IOController.hpp>
 
 #include <QVariantMap>
@@ -15,7 +13,7 @@ class NetworkAccessJS;
 class NetworkReply;
 class QTimer;
 
-class QMPLAY2SHAREDLIB_EXPORT CommonJS : public QObject
+class CommonJS : public QObject
 {
     Q_OBJECT
 

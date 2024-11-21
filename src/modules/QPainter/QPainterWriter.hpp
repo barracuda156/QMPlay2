@@ -27,23 +27,23 @@
 class QPainterWriter;
 class QMPlay2OSD;
 
-class Drawable final : public QWidget
+class Drawable : public QWidget
 {
 public:
     Drawable(class QPainterWriter &);
-    ~Drawable();
+    ~Drawable() final;
 
     void draw(const VideoFrame &newVideoFrame, bool, bool);
 
-    void resizeEvent(QResizeEvent *) override;
+    void resizeEvent(QResizeEvent *) override final;
 
     VideoFrame videoFrame;
     QList<const QMPlay2OSD *> osd_list;
     int Brightness, Contrast;
     QMutex osd_mutex;
 private:
-    void paintEvent(QPaintEvent *) override;
-    bool event(QEvent *) override;
+    void paintEvent(QPaintEvent *) override final;
+    bool event(QEvent *) override final;
 
     int X, Y, W, H, imgW, imgH;
     QPainterWriter &writer;
@@ -54,28 +54,28 @@ private:
 
 /**/
 
-class QPainterWriter final : public VideoWriter
+class QPainterWriter : public VideoWriter
 {
     friend class Drawable;
 public:
     QPainterWriter(Module &);
 private:
-    ~QPainterWriter();
+    ~QPainterWriter() final;
 
-    bool set() override;
+    bool set() override final;
 
-    bool readyWrite() const override;
+    bool readyWrite() const override final;
 
-    bool processParams(bool *paramsCorrected) override;
+    bool processParams(bool *paramsCorrected) override final;
 
-    QMPlay2PixelFormats supportedPixelFormats() const override;
+    QMPlay2PixelFormats supportedPixelFormats() const override final;
 
-    void writeVideo(const VideoFrame &videoFrame) override;
-    void writeOSD(const QList<const QMPlay2OSD *> &) override;
+    void writeVideo(const VideoFrame &videoFrame) override final;
+    void writeOSD(const QList<const QMPlay2OSD *> &) override final;
 
-    QString name() const override;
+    QString name() const override final;
 
-    bool open() override;
+    bool open() override final;
 
     /**/
 

@@ -20,15 +20,15 @@
 
 #include <AudioFilter.hpp>
 
-class VoiceRemoval final : public AudioFilter
+class VoiceRemoval : public AudioFilter
 {
 public:
     VoiceRemoval(Module &);
 
-    bool set() override;
+    bool set() override final;
 private:
-    bool setAudioParameters(uchar, uint) override;
-    double filter(Buffer &, bool) override;
+    bool setAudioParameters(uchar, uint) override final;
+    double filter(Buffer &, bool) override final;
 
     bool enabled, hasParameters, canFilter;
     uchar chn;

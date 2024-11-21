@@ -18,8 +18,6 @@
 
 #pragma once
 
-#include <QMPlay2Lib.hpp>
-
 #include <QVector>
 
 enum class QMPlay2PixelFormat
@@ -60,10 +58,10 @@ struct LumaCoefficients
 
 namespace QMPlay2PixelFormatConvert {
 
-QMPLAY2SHAREDLIB_EXPORT int toFFmpeg(QMPlay2PixelFormat pixFmt);
-QMPLAY2SHAREDLIB_EXPORT QMPlay2PixelFormat fromFFmpeg(int pixFmt);
+int toFFmpeg(QMPlay2PixelFormat pixFmt);
+QMPlay2PixelFormat fromFFmpeg(int pixFmt);
 
-QMPLAY2SHAREDLIB_EXPORT QMPlay2ColorSpace fromFFmpegColorSpace(int colorSpace, int h);
-QMPLAY2SHAREDLIB_EXPORT LumaCoefficients getLumaCoeff(QMPlay2ColorSpace colorSpace);
+QMPlay2ColorSpace fromFFmpegColorSpace(int colorSpace, int h);
+LumaCoefficients getLumaCoeff(QMPlay2ColorSpace colorSpace);
 
 }

@@ -23,22 +23,22 @@
 #include <QSurfaceFormat>
 #include <QOpenGLWidget>
 
-class OpenGL2Widget final : public QOpenGLWidget, public OpenGL2Common
+class OpenGL2Widget : public QOpenGLWidget, public OpenGL2Common
 {
     Q_OBJECT
 public:
     OpenGL2Widget();
-    ~OpenGL2Widget();
+    ~OpenGL2Widget() final;
 
-    QWidget *widget() override;
+    QWidget *widget() override final;
 
-    bool setVSync(bool enable) override;
-    void updateGL(bool requestDelayed) override;
+    bool setVSync(bool enable) override final;
+    void updateGL(bool requestDelayed) override final;
 
-    void initializeGL() override;
-    void paintGL() override;
+    void initializeGL() override final;
+    void paintGL() override final;
 private slots:
     void aboutToBeDestroyed();
 private:
-    bool event(QEvent *e) override;
+    bool event(QEvent *e) override final;
 };

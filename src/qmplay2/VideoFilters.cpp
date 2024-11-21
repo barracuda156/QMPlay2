@@ -137,7 +137,7 @@ private:
 
 /**/
 
-class VideoFiltersThr final : public QThread
+class VideoFiltersThr : public QThread
 {
 public:
     VideoFiltersThr(VideoFilters &videoFilters) :
@@ -188,7 +188,7 @@ public:
 
     QMutex bufferMutex;
 private:
-    void run() override
+    void run() override final
     {
         while (!br)
         {

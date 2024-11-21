@@ -25,16 +25,16 @@
 class QMPlay2OSD;
 class VideoWriter;
 
-class VideoThr final : public AVThread
+class VideoThr : public AVThread
 {
     Q_OBJECT
 public:
     VideoThr(PlayClass &, VideoWriter *, const QStringList &pluginsName = {});
-    ~VideoThr();
+    ~VideoThr() final;
 
-    void stop(bool terminate = false) override;
+    void stop(bool terminate = false) override final;
 
-    bool hasDecoderError() const override;
+    bool hasDecoderError() const override final;
 
     inline VideoWriter *getHWAccelWriter() const
     {
@@ -80,7 +80,7 @@ public:
 private:
     inline VideoWriter *videoWriter() const;
 
-    void run() override;
+    void run() override final;
 
     bool deleteSubs, syncVtoA, doScreenshot, canWrite, deleteOSD, deleteFrame, gotFrameOrError, decoderError;
     double lastSampleAspectRatio;

@@ -18,11 +18,11 @@
 
 #pragma once
 
-#include <QMPlay2Lib.hpp>
+#include <QtGlobal>
 
 #include <string.h>
 
-class QMPLAY2SHAREDLIB_EXPORT VideoAdjustment
+class VideoAdjustment
 {
 public:
     inline void unset()

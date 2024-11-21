@@ -29,12 +29,12 @@ class QLineEdit;
 class QSpinBox;
 class QLabel;
 
-class PictureW final : public QWidget
+class PictureW : public QWidget
 {
 public:
     PictureW(TagLib::ByteVector &picture);
 private:
-    void paintEvent(QPaintEvent *) override;
+    void paintEvent(QPaintEvent *) override final;
 
     TagLib::ByteVector &picture;
 };
@@ -44,7 +44,7 @@ class TagEditor : public QGroupBox
     Q_OBJECT
 public:
     TagEditor();
-    ~TagEditor();
+    ~TagEditor() final;
 
     bool open(const QString &fileName);
     void clear();

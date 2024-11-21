@@ -23,7 +23,7 @@
 
 #include <memory>
 
-class MediaPlayer2Root final : public QDBusAbstractAdaptor
+class MediaPlayer2Root : public QDBusAbstractAdaptor
 {
     Q_OBJECT
 
@@ -62,7 +62,7 @@ private:
 
 /**/
 
-class MediaPlayer2Player final : public QDBusAbstractAdaptor
+class MediaPlayer2Player : public QDBusAbstractAdaptor
 {
     Q_OBJECT
 
@@ -83,7 +83,7 @@ class MediaPlayer2Player final : public QDBusAbstractAdaptor
     Q_PROPERTY(double Volume READ volume WRITE setVolume)
 public:
     MediaPlayer2Player(QObject *p);
-    ~MediaPlayer2Player();
+    ~MediaPlayer2Player() final;
 
     bool canControl() const;
     bool canGoNext() const;
@@ -139,11 +139,11 @@ private:
 
 /**/
 
-class MPRIS2Interface final : public QObject
+class MPRIS2Interface : public QObject
 {
 public:
     MPRIS2Interface();
-    ~MPRIS2Interface();
+    ~MPRIS2Interface() final;
 
     inline bool isOk() const;
 private:
@@ -157,13 +157,13 @@ private:
 
 #include <QMPlay2Extensions.hpp>
 
-class MPRIS2 final : public QMPlay2Extensions
+class MPRIS2 : public QMPlay2Extensions
 {
 public:
     MPRIS2(Module &module);
-    ~MPRIS2();
+    ~MPRIS2() final;
 private:
-    bool set() override;
+    bool set() override final;
 
     std::unique_ptr<MPRIS2Interface> mpris2Interface;
 };

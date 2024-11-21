@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include <QMPlay2Lib.hpp>
 #include <PixelFormats.hpp>
 
 #include <QCoreApplication>
@@ -57,7 +56,7 @@ enum QMPlay2Tags
     QMPLAY2_TAG_LYRICS,
 };
 
-class QMPLAY2SHAREDLIB_EXPORT StreamInfo
+class StreamInfo
 {
     Q_DECLARE_TR_FUNCTIONS(StreamInfo)
 public:
@@ -96,7 +95,7 @@ public:
     QMPlay2ColorSpace colorSpace = QMPlay2ColorSpace::Unknown;
 };
 
-class QMPLAY2SHAREDLIB_EXPORT StreamsInfo : public QList<StreamInfo *>
+class StreamsInfo : public QList<StreamInfo *>
 {
     Q_DISABLE_COPY(StreamsInfo)
 public:

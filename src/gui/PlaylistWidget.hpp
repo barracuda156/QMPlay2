@@ -34,7 +34,7 @@ class QTreeWidgetItem;
 class PlaylistWidget;
 class Demuxer;
 
-class UpdateEntryThr final : public QThread
+class UpdateEntryThr : public QThread
 {
     Q_OBJECT
 
@@ -51,7 +51,7 @@ public:
     }
 
 private:
-    void run() override;
+    void run() override final;
 
     QAtomicInt pendingUpdates;
     IOController<> ioCtrl;
@@ -84,7 +84,7 @@ private slots:
     void finished();
 };
 
-class AddThr final : public QThread
+class AddThr : public QThread
 {
     Q_OBJECT
 public:
@@ -101,7 +101,7 @@ private slots:
     void modifyItemFlags(QTreeWidgetItem *tWI, int flags);
     void deleteTreeWidgetItem(QTreeWidgetItem *tWI);
 private:
-    void run() override;
+    void run() override final;
 
     bool add(const QStringList &urls, QTreeWidgetItem *parent, const Functions::DemuxersInfo &demuxersInfo, QStringList *existingEntries = nullptr, bool loadList = false);
     QTreeWidgetItem *insertPlaylistEntries(const Playlist::Entries &entries, QTreeWidgetItem *parent, const Functions::DemuxersInfo &demuxersInfo, int insertChildAt, QStringList *existingEntries);
@@ -120,7 +120,7 @@ signals:
     void status(bool s);
 };
 
-class PlaylistWidget final : public QTreeWidget
+class PlaylistWidget : public QTreeWidget
 {
     friend class AddThr;
     friend class UpdateEntryThr;
@@ -196,12 +196,12 @@ private:
 
     void createExtensionsMenu();
 
-    void mouseMoveEvent(QMouseEvent *) override;
-    void dragEnterEvent(QDragEnterEvent *) override;
-    void dragMoveEvent(QDragMoveEvent *) override;
-    void dropEvent(QDropEvent *) override;
-    void paintEvent(QPaintEvent *) override;
-    void scrollContentsBy(int dx, int dy) override;
+    void mouseMoveEvent(QMouseEvent *) override final;
+    void dragEnterEvent(QDragEnterEvent *) override final;
+    void dragMoveEvent(QDragMoveEvent *) override final;
+    void dropEvent(QDropEvent *) override final;
+    void paintEvent(QPaintEvent *) override final;
+    void scrollContentsBy(int dx, int dy) override final;
 
     QRect getArcRect(int size);
 

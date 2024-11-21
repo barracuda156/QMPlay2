@@ -50,7 +50,7 @@ static AVPixelFormat getVTBFormat(AVCodecContext *ctx, const AVPixelFormat *fmt)
 
 /**/
 
-class VTBHwaccel final : public HWAccelInterface
+class VTBHwaccel : public HWAccelInterface
 {
 public:
     inline VTBHwaccel() :

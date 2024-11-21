@@ -20,16 +20,16 @@
 
 #include <Module.hpp>
 
-class FileAssociation final : public Module
+class FileAssociation : public Module
 {
     Q_OBJECT
 public:
     FileAssociation();
 private:
-    QList<Info> getModulesInfo(const bool) const override;
-    void *createInstance(const QString &) override;
+    QList<Info> getModulesInfo(const bool) const override final;
+    void *createInstance(const QString &) override final;
 
-    SettingsWidget *getSettingsWidget() override;
+    SettingsWidget *getSettingsWidget() override final;
 
     bool reallyFirsttime;
 private slots:
@@ -43,14 +43,14 @@ class QPushButton;
 class QGroupBox;
 class QCheckBox;
 
-class ModuleSettingsWidget final : public Module::SettingsWidget
+class ModuleSettingsWidget : public Module::SettingsWidget
 {
     Q_OBJECT
     friend class FileAssociation;
 public:
     ModuleSettingsWidget(Module &);
 private:
-    void saveSettings() override;
+    void saveSettings() override final;
     void addExtension(const QString &, const bool, const bool isPlaylist = false);
 private slots:
     void selectAll();

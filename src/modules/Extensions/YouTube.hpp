@@ -39,12 +39,12 @@ class QMenu;
 
 /**/
 
-class ResultsYoutube final : public QTreeWidget
+class ResultsYoutube : public QTreeWidget
 {
     Q_OBJECT
 public:
     ResultsYoutube();
-    ~ResultsYoutube();
+    ~ResultsYoutube() final;
 
 private:
     void playOrEnqueue(const QString &param, QTreeWidgetItem *tWI, const QString &addrParam = QString());
@@ -62,7 +62,7 @@ private slots:
 
 /**/
 
-class PageSwitcher final : public QWidget
+class PageSwitcher : public QWidget
 {
     Q_OBJECT
 public:
@@ -76,7 +76,7 @@ public:
 
 using ItagNames = QPair<QStringList, QList<int>>;
 
-class YouTube final : public QWidget, public QMPlay2Extensions
+class YouTube : public QWidget, public QMPlay2Extensions
 {
     Q_OBJECT
 
@@ -85,19 +85,19 @@ public:
 
 public:
     YouTube(Module &module);
-    ~YouTube();
+    ~YouTube() final;
 
-    bool set() override;
+    bool set() override final;
 
-    DockWidget *getDockWidget() override;
+    DockWidget *getDockWidget() override final;
 
-    bool canConvertAddress() const override;
+    bool canConvertAddress() const override final;
 
-    QString matchAddress(const QString &url) const override;
-    QList<AddressPrefix> addressPrefixList(bool) const override;
-    void convertAddress(const QString &, const QString &, const QString &, QString *, QString *, QIcon *, QString *, IOController<> *ioCtrl) override;
+    QString matchAddress(const QString &url) const override final;
+    QList<AddressPrefix> addressPrefixList(bool) const override final;
+    void convertAddress(const QString &, const QString &, const QString &, QString *, QString *, QIcon *, QString *, IOController<> *ioCtrl) override final;
 
-    QVector<QAction *> getActions(const QString &, double, const QString &, const QString &, const QString &) override;
+    QVector<QAction *> getActions(const QString &, double, const QString &, const QString &, const QString &) override final;
 
 private slots:
     void next();

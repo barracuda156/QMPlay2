@@ -25,19 +25,19 @@
 #define NFILT  12
 #define NEFILT 17
 
-class DysonCompressor final : public AudioFilter
+class DysonCompressor : public AudioFilter
 {
 public:
     DysonCompressor(Module &module);
-    ~DysonCompressor();
+    ~DysonCompressor() final;
 
-    bool set() override;
+    bool set() override final;
 
 private:
-    bool setAudioParameters(uchar chn, uint srate) override;
-    int bufferedSamples() const override;
-    void clearBuffers() override;
-    double filter(Buffer &data, bool flush) override;
+    bool setAudioParameters(uchar chn, uint srate) override final;
+    int bufferedSamples() const override final;
+    void clearBuffers() override final;
+    double filter(Buffer &data, bool flush) override final;
 
     using FloatVector = QVector<float>;
 

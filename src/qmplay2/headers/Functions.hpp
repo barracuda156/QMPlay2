@@ -59,21 +59,21 @@ namespace Functions
     using DemuxersInfo = QVector<DemuxerInfo>;
     using ChecksumList = QVector<quint64>;
 
-    QMPLAY2SHAREDLIB_EXPORT QDate parseVersion(const QString &dateTxt);
+    QDate parseVersion(const QString &dateTxt);
 
-    QMPLAY2SHAREDLIB_EXPORT QString Url(QString, const QString &pth = QString());
-    QMPLAY2SHAREDLIB_EXPORT QString getUrlScheme(const QString &url);
+    QString Url(QString, const QString &pth = QString());
+    QString getUrlScheme(const QString &url);
 
-    QMPLAY2SHAREDLIB_EXPORT QString timeToStr(const double t, const bool decimals = false);
+    QString timeToStr(const double t, const bool decimals = false);
 
-    QMPLAY2SHAREDLIB_EXPORT QString filePath(const QString &);
-    QMPLAY2SHAREDLIB_EXPORT QString fileName(QString, bool extension = true);
-    QMPLAY2SHAREDLIB_EXPORT QString fileExt(const QString &);
+    QString filePath(const QString &);
+    QString fileName(QString, bool extension = true);
+    QString fileExt(const QString &);
 
-    QMPLAY2SHAREDLIB_EXPORT QString cleanPath(QString);
-    QMPLAY2SHAREDLIB_EXPORT QString cleanFileName(QString, const QString &replaced = "_");
+    QString cleanPath(QString);
+    QString cleanFileName(QString, const QString &replaced = "_");
 
-    QMPLAY2SHAREDLIB_EXPORT QString sizeString(quint64);
+    QString sizeString(quint64);
 
     static inline double gettime()
     {
@@ -114,48 +114,48 @@ namespace Functions
         return val > 255 ? (quint8)255 : (val < 0 ? (quint8)0 : val);
     }
 
-    QMPLAY2SHAREDLIB_EXPORT void getImageSize(const double aspect_ratio, const double zoom, const int winW, const int winH, int &W, int &H, int *X = nullptr, int *Y = nullptr, QRect *dstRect = nullptr, const int *vidW = nullptr, const int *vidH = nullptr, QRect *srcRect = nullptr);
+    void getImageSize(const double aspect_ratio, const double zoom, const int winW, const int winH, int &W, int &H, int *X = nullptr, int *Y = nullptr, QRect *dstRect = nullptr, const int *vidW = nullptr, const int *vidH = nullptr, QRect *srcRect = nullptr);
 
-    QMPLAY2SHAREDLIB_EXPORT QPixmap getPixmapFromIcon(const QIcon &icon, QSize size, QWidget *w = nullptr);
-    QMPLAY2SHAREDLIB_EXPORT void drawPixmap(QPainter &p, const QPixmap &pixmap, const QWidget *w, Qt::TransformationMode transformationMode = Qt::SmoothTransformation, Qt::AspectRatioMode aRatioMode = Qt::KeepAspectRatio, QSize size = QSize(), qreal scale = 1.0);
+    QPixmap getPixmapFromIcon(const QIcon &icon, QSize size, QWidget *w = nullptr);
+    void drawPixmap(QPainter &p, const QPixmap &pixmap, const QWidget *w, Qt::TransformationMode transformationMode = Qt::SmoothTransformation, Qt::AspectRatioMode aRatioMode = Qt::KeepAspectRatio, QSize size = QSize(), qreal scale = 1.0);
 
-    QMPLAY2SHAREDLIB_EXPORT bool mustRepaintOSD(const QList<const QMPlay2OSD *> &osd_list, const ChecksumList &osd_ids, const qreal *scaleW = nullptr, const qreal *scaleH = nullptr, QRect *bounds = nullptr);
-    QMPLAY2SHAREDLIB_EXPORT void paintOSD(bool rgbSwapped, const QList<const QMPlay2OSD *> &osd_list, const qreal scaleW, const qreal scaleH, QPainter &painter, ChecksumList *osd_ids = nullptr);
-    QMPLAY2SHAREDLIB_EXPORT void paintOSDtoYV12(quint8 *imageData, QImage &osdImg, int W, int H, int linesizeLuma, int linesizeChroma, const QList<const QMPlay2OSD *> &osd_list, ChecksumList &osd_ids);
+    bool mustRepaintOSD(const QList<const QMPlay2OSD *> &osd_list, const ChecksumList &osd_ids, const qreal *scaleW = nullptr, const qreal *scaleH = nullptr, QRect *bounds = nullptr);
+    void paintOSD(bool rgbSwapped, const QList<const QMPlay2OSD *> &osd_list, const qreal scaleW, const qreal scaleH, QPainter &painter, ChecksumList *osd_ids = nullptr);
+    void paintOSDtoYV12(quint8 *imageData, QImage &osdImg, int W, int H, int linesizeLuma, int linesizeChroma, const QList<const QMPlay2OSD *> &osd_list, ChecksumList &osd_ids);
 
-    QMPLAY2SHAREDLIB_EXPORT QPixmap applyDropShadow(const QPixmap &input, const qreal blurRadius, const QPointF &offset, const QColor &color);
-    QMPLAY2SHAREDLIB_EXPORT QPixmap applyBlur(const QPixmap &input, const qreal blurRadius);
+    QPixmap applyDropShadow(const QPixmap &input, const qreal blurRadius, const QPointF &offset, const QColor &color);
+    QPixmap applyBlur(const QPixmap &input, const qreal blurRadius);
 
-    QMPLAY2SHAREDLIB_EXPORT void ImageEQ(int Contrast, int Brightness, quint8 *imageBits, unsigned bitsCount);
-    QMPLAY2SHAREDLIB_EXPORT int scaleEQValue(int val, int min, int max);
+    void ImageEQ(int Contrast, int Brightness, quint8 *imageBits, unsigned bitsCount);
+    int scaleEQValue(int val, int min, int max);
 
-    QMPLAY2SHAREDLIB_EXPORT int getField(const VideoFrame &videoFrame, int deinterlace, int fullFrame, int topField, int bottomField);
+    int getField(const VideoFrame &videoFrame, int deinterlace, int fullFrame, int topField, int bottomField);
 
-    QMPLAY2SHAREDLIB_EXPORT QByteArray convertToASS(QString txt);
+    QByteArray convertToASS(QString txt);
 
-    QMPLAY2SHAREDLIB_EXPORT bool chkMimeData(const QMimeData *mimeData);
-    QMPLAY2SHAREDLIB_EXPORT QStringList getUrlsFromMimeData(const QMimeData *mimeData, const bool checkExtensionsForUrl = true);
+    bool chkMimeData(const QMimeData *mimeData);
+    QStringList getUrlsFromMimeData(const QMimeData *mimeData, const bool checkExtensionsForUrl = true);
 
-    QMPLAY2SHAREDLIB_EXPORT QString maybeExtensionAddress(const QString &url);
+    QString maybeExtensionAddress(const QString &url);
 
-    QMPLAY2SHAREDLIB_EXPORT bool splitPrefixAndUrlIfHasPluginPrefix(const QString &entireUrl, QString *addressPrefixName, QString *url, QString *param = nullptr);
-    QMPLAY2SHAREDLIB_EXPORT void getDataIfHasPluginPrefix(const QString &entireUrl, QString *url = nullptr, QString *name = nullptr, QIcon *icon = nullptr, IOController<> *ioCtrl = nullptr, const DemuxersInfo &demuxersInfo = DemuxersInfo());
+    bool splitPrefixAndUrlIfHasPluginPrefix(const QString &entireUrl, QString *addressPrefixName, QString *url, QString *param = nullptr);
+    void getDataIfHasPluginPrefix(const QString &entireUrl, QString *url = nullptr, QString *name = nullptr, QIcon *icon = nullptr, IOController<> *ioCtrl = nullptr, const DemuxersInfo &demuxersInfo = DemuxersInfo());
 
-    QMPLAY2SHAREDLIB_EXPORT QByteArray getUserAgent();
-    QMPLAY2SHAREDLIB_EXPORT QString prepareFFmpegUrl(QString url, AVDictionary *&options, bool setCookies = true, bool setRawHeaders = true, bool icy = true, const QByteArray &userAgentArg = QByteArray());
+    QByteArray getUserAgent();
+    QString prepareFFmpegUrl(QString url, AVDictionary *&options, bool setCookies = true, bool setRawHeaders = true, bool icy = true, const QByteArray &userAgentArg = QByteArray());
 
-    QMPLAY2SHAREDLIB_EXPORT void hFlip(quint8 *data, int linesize, int height, int width);
-    QMPLAY2SHAREDLIB_EXPORT void vFlip(quint8 *data, int linesize, int height);
+    void hFlip(quint8 *data, int linesize, int height, int width);
+    void vFlip(quint8 *data, int linesize, int height);
 
-    QMPLAY2SHAREDLIB_EXPORT QString dBStr(double a);
+    QString dBStr(double a);
 
-    QMPLAY2SHAREDLIB_EXPORT quint32 getBestSampleRate();
+    quint32 getBestSampleRate();
 
-    QMPLAY2SHAREDLIB_EXPORT bool wrapMouse(QWidget *widget, QPoint &mousePos, int margin = 0);
+    bool wrapMouse(QWidget *widget, QPoint &mousePos, int margin = 0);
 
-    QMPLAY2SHAREDLIB_EXPORT QByteArray decryptAes256Cbc(const QByteArray &password, const QByteArray &salt, const QByteArray &ciphered);
+    QByteArray decryptAes256Cbc(const QByteArray &password, const QByteArray &salt, const QByteArray &ciphered);
 
-    QMPLAY2SHAREDLIB_EXPORT QByteArray textWithFallbackEncoding(const QByteArray &data);
+    QByteArray textWithFallbackEncoding(const QByteArray &data);
 
-    QMPLAY2SHAREDLIB_EXPORT QMatrix3x3 getYUVtoRGBmatrix(float cr, float cg, float cb, bool limited);
+    QMatrix3x3 getYUVtoRGBmatrix(float cr, float cg, float cb, bool limited);
 }

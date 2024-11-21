@@ -21,19 +21,15 @@
 #include <YouTubeDL.hpp>
 #include <LineEdit.hpp>
 
-#include <QLoggingCategory>
 #include <QStringListModel>
 #include <QDesktopServices>
 #include <QJsonParseError>
 #include <QTextDocument>
-#include <QJsonDocument>
 #include <QProgressBar>
 #include <QApplication>
-#include <QJsonObject>
 #include <QHeaderView>
 #include <QGridLayout>
 #include <QToolButton>
-#include <QJsonArray>
 #include <QCompleter>
 #include <QClipboard>
 #include <QMimeData>
@@ -42,7 +38,22 @@
 #include <QMenu>
 #include <QUrl>
 
-Q_LOGGING_CATEGORY(youtube, "Extensions/YouTube")
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    #include <QLoggingCategory>
+    #include <QJsonParseError>
+    #include <QJsonDocument>
+    #include <QJsonObject>
+    #include <QJsonArray>
+#else
+    #include <QJsonParseError.h>
+    #include <QJsonDocument.h>
+    #include <QJsonObject.h>
+    #include <QJsonArray.h>
+#endif
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    Q_LOGGING_CATEGORY(youtube, "Extensions/YouTube")
+#endif
 
 #define YOUTUBE_URL "https://www.youtube.com"
 

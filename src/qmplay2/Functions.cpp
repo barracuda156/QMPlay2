@@ -36,11 +36,14 @@
 #include <QDir>
 #include <QUrl>
 #include <QRegExp>
-#include <QWindow>
 #include <QLibrary>
 #include <QTextCodec>
 #include <QMessageBox>
 #include <QStyleOption>
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    #include <QWindow>
+#endif
 
 extern "C"
 {
@@ -58,6 +61,7 @@ static inline void swapArray(quint8 *a, quint8 *b, int size)
     memcpy(b, t, size);
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)
 static inline QWindow *getNativeWindow(const QWidget *w)
 {
     if (w)
@@ -67,6 +71,7 @@ static inline QWindow *getNativeWindow(const QWidget *w)
     }
     return nullptr;
 }
+#endif
 
 /**/
 
@@ -300,8 +305,12 @@ QPixmap Functions::getPixmapFromIcon(const QIcon &icon, QSize size, QWidget *w)
         imgSize = icon.availableSizes().value(0);
         imgSize.scale(size, size.isEmpty() ? Qt::KeepAspectRatioByExpanding : Qt::KeepAspectRatio);
     }
-
+#if QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)
     return icon.pixmap(getNativeWindow(w), imgSize);
+#else
+	Q_UNUSED(w)
+	return icon.pixmap(imgSize);
+#endif
 }
 void Functions::drawPixmap(QPainter &p, const QPixmap &pixmap, const QWidget *w, Qt::TransformationMode transformationMode, Qt::AspectRatioMode aRatioMode, QSize size, qreal scale)
 {
@@ -347,6 +356,7 @@ void Functions::drawPixmap(QPainter &p, const QPixmap &pixmap, const QWidget *w,
         pixmapSize = pixmap.size();
     }
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     const qreal dpr = w->devicePixelRatioF();
 
     pixmapToDraw = pixmapToDraw.scaled(pixmapSize * dpr, Qt::IgnoreAspectRatio, transformationMode);
@@ -356,6 +366,16 @@ void Functions::drawPixmap(QPainter &p, const QPixmap &pixmap, const QWidget *w,
         size.width()  / 2 - int(pixmapToDraw.width()  / (dpr * 2)),
         size.height() / 2 - int(pixmapToDraw.height() / (dpr * 2))
     };
+#else
+    qreal devicePixelRatio = QMPlay2Core.getVideoDevicePixelRatio();
+
+    pixmapToDraw = pixmapToDraw.scaled(pixmapSize * devicePixelRatio, Qt::IgnoreAspectRatio, transformationMode);
+
+    const QPoint pixmapPos {
+        size.width()  / 2 - int(pixmapToDraw.width()  / (devicePixelRatio * 2)),
+        size.height() / 2 - int(pixmapToDraw.height() / (devicePixelRatio * 2))
+    };
+#endif
 
     p.drawPixmap(pixmapPos, pixmapToDraw);
 }
@@ -405,8 +425,13 @@ void Functions::paintOSD(bool rgbSwapped, const QList<const QMPlay2OSD *> &osd_l
         for (int j = 0; j < osd->imageCount(); j++)
         {
             const QMPlay2OSD::Image &img = osd->getImage(j);
+    #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
             const QImage qImg = QImage((const uchar *)img.data.constData(), img.rect.width(), img.rect.height(), rgbSwapped ? QImage::Format_RGBA8888 : QImage::Format_ARGB32);
             painter.drawImage(img.rect.topLeft(), qImg);
+    #else
+            const QImage qImg = QImage((uchar *)img.data.data(), img.rect.width(), img.rect.height(), QImage::Format_ARGB32);
+            painter.drawImage(img.rect.topLeft(), rgbSwapped ? qImg.rgbSwapped() : qImg);
+    #endif
         }
         if (osd->needsRescale())
             painter.restore();

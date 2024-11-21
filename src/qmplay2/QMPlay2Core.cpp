@@ -28,7 +28,14 @@
 #include <Version.hpp>
 #include <Module.hpp>
 
-#include <QLoggingCategory>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    #include <QLoggingCategory>
+    #include <QWindow>
+#else
+	#define QT_VERSION_MAJOR 4
+	#define QT_VERSION_MINOR 8 // Qt 4.8.0 is the oldest supported Qt version
+#endif
+
 #include <QApplication>
 #include <QLibraryInfo>
 #include <QTranslator>
@@ -36,13 +43,12 @@
 #include <QLibrary>
 #include <QPointer>
 #include <QLocale>
-#include <QWindow>
 #include <QFile>
 #include <QDir>
 #if defined Q_OS_WIN
     #include <windows.h>
     #include <powrprof.h>
-#elif defined Q_OS_MACOS
+#elif defined Q_OS_MACOS && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     #include <QStandardPaths>
 #endif
 
@@ -58,10 +64,13 @@ extern "C"
 
 /**/
 
-Q_LOGGING_CATEGORY(ffmpeglog, "FFmpegLog")
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    Q_LOGGING_CATEGORY(ffmpeglog, "FFmpegLog")
+#endif
 
 static void avQMPlay2LogHandler(void *avcl, int level, const char *fmt, va_list vl)
 {
+  #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     if (level <= AV_LOG_FATAL)
     {
         const QByteArray msg = QString::vasprintf(fmt, vl).trimmed().toUtf8();
@@ -71,6 +80,7 @@ static void avQMPlay2LogHandler(void *avcl, int level, const char *fmt, va_list 
     {
         av_log_default_callback(avcl, level, fmt, vl);
     }
+  #endif
 }
 
 /**/
@@ -204,7 +214,11 @@ void QMPlay2CoreClass::init(bool loadModules, bool modulesInSubdirs, const QStri
 #if defined(Q_OS_WIN)
         settingsDir = QFileInfo(QSettings(QSettings::IniFormat, QSettings::UserScope, QString()).fileName()).absolutePath() + "/QMPlay2/";
 #elif defined(Q_OS_MACOS)
+    #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         settingsDir = Functions::cleanPath(QStandardPaths::standardLocations(QStandardPaths::DataLocation).value(0, settingsDir));
+    #else
+        settingsDir = QDir::homePath() + "/.qmplay2/";
+    #endif
 #else
         settingsDir = QDir::homePath() + "/.qmplay2/";
 #endif
@@ -416,7 +430,9 @@ QStringList QMPlay2CoreClass::getModules(const QString &type, int typeLen) const
 
 qreal QMPlay2CoreClass::getVideoDevicePixelRatio() const
 {
+  #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     return getVideoDock()->devicePixelRatioF();
+  #endif
 }
 
 QIcon QMPlay2CoreClass::getIconFromTheme(const QString &iconName, const QIcon &fallback)

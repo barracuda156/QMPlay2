@@ -407,7 +407,9 @@ MainWidget::MainWidget(QList<QPair<QString, QString>> &arguments) :
         if (tabBar && tabBar->property("changeCurrentOnDrag").isValid())
         {
             tabBar->setAcceptDrops(true);
+    #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
             tabBar->setChangeCurrentOnDrag(true);
+    #endif
         }
     }
 
@@ -1443,6 +1445,7 @@ void MainWidget::doRestoreState(const QByteArray &data)
     if (isMaximized())
     {
         setUpdatesEnabled(false);
+    #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         QTimer::singleShot(0, this, [=] {
             QTimer::singleShot(0, this, [=] {
                 restoreState(data);
@@ -1450,6 +1453,7 @@ void MainWidget::doRestoreState(const QByteArray &data)
                 repaint();
             });
         });
+    #endif
     }
     else
     {

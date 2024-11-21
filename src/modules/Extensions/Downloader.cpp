@@ -364,8 +364,10 @@ void DownloadItemW::downloadStop(bool ok)
     finished = true;
     if (!dontDeleteDownloadThr)
     {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         if (visibleRegion().isNull())
             emit QMPlay2Core.sendMessage(titleL->text(), sizeL->text());
+#endif
     }
 }
 
@@ -386,7 +388,9 @@ void DownloadItemW::startConversion()
         else
         {
             sizeL->setText(tr(g_conversionError));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
             qCWarning(downloader) << "Failed to convert:" << m_convertProcess->program() << m_convertProcess->arguments() << m_convertProcess->readAllStandardError().constData();
+#endif
             downloadStop(false);
         }
     });
@@ -395,7 +399,9 @@ void DownloadItemW::startConversion()
         {
             sizeL->setText(tr(g_conversionError));
             downloadStop(false);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
             qCWarning(downloader) << "Failed to start process:" << m_convertProcess->program();
+#endif
         }
     });
 
@@ -848,9 +854,11 @@ void Downloader::init()
     downloadLW->setRootIsDecorated(false);
     connect(downloadLW, SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)), this, SLOT(itemDoubleClicked(QTreeWidgetItem *)));
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     m_convertsMenu = new QMenu(this);
     connect(m_convertsMenu->addAction(tr("&Add")), &QAction::triggered, this, &Downloader::addConvertPreset);
     m_convertsMenu->addSeparator();
+#endif
 
     setDownloadsDirB = new QToolButton;
     setDownloadsDirB->setIcon(QMPlay2Core.getIconFromTheme("folder-open"));
@@ -982,7 +990,7 @@ QVector<QAction *> Downloader::getActions(const QString &name, double, const QSt
         for (const Module::Info &mod : module->getModulesInfo())
             if (mod.type == Module::DEMUXER && mod.name == prefix)
                 return {};
-
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     const auto createAction = [&](const QString &actionName, const QString &preset) {
         QAction *act = new QAction(actionName, nullptr);
         act->setIcon(QIcon(":/downloader.svgz"));
@@ -1012,6 +1020,19 @@ QVector<QAction *> Downloader::getActions(const QString &name, double, const QSt
     }
 
     return actions;
+#else
+	QAction *act = new QAction(Downloader::tr("Download"), nullptr);
+	act->setIcon(QIcon(":/downloader.svgz"));
+	act->connect(act, SIGNAL(triggered()), this, SLOT(download()));
+	act->setProperty("name", name);
+	if (!prefix.isEmpty())
+	{
+		act->setProperty("prefix", prefix);
+		act->setProperty("param", param);
+	}
+	act->setProperty("url", url);
+	return {act};
+#endif
 }
 
 void Downloader::addConvertPreset()
@@ -1038,6 +1059,7 @@ bool Downloader::modifyConvertAction(QAction *action, bool addRemoveButton)
 
     commandE->setToolTip(tr("Command line to execute after download.\n\n<input/> - specifies downloaded file.\n<output>%f.mp3</output> - converted file will be input file with \"mp3\" extension."));
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
     connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
@@ -1053,6 +1075,7 @@ bool Downloader::modifyConvertAction(QAction *action, bool addRemoveButton)
             }
         });
     }
+#endif
 
     QFormLayout *layout = new QFormLayout(&dialog);
     layout->setMargin(4);
@@ -1061,11 +1084,13 @@ bool Downloader::modifyConvertAction(QAction *action, bool addRemoveButton)
     layout->addRow(tr("Command line"), commandE);
     layout->addRow(buttons);
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     if (QWindow *win = window()->windowHandle())
     {
         if (QScreen *screen = win->screen())
             dialog.resize(screen->availableGeometry().width() / 2, 1);
     }
+#endif
 
     while (dialog.exec() == QDialog::Accepted)
     {

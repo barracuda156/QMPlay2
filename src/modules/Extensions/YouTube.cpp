@@ -293,6 +293,7 @@ YouTube::YouTube(Module &module) :
 
     QMenu *qualityMenu = new QMenu(this);
     int qualityIdx = 0;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     for (QAction *act : m_qualityGroup->actions())
     {
         connect(act, &QAction::triggered, this, [=] {
@@ -306,7 +307,42 @@ YouTube::YouTube(Module &module) :
         qualityMenu->addAction(act);
         ++qualityIdx;
     }
+
     qualityMenu->insertSeparator(qualityMenu->actions().at(5));
+#else
+    QList<QAction*> actions = m_qualityGroup->actions();
+    for (int i = 0; i < actions.size(); ++i)
+    {
+        QAction *act = actions.at(i);
+    
+        connect(act, SIGNAL(triggered()), this, SLOT(onTriggered()));
+        connect(act, SIGNAL(toggled(bool)), this, SLOT(onToggled(bool)));
+    
+        act->setCheckable(true);
+        qualityMenu->addAction(act);
+        ++qualityIdx;
+    }
+
+    qualityMenu->insertSeparator(5);
+
+    void YouTube::onTriggered()
+    {
+        QAction *act = qobject_cast<QAction*>(sender());
+        if (act)
+        {
+            sets().set("YouTube/QualityPreset", act->text());
+        }
+    }
+
+    void YouTube::onToggled(bool checked)
+    {
+        QAction *act = qobject_cast<QAction*>(sender());
+        if (act && checked)
+        {
+            setItags(qualityIdx);
+        }
+    }
+#endif
 
     QToolButton *qualityB = new QToolButton;
     qualityB->setPopupMode(QToolButton::InstantPopup);
@@ -323,6 +359,7 @@ YouTube::YouTube(Module &module) :
 
     QMenu *sortByMenu = new QMenu(this);
     int sortByIdx = 0;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     for (QAction *act : m_sortByGroup->actions())
     {
         connect(act, &QAction::triggered, this, [=] {
@@ -337,6 +374,32 @@ YouTube::YouTube(Module &module) :
         sortByMenu->addAction(act);
         ++sortByIdx;
     }
+#else
+    QList<QAction*> actions = m_sortByGroup->actions();
+    for (int i = 0; i < actions.size(); ++i)
+    {
+        QAction *act = actions.at(i);
+    
+        connect(act, SIGNAL(triggered()), this, SLOT(onTriggered()));
+    
+        act->setCheckable(true);
+        sortByMenu->addAction(act);
+        ++sortByIdx;
+    }
+    void YouTube::onTriggered()
+    {
+        QAction *act = qobject_cast<QAction*>(sender());
+        if (act)
+        {
+            if (m_sortByIdx != sortByIdx)
+            {
+                m_sortByIdx = sortByIdx;
+                sets().set("YouTube/SortBy", m_sortByIdx);
+                search();
+            }
+        }
+    }
+#endif
 
     QToolButton *sortByB = new QToolButton;
     sortByB->setPopupMode(QToolButton::InstantPopup);
@@ -735,13 +798,21 @@ void YouTube::setAutocomplete(const QByteArray &data)
     const QJsonDocument json = QJsonDocument::fromJson(data, &jsonErr);
     if (jsonErr.error != QJsonParseError::NoError)
     {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         qCWarning(youtube) << "Cannot parse autocomplete JSON:" << jsonErr.errorString();
+#else
+        qWarning() << "Cannot parse autocomplete JSON:" << jsonErr.errorString();
+#endif
         return;
     }
     const QJsonArray mainArr = json.array();
     if (mainArr.count() < 2)
     {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         qCWarning(youtube) << "Invalid autocomplete JSON array";
+#else
+        qWarning() << "Invalid autocomplete JSON array";
+#endif
         return;
     }
     const QJsonArray arr = mainArr.at(1).toArray();
@@ -966,7 +1037,11 @@ QStringList YouTube::getYouTubeVideo(const QString &param, const QString &url, I
         for (auto &&itag : itags)
         {
             auto it = itagsData.constFind(itag);
+    #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
             if (it != itagsData.cend())
+    #else
+            if (it != itagsData.constEnd())
+    #endif
             {
                 urls += it->first;
                 exts += it->second;

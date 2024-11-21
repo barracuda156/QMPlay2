@@ -18,14 +18,14 @@
 
 #pragma once
 
-#include <QMPlay2Lib.hpp>
+#include <stddef.h>
 
 /* YUV planar to RGB32 */
 
 struct SwsContext;
 class VideoFrame;
 
-class QMPLAY2SHAREDLIB_EXPORT ImgScaler
+class ImgScaler
 {
 public:
     ImgScaler();

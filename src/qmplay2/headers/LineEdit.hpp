@@ -18,45 +18,37 @@
 
 #pragma once
 
-#include <QMPlay2Lib.hpp>
-
 #include <QLineEdit>
+#include <QLabel>
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
-    #include <QLabel>
-
-class QMPLAY2SHAREDLIB_EXPORT LineEditButton final : public QLabel
+class LineEditButton : public QLabel
 {
-    Q_OBJECT
+	Q_OBJECT
 public:
-    LineEditButton();
+	LineEditButton();
 private:
-    void mousePressEvent(QMouseEvent *) override;
+	void mousePressEvent(QMouseEvent *) override final;
 signals:
-    void clicked();
+	void clicked();
 };
-#endif
 
-class QMPLAY2SHAREDLIB_EXPORT LineEdit final : public QLineEdit
+/**/
+
+class LineEdit : public QLineEdit
 {
-    Q_OBJECT
-
+	Q_OBJECT
 public:
-    LineEdit(QWidget *parent = nullptr);
-#if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
+	LineEdit(QWidget *parent = nullptr);
 private:
-    void resizeEvent(QResizeEvent *) override;
-    void mousePressEvent(QMouseEvent *) override;
-    void mouseMoveEvent(QMouseEvent *) override;
+	void resizeEvent(QResizeEvent *) override final;
+	void mousePressEvent(QMouseEvent *) override final;
+	void mouseMoveEvent(QMouseEvent *) override final;
 
-    LineEditButton b;
+	LineEditButton b;
 private slots:
-    void textChangedSlot(const QString &);
+	void textChangedSlot(const QString &);
 public slots:
-#endif
-
-    void clearText();
-
+	void clearText();
 signals:
-    void clearButtonClicked();
+	void clearButtonClicked();
 };

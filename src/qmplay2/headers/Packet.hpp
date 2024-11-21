@@ -23,7 +23,7 @@
 
 #include <QByteArray>
 
-struct QMPLAY2SHAREDLIB_EXPORT Packet : public Buffer
+struct Packet : public Buffer
 {
     TimeStamp ts;
     double duration, sampleAspectRatio = 0.0;

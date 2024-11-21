@@ -25,7 +25,7 @@
 #include <QString>
 #include <QImage>
 
-class QMPLAY2SHAREDLIB_EXPORT QMPlay2Extensions : public ModuleCommon
+class QMPlay2Extensions : public ModuleCommon
 {
 public:
     static void openExtensions();

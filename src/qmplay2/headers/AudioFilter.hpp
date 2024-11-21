@@ -24,7 +24,7 @@
 
 class Buffer;
 
-class QMPLAY2SHAREDLIB_EXPORT AudioFilter : public ModuleCommon
+class AudioFilter : public ModuleCommon
 {
 public:
     virtual ~AudioFilter() = default;

@@ -42,14 +42,14 @@ class QMPlay2Extensions;
     class QWinTaskbarProgress;
 #endif
 
-class MainWidget final : public QMainWindow
+class MainWidget : public QMainWindow
 {
     friend class QMPlay2GUIClass;
     Q_PROPERTY(bool fullScreen READ getFullScreen)
     Q_OBJECT
 public:
     MainWidget(QList<QPair<QString, QString>> &argument);
-    ~MainWidget();
+    ~MainWidget() final;
 private slots:
     void detachFromPipe();
 
@@ -122,7 +122,7 @@ private slots:
 private:
     void savePlistHelper(const QString &, const QString &, bool);
 
-    QMenu *createPopupMenu() override;
+    QMenu *createPopupMenu() override final;
 
     void showToolBar(bool);
     void hideDocks();
@@ -135,15 +135,15 @@ private:
     void setWindowsTaskBarFeatures();
 #endif
 
-    void keyPressEvent(QKeyEvent *) override;
-    void mouseMoveEvent(QMouseEvent *) override;
-    void leaveEvent(QEvent *) override;
-    void closeEvent(QCloseEvent *) override;
-    void moveEvent(QMoveEvent *) override;
-    void showEvent(QShowEvent *) override;
-    void hideEvent(QHideEvent *) override;
+    void keyPressEvent(QKeyEvent *) override final;
+    void mouseMoveEvent(QMouseEvent *) override final;
+    void leaveEvent(QEvent *) override final;
+    void closeEvent(QCloseEvent *) override final;
+    void moveEvent(QMoveEvent *) override final;
+    void showEvent(QShowEvent *) override final;
+    void hideEvent(QHideEvent *) override final;
 
-    bool eventFilter(QObject *obj, QEvent *event) override;
+    bool eventFilter(QObject *obj, QEvent *event) override final;
 
 #if defined Q_OS_MACOS && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     void fileOpenTimerTimeout();

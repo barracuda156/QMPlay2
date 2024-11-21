@@ -24,7 +24,7 @@
 
 #include <QStringList>
 
-class QMPLAY2SHAREDLIB_EXPORT Writer : public ModuleCommon, public ModuleParams, public BasicIO
+class Writer : public ModuleCommon, public ModuleParams, public BasicIO
 {
 public:
     static Writer *create(const QString &, const QStringList &modNames = {});

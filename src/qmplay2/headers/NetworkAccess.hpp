@@ -19,14 +19,13 @@
 #pragma once
 
 #include <IOController.hpp>
-#include <QMPlay2Lib.hpp>
 
 #include <QObject>
 
 class NetworkReplyPriv;
 struct NetworkAccessParams;
 
-class QMPLAY2SHAREDLIB_EXPORT NetworkReply final : public QObject, public BasicIO
+class NetworkReply : public QObject, public BasicIO
 {
     Q_OBJECT
 
@@ -63,11 +62,11 @@ public:
     Q_ENUM(Wait)
 #endif
 
-    ~NetworkReply();
+    ~NetworkReply() final;
 
     QString url() const;
 
-    void abort() override;
+    void abort() override final;
 
     bool hasError() const;
     Error error() const;
@@ -90,7 +89,7 @@ private:
 
 /**/
 
-class QMPLAY2SHAREDLIB_EXPORT NetworkAccess : public QObject
+class NetworkAccess : public QObject
 {
     Q_OBJECT
 

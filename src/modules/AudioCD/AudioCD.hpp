@@ -24,19 +24,19 @@
 
 class CDIODestroyTimer;
 
-class AudioCD final : public Module
+class AudioCD : public Module
 {
     Q_OBJECT
 public:
     AudioCD();
-    ~AudioCD();
+    ~AudioCD() final;
 private:
-    QList<Info> getModulesInfo(const bool) const override;
-    void *createInstance(const QString &) override;
+    QList<Info> getModulesInfo(const bool) const override final;
+    void *createInstance(const QString &) override final;
 
-    QList<QAction *> getAddActions() override;
+    QList<QAction *> getAddActions() override final;
 
-    SettingsWidget *getSettingsWidget() override;
+    SettingsWidget *getSettingsWidget() override final;
 
     QIcon CD;
 
@@ -52,13 +52,13 @@ class QGridLayout;
 class QGroupBox;
 class QCheckBox;
 
-class ModuleSettingsWidget final : public Module::SettingsWidget
+class ModuleSettingsWidget : public Module::SettingsWidget
 {
     Q_DECLARE_TR_FUNCTIONS(ModuleSettingsWidget)
 public:
     ModuleSettingsWidget(Module &);
 private:
-    void saveSettings() override;
+    void saveSettings() override final;
 
     QGroupBox *audioCDB;
     QCheckBox *useCDDB, *useCDTEXT;

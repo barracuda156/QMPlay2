@@ -20,18 +20,18 @@
 
 #include <Module.hpp>
 
-class Inputs final : public Module
+class Inputs : public Module
 {
     Q_OBJECT
 public:
     Inputs();
 private:
-    QList<Info> getModulesInfo(const bool) const override;
-    void *createInstance(const QString &) override;
+    QList<Info> getModulesInfo(const bool) const override final;
+    void *createInstance(const QString &) override final;
 
-    QList<QAction *> getAddActions() override;
+    QList<QAction *> getAddActions() override final;
 
-    SettingsWidget *getSettingsWidget() override;
+    SettingsWidget *getSettingsWidget() override final;
 
     QIcon toneIcon, pcmIcon, rayman2Icon;
 private slots:
@@ -43,7 +43,7 @@ private slots:
 #include <QSpinBox>
 #include <QDialog>
 
-class HzW final : public QWidget
+class HzW : public QWidget
 {
 public:
     HzW(int, const QStringList &);
@@ -60,7 +60,7 @@ private:
 
 class QGridLayout;
 
-class AddD final : public QDialog
+class AddD : public QDialog
 {
     Q_OBJECT
 public:
@@ -95,7 +95,7 @@ class QGroupBox;
 class QCheckBox;
 class QLineEdit;
 
-class ModuleSettingsWidget final : public Module::SettingsWidget
+class ModuleSettingsWidget : public Module::SettingsWidget
 {
     Q_OBJECT
 public:
@@ -103,7 +103,7 @@ public:
 private slots:
     void applyFreqs();
 private:
-    void saveSettings() override;
+    void saveSettings() override final;
 
     AddD *toneGenerator;
     QGroupBox *pcmB;

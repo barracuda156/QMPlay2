@@ -18,15 +18,13 @@
 
 #pragma once
 
-#include <QMPlay2Lib.hpp>
-
 #include <QList>
 
 struct AVFormatContext;
 class StreamInfo;
 struct Packet;
 
-class QMPLAY2SHAREDLIB_EXPORT MkvMuxer
+class MkvMuxer
 {
     MkvMuxer(const MkvMuxer &) = delete;
     MkvMuxer &operator =(const MkvMuxer &) = delete;

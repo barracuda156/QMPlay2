@@ -22,19 +22,19 @@
 
 class VDPAU;
 
-class FFDecVDPAU_NW final : public FFDecHWAccel
+class FFDecVDPAU_NW : public FFDecHWAccel
 {
 public:
     FFDecVDPAU_NW(Module &);
-    ~FFDecVDPAU_NW();
+    ~FFDecVDPAU_NW() final;
 
-    bool set() override;
+    bool set() override final;
 
-    QString name() const override;
+    QString name() const override final;
 
-    void downloadVideoFrame(VideoFrame &decoded) override;
+    void downloadVideoFrame(VideoFrame &decoded) override final;
 
-    bool open(StreamInfo &, VideoWriter *) override;
+    bool open(StreamInfo &, VideoWriter *) override final;
 
 private:
     VDPAU *vdpau;

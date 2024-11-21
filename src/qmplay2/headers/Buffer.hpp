@@ -18,11 +18,11 @@
 
 #pragma once
 
-#include <QMPlay2Lib.hpp>
+#include <QtGlobal>
 
 struct AVBufferRef;
 
-class QMPLAY2SHAREDLIB_EXPORT Buffer
+class Buffer
 {
     AVBufferRef *m_bufferRef = nullptr;
     qint32 m_size = 0;

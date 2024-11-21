@@ -32,12 +32,12 @@ class QProgressBar;
 class QTreeWidgetItem;
 class DownloaderThread;
 
-class DownloadItemW final : public QWidget
+class DownloadItemW : public QWidget
 {
     Q_OBJECT
 public:
     DownloadItemW(DownloaderThread *downloaderThr, QString name, const QIcon &icon, QDataStream *stream, QString preset);
-    ~DownloadItemW();
+    ~DownloadItemW() final;
 
     void setName(const QString &);
     void setSizeAndFilePath(qint64, const QString &);
@@ -99,7 +99,7 @@ private:
 
 /**/
 
-class DownloadListW final : public QTreeWidget
+class DownloadListW : public QTreeWidget
 {
     friend class Downloader;
 public:
@@ -113,13 +113,13 @@ private:
 
 /**/
 
-class DownloaderThread final : public QThread
+class DownloaderThread : public QThread
 {
     Q_OBJECT
     enum {ADD_ENTRY, NAME, SET, SET_POS, SET_SPEED, DOWNLOAD_ERROR, FINISH};
 public:
     DownloaderThread(QDataStream *stream, const QString &url, DownloadListW *downloadLW, const QMenu *convertsMenu, const QString &name = QString(), const QString &prefix = QString(), const QString &param = QString(), const QString &preset = QString());
-    ~DownloaderThread();
+    ~DownloaderThread() final;
 
     void serialize(QDataStream &stream);
 
@@ -131,7 +131,7 @@ private slots:
     void stop();
     void finished();
 private:
-    void run() override;
+    void run() override final;
 
     QIcon getIcon();
 
@@ -145,19 +145,19 @@ private:
 
 /**/
 
-class Downloader final : public QWidget, public QMPlay2Extensions
+class Downloader : public QWidget, public QMPlay2Extensions
 {
     Q_OBJECT
 
 public:
     Downloader(Module &module);
-    ~Downloader();
+    ~Downloader() final;
 
-    void init() override;
+    void init() override final;
 
-    DockWidget *getDockWidget() override;
+    DockWidget *getDockWidget() override final;
 
-    QVector<QAction *> getActions(const QString &, double, const QString &, const QString &, const QString &) override;
+    QVector<QAction *> getActions(const QString &, double, const QString &, const QString &, const QString &) override final;
 
 private:
     void addConvertPreset();

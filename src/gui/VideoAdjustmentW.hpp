@@ -27,13 +27,13 @@ class ModuleParams;
 class QAction;
 class Slider;
 
-class VideoAdjustmentW final : public QWidget
+class VideoAdjustmentW : public QWidget
 {
     Q_OBJECT
 
 public:
     VideoAdjustmentW();
-    ~VideoAdjustmentW();
+    ~VideoAdjustmentW() final;
 
     void restoreValues();
     void saveValues();

@@ -20,16 +20,16 @@
 
 #include <Module.hpp>
 
-class Notify final : public Module
+class Notify : public Module
 {
 public:
     Notify();
 
 private:
-    QList<Info> getModulesInfo(const bool) const override;
-    void *createInstance(const QString &) override;
+    QList<Info> getModulesInfo(const bool) const override final;
+    void *createInstance(const QString &) override final;
 
-    SettingsWidget *getSettingsWidget() override;
+    SettingsWidget *getSettingsWidget() override final;
 };
 
 /**/
@@ -41,7 +41,7 @@ class QCheckBox;
 class QGroupBox;
 class QLineEdit;
 
-class ModuleSettingsWidget final : public Module::SettingsWidget
+class ModuleSettingsWidget : public Module::SettingsWidget
 {
     Q_DECLARE_TR_FUNCTIONS(ModuleSettingsWidget)
 
@@ -49,7 +49,7 @@ public:
     ModuleSettingsWidget(Module &module);
 
 private:
-    void saveSettings() override;
+    void saveSettings() override final;
 
     QGroupBox *m_notify;
     QDoubleSpinBox *m_timeoutSB;

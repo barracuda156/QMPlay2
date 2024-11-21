@@ -20,15 +20,15 @@
 
 #include <Module.hpp>
 
-class Visualizations final : public Module
+class Visualizations : public Module
 {
 public:
     Visualizations();
 private:
-    QList<Info> getModulesInfo(const bool) const override;
-    void *createInstance(const QString &) override;
+    QList<Info> getModulesInfo(const bool) const override final;
+    void *createInstance(const QString &) override final;
 
-    SettingsWidget *getSettingsWidget() override;
+    SettingsWidget *getSettingsWidget() override final;
 };
 
 /**/
@@ -38,13 +38,13 @@ private:
 class QCheckBox;
 class QSpinBox;
 
-class ModuleSettingsWidget final : public Module::SettingsWidget
+class ModuleSettingsWidget : public Module::SettingsWidget
 {
     Q_DECLARE_TR_FUNCTIONS(ModuleSettingsWidget)
 public:
     ModuleSettingsWidget(Module &);
 private:
-    void saveSettings() override;
+    void saveSettings() override final;
 
 #ifdef USE_OPENGL
     QCheckBox *useOpenGLB;

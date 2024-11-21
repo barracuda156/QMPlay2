@@ -26,7 +26,7 @@
 
 class SimpleVis;
 
-class SimpleVisW final : public VisWidget
+class SimpleVisW : public VisWidget
 {
     friend class SimpleVis;
 
@@ -34,12 +34,12 @@ class SimpleVisW final : public VisWidget
 public:
     SimpleVisW(SimpleVis &);
 private:
-    void paint(QPainter &p) override;
+    void paint(QPainter &p) override final;
 
-    void resizeEvent(QResizeEvent *) override;
+    void resizeEvent(QResizeEvent *) override final;
 
-    void start() override;
-    void stop() override;
+    void start() override final;
+    void stop() override final;
 
     QByteArray soundData;
     quint8 chn;
@@ -54,22 +54,22 @@ private:
 
 /**/
 
-class SimpleVis final : public QMPlay2Extensions
+class SimpleVis : public QMPlay2Extensions
 {
 public:
     SimpleVis(Module &);
 
     void soundBuffer(const bool);
 
-    bool set() override;
+    bool set() override final;
 private:
-    DockWidget *getDockWidget() override;
+    DockWidget *getDockWidget() override final;
 
-    bool isVisualization() const override;
-    void connectDoubleClick(const QObject *, const char *) override;
-    void visState(bool, uchar, uint) override;
-    void sendSoundData(const QByteArray &) override;
-    void clearSoundData() override;
+    bool isVisualization() const override final;
+    void connectDoubleClick(const QObject *, const char *) override final;
+    void visState(bool, uchar, uint) override final;
+    void sendSoundData(const QByteArray &) override final;
+    void clearSoundData() override final;
 
     /**/
 

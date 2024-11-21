@@ -30,7 +30,7 @@
     class QLabel;
 #endif
 
-class Updater final : public
+class Updater : public
 #ifdef UPDATER
     QDialog
 #else
@@ -45,7 +45,7 @@ public:
 #else
     Updater(QObject *parent);
 #endif
-    ~Updater();
+    ~Updater() final;
 
 #ifdef UPDATER
     bool downloading() const;

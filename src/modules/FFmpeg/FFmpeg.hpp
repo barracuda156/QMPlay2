@@ -24,19 +24,19 @@
 
 class QComboBox;
 
-class FFmpeg final : public Module
+class FFmpeg : public Module
 {
     Q_DECLARE_TR_FUNCTIONS(FFmpeg)
 public:
     FFmpeg();
-    ~FFmpeg();
+    ~FFmpeg() final;
 private:
-    QList<Info> getModulesInfo(const bool) const override;
-    void *createInstance(const QString &) override;
+    QList<Info> getModulesInfo(const bool) const override final;
+    void *createInstance(const QString &) override final;
 
-    SettingsWidget *getSettingsWidget() override;
+    SettingsWidget *getSettingsWidget() override final;
 
-    void videoDeintSave() override;
+    void videoDeintSave() override final;
 
     /**/
 
@@ -65,7 +65,7 @@ class QGroupBox;
 class QSpinBox;
 class Slider;
 
-class ModuleSettingsWidget final : public Module::SettingsWidget
+class ModuleSettingsWidget : public Module::SettingsWidget
 {
 #ifdef QMPlay2_VDPAU
     Q_OBJECT
@@ -84,7 +84,7 @@ private slots:
     void checkEnables();
 #endif
 private:
-    void saveSettings() override;
+    void saveSettings() override final;
 
     QGroupBox *demuxerB;
     QCheckBox *reconnectStreamedB;

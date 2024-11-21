@@ -18,12 +18,10 @@
 
 #pragma once
 
-#include <QMPlay2Lib.hpp>
-
 #include <QPointer>
 #include <QWidget>
 
-class QMPLAY2SHAREDLIB_EXPORT InDockW final : public QWidget
+class InDockW : public QWidget
 {
     Q_OBJECT
 public:
@@ -44,9 +42,9 @@ private slots:
 public:
     void setWidget(QWidget *newW);
 protected:
-    void resizeEvent(QResizeEvent *) override;
-    void paintEvent(QPaintEvent *) override;
-    bool event(QEvent *) override;
+    void resizeEvent(QResizeEvent *) override final;
+    void paintEvent(QPaintEvent *) override final;
+    bool event(QEvent *) override final;
 signals:
     void resized(int, int);
     void itemDropped(const QString &);

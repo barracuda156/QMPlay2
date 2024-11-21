@@ -26,19 +26,19 @@
 
 class FFTSpectrum;
 
-class FFTSpectrumW final : public VisWidget
+class FFTSpectrumW : public VisWidget
 {
     friend class FFTSpectrum;
     Q_DECLARE_TR_FUNCTIONS(FFTSpectrumW)
 public:
     FFTSpectrumW(FFTSpectrum &);
 private:
-    void paint(QPainter &p) override;
+    void paint(QPainter &p) override final;
 
-    void mouseMoveEvent(QMouseEvent *e) override;
+    void mouseMoveEvent(QMouseEvent *e) override final;
 
-    void start() override;
-    void stop() override;
+    void start() override final;
+    void stop() override final;
 
     QVector<float> spectrumData;
     QVector<QPair<qreal, QPair<qreal, double>>> lastData;
@@ -54,22 +54,22 @@ private:
 struct FFTContext;
 struct FFTComplex;
 
-class FFTSpectrum final : public QMPlay2Extensions
+class FFTSpectrum : public QMPlay2Extensions
 {
 public:
     FFTSpectrum(Module &);
 
     void soundBuffer(const bool);
 
-    bool set() override;
+    bool set() override final;
 private:
-    DockWidget *getDockWidget() override;
+    DockWidget *getDockWidget() override final;
 
-    bool isVisualization() const override;
-    void connectDoubleClick(const QObject *, const char *) override;
-    void visState(bool, uchar, uint) override;
-    void sendSoundData(const QByteArray &) override;
-    void clearSoundData() override;
+    bool isVisualization() const override final;
+    void connectDoubleClick(const QObject *, const char *) override final;
+    void visState(bool, uchar, uint) override final;
+    void sendSoundData(const QByteArray &) override final;
+    void clearSoundData() override final;
 
     /**/
 

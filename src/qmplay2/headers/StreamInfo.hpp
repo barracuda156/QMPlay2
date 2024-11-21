@@ -57,7 +57,7 @@ enum QMPlay2Tags
     QMPLAY2_TAG_LYRICS,
 };
 
-class QMPLAY2SHAREDLIB_EXPORT StreamInfo
+class StreamInfo
 {
     Q_DECLARE_TR_FUNCTIONS(StreamInfo)
 public:

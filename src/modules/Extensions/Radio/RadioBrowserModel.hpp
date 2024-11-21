@@ -30,7 +30,7 @@ class NetworkAccess;
 class NetworkReply;
 struct Column;
 
-class RadioBrowserModel final : public QAbstractItemModel
+class RadioBrowserModel : public QAbstractItemModel
 {
     Q_OBJECT
 
@@ -49,14 +49,14 @@ public:
     QUrl getEditUrl(const QModelIndex &index) const;
     QUrl getHomePageUrl(const QModelIndex &index) const;
 
-    QModelIndex index(int row, int column, const QModelIndex &parent) const override;
-    QModelIndex parent(const QModelIndex &child) const override;
-    int rowCount(const QModelIndex &parent) const override;
-    int columnCount(const QModelIndex &parent) const override;
-    QVariant data(const QModelIndex &index, int role) const override;
-    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-    Qt::ItemFlags flags(const QModelIndex &index) const override;
-    void sort(int columnIdx, Qt::SortOrder order = Qt::AscendingOrder) override;
+    QModelIndex index(int row, int column, const QModelIndex &parent) const override final;
+    QModelIndex parent(const QModelIndex &child) const override final;
+    int rowCount(const QModelIndex &parent) const override final;
+    int columnCount(const QModelIndex &parent) const override final;
+    QVariant data(const QModelIndex &index, int role) const override final;
+    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override final;
+    Qt::ItemFlags flags(const QModelIndex &index) const override final;
+    void sort(int columnIdx, Qt::SortOrder order = Qt::AscendingOrder) override final;
 
 public slots:
     void setFiltrText(const QString &text = QString());

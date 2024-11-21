@@ -20,15 +20,15 @@
 
 #include <AudioFilter.hpp>
 
-class PhaseReverse final : public AudioFilter
+class PhaseReverse : public AudioFilter
 {
 public:
     PhaseReverse(Module &);
 
-    bool set() override;
+    bool set() override final;
 private:
-    bool setAudioParameters(uchar, uint) override;
-    double filter(Buffer &, bool) override;
+    bool setAudioParameters(uchar, uint) override final;
+    double filter(Buffer &, bool) override final;
 
     bool enabled, hasParameters, canFilter, reverseRight;
     uchar chn;

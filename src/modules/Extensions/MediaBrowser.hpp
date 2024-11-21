@@ -33,13 +33,13 @@ class MediaBrowserJS;
 
 /**/
 
-class MediaBrowserResults final : public QTreeWidget
+class MediaBrowserResults : public QTreeWidget
 {
     Q_OBJECT
 
 public:
     MediaBrowserResults(MediaBrowserJS *&mediaBrowser);
-    ~MediaBrowserResults();
+    ~MediaBrowserResults() final;
 
     void setCurrentName(const QString &name, const QString &pageName);
 
@@ -69,7 +69,7 @@ private:
 class QToolButton;
 class QComboBox;
 
-class MediaBrowserPages final : public QWidget
+class MediaBrowserPages : public QWidget
 {
     Q_OBJECT
 
@@ -114,23 +114,23 @@ class QCompleter;
 class QTextEdit;
 class LineEdit;
 
-class MediaBrowser final : public QWidget, public QMPlay2Extensions
+class MediaBrowser : public QWidget, public QMPlay2Extensions
 {
     Q_OBJECT
 
 public:
     MediaBrowser(Module &module);
-    ~MediaBrowser();
+    ~MediaBrowser() final;
 
 private:
-    DockWidget *getDockWidget() override;
+    DockWidget *getDockWidget() override final;
 
-    bool canConvertAddress() const override;
+    bool canConvertAddress() const override final;
 
-    QList<AddressPrefix> addressPrefixList(bool) const override;
-    void convertAddress(const QString &prefix, const QString &url, const QString &param, QString *streamUrl, QString *name, QIcon *icon, QString *extension, IOController<> *ioCtrl) override;
+    QList<AddressPrefix> addressPrefixList(bool) const override final;
+    void convertAddress(const QString &prefix, const QString &url, const QString &param, QString *streamUrl, QString *name, QIcon *icon, QString *extension, IOController<> *ioCtrl) override final;
 
-    QVector<QAction *> getActions(const QString &, double, const QString &, const QString &, const QString &) override;
+    QVector<QAction *> getActions(const QString &, double, const QString &, const QString &, const QString &) override final;
 
 private:
     void initScripts();

@@ -18,16 +18,14 @@
 
 #pragma once
 
-#include <QMPlay2Lib.hpp>
-
 #include <QSlider>
 
-class QMPLAY2SHAREDLIB_EXPORT Slider final : public QSlider
+class Slider : public QSlider
 {
     Q_OBJECT
 public:
-    Slider();
-    ~Slider() final = default;
+	Slider();
+	~Slider() final = default;
 
     inline bool ignoringValueChanged() const
     {
@@ -45,12 +43,12 @@ public slots:
     }
     void drawRange(int first, int second);
 protected:
-    void paintEvent(QPaintEvent *) override;
-    void mousePressEvent(QMouseEvent *) override;
-    void mouseReleaseEvent(QMouseEvent *) override;
-    void mouseMoveEvent(QMouseEvent *) override;
-    void wheelEvent(QWheelEvent *) override;
-    void enterEvent(QEvent *) override;
+    void paintEvent(QPaintEvent *) override final;
+    void mousePressEvent(QMouseEvent *) override final;
+    void mouseReleaseEvent(QMouseEvent *) override final;
+    void mouseMoveEvent(QMouseEvent *) override final;
+    void wheelEvent(QWheelEvent *) override final;
+    void enterEvent(QEvent *) override final;
 private:
     int getMousePos(const QPoint &pos);
 

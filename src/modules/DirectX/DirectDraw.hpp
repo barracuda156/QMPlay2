@@ -28,12 +28,12 @@
 class DirectDrawWriter;
 class QMPlay2OSD;
 
-class Drawable final : public QWidget
+class Drawable : public QWidget
 {
     Q_OBJECT
 public:
     Drawable(DirectDrawWriter &);
-    ~Drawable();
+    ~Drawable() final;
 
     inline bool canDraw() const
     {
@@ -48,7 +48,7 @@ public:
 
     void draw(const VideoFrame &videoFrame);
 
-    void resizeEvent(QResizeEvent *) override;
+    void resizeEvent(QResizeEvent *) override final;
 
     QList<const QMPlay2OSD *> osd_list;
     QMutex osd_mutex;
@@ -64,10 +64,10 @@ private:
 
     bool restoreLostSurface();
 
-    void paintEvent(QPaintEvent *) override;
-    bool event(QEvent *) override;
+    void paintEvent(QPaintEvent *) override final;
+    bool event(QEvent *) override final;
 
-    QPaintEngine *paintEngine() const override;
+    QQPaintEngine *paintEngine() const override final;
 
     QImage osdImg;
     QVector<quint64> osd_ids;
@@ -90,27 +90,27 @@ private:
 
 /**/
 
-class DirectDrawWriter final : public VideoWriter
+class DirectDrawWriter : public VideoWriter
 {
     friend class Drawable;
 public:
     DirectDrawWriter(Module &);
 private:
-        ~DirectDrawWriter();
+    ~DirectDrawWriter() final;
 
-    bool set() override;
+    bool set() override final;
 
-    bool readyWrite() const override;
+    bool readyWrite() const override final;
 
-    bool processParams(bool *paramsCorrected) override;
-    void writeVideo(const VideoFrame &videoFrame) override;
-    void writeOSD(const QList<const QMPlay2OSD *> &) override;
+    bool processParams(bool *paramsCorrected) override final;
+    void writeVideo(const VideoFrame &videoFrame) override final;
+    void writeOSD(const QList<const QMPlay2OSD *> &) override final;
 
-    void pause() override;
+    void pause() override final;
 
-    QString name() const override;
+    QString name() const override final;
 
-    bool open() override;
+    bool open() override final;
 
     /**/
 

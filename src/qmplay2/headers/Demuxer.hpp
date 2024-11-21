@@ -26,7 +26,7 @@
 
 struct Packet;
 
-class QMPLAY2SHAREDLIB_EXPORT Demuxer : protected ModuleCommon, public BasicIO
+class Demuxer : protected ModuleCommon, public BasicIO
 {
 public:
     class FetchTracks

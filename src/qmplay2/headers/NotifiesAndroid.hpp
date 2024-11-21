@@ -22,10 +22,10 @@
 
 #include <QObject>
 
-class NotifiesAndroid final : public QObject, public Notifies
+class NotifiesAndroid : public QObject, public Notifies
 {
     Q_OBJECT
 
-    bool doNotify(const QString &title, const QString &message, const int ms, const QPixmap &pixmap, const int iconId = 0) override;
-    bool doNotify(const QString &title, const QString &message, const int ms, const QImage &image, const int iconId = 0) override;
+    bool doNotify(const QString &title, const QString &message, const int ms, const QPixmap &pixmap, const int iconId = 0) override final;
+    bool doNotify(const QString &title, const QString &message, const int ms, const QImage &image, const int iconId = 0) override final;
 };

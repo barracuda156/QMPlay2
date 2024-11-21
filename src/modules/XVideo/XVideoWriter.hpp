@@ -24,18 +24,18 @@
 
 #include <QWidget>
 
-class Drawable final : public QWidget
+class Drawable : public QWidget
 {
     friend class XVideoWriter;
 public:
     Drawable(class XVideoWriter &);
     ~Drawable() final = default;
 private:
-    void resizeEvent(QResizeEvent *) override;
-    void paintEvent(QPaintEvent *) override;
-    bool event(QEvent *) override;
+    void resizeEvent(QResizeEvent *) override final;
+    void paintEvent(QPaintEvent *) override final;
+    bool event(QEvent *) override final;
 
-    QPaintEngine *paintEngine() const override;
+    QPaintEngine *paintEngine() const override final;
 
     int X, Y, W, H;
     QRect dstRect, srcRect;
@@ -46,25 +46,25 @@ private:
 
 class QMPlay2OSD;
 
-class XVideoWriter final : public VideoWriter
+class XVideoWriter : public VideoWriter
 {
     friend class Drawable;
 public:
     XVideoWriter(Module &);
 private:
-    ~XVideoWriter();
+    ~XVideoWriter() final;
 
-    bool set() override;
+    bool set() override final;
 
-    bool readyWrite() const override;
+    bool readyWrite() const override final;
 
-    bool processParams(bool *paramsCorrected) override;
-    void writeVideo(const VideoFrame &videoFrame) override;
-    void writeOSD(const QList<const QMPlay2OSD *> &) override;
+    bool processParams(bool *paramsCorrected) override final;
+    void writeVideo(const VideoFrame &videoFrame) override final;
+    void writeOSD(const QList<const QMPlay2OSD *> &) override final;
 
-    QString name() const override;
+    QString name() const override final;
 
-    bool open() override;
+    bool open() override final;
 
     /**/
 

@@ -26,7 +26,7 @@ class QMPlay2OSD;
 class VideoFrame;
 class ImgScaler;
 
-class QMPLAY2SHAREDLIB_EXPORT VideoWriter : public Writer
+class VideoWriter : public Writer
 {
 public:
     static VideoWriter *createOpenGL2(HWAccelInterface *hwAccelInterface);

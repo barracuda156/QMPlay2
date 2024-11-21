@@ -23,7 +23,7 @@
 #include <QMutex>
 #include <QList>
 
-class QMPLAY2SHAREDLIB_EXPORT PacketBuffer : private QList<Packet>
+class PacketBuffer : private QList<Packet>
 {
     static int backwardPackets;
 public:

@@ -18,12 +18,10 @@
 
 #pragma once
 
-#include <QMPlay2Lib.hpp>
-
 class QByteArray;
 class Buffer;
 
-class QMPLAY2SHAREDLIB_EXPORT SndResampler
+class SndResampler
 {
 public:
     SndResampler() = default;

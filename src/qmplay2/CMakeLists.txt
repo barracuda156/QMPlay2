@@ -186,32 +186,22 @@ else()
     link_directories(${LIBSWRESAMPLE_LIBRARY_DIRS})
 endif()
 
+if(USE_QT5)
+    qt5_add_resources(QMPLAY2_RESOURCES_RCC ${QMPLAY2_RESOURCES})
+else()
+    qt4_add_resources(QMPLAY2_RESOURCES_RCC ${QMPLAY2_RESOURCES})
+endif()
+
 add_library(${PROJECT_NAME} SHARED
     ${QMPLAY2_HDR}
     ${QMPLAY2_SRC}
-    ${QMPLAY2_RESOURCES}
+    ${QMPLAY2_RESOURCES_RCC}
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
 
-if(APPLE)
-    if(USE_QT4)
-        target_link_libraries(${PROJECT_NAME}
-            PRIVATE
-            ${APPKIT_LIBRARY}
-    )
-    else()
-        target_link_libraries(${PROJECT_NAME}
-            PRIVATE
-            Qt5::MacExtras
-            ${APPKIT_LIBRARY}
-    )
-    endif()
-endif()
-
 if(WIN32)
     target_link_libraries(${PROJECT_NAME}
-        PRIVATE
         powrprof
         winmm
     )
@@ -239,34 +229,35 @@ endif()
 if(USE_QT4)
     add_definitions(-I/opt/local/include/QJson4)
     target_link_libraries(${PROJECT_NAME}
-        PUBLIC
         Qt4::QtCore
         Qt4::QtGui
-        Qt4::QtSvg
+        ${DBUS}
         QJson4
     )
 else()
     target_link_libraries(${PROJECT_NAME}
-        PUBLIC
         Qt5::Core
         Qt5::Gui
         Qt5::Widgets
         Qt5::Svg
-        PRIVATE
+        ${DBUS}
         ${QML}
     )
+    if(APPLE)
+        target_link_libraries(${PROJECT_NAME}
+            Qt5::MacExtras
+            ${APPKIT_LIBRARY}
+        )
+    endif()
 endif()
 
 target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-    ${DBUS}
     ${LIBQMPLAY2_LIBS}
 )
 
 if(ANDROID)
     # Android libs must be public, because androiddeployqt copies them
     target_link_libraries(${PROJECT_NAME}
-        PUBLIC
         Qt5::Svg
         Qt5::AndroidExtras
         ${QML}

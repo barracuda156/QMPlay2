@@ -22,12 +22,38 @@
 
 #include <QLineEdit>
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
+    #include <QLabel>
+
+class QMPLAY2SHAREDLIB_EXPORT LineEditButton final : public QLabel
+{
+    Q_OBJECT
+public:
+    LineEditButton();
+private:
+    void mousePressEvent(QMouseEvent *) override;
+signals:
+    void clicked();
+};
+#endif
+
 class QMPLAY2SHAREDLIB_EXPORT LineEdit final : public QLineEdit
 {
     Q_OBJECT
 
 public:
     LineEdit(QWidget *parent = nullptr);
+#if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
+private:
+    void resizeEvent(QResizeEvent *) override;
+    void mousePressEvent(QMouseEvent *) override;
+    void mouseMoveEvent(QMouseEvent *) override;
+
+    LineEditButton b;
+private slots:
+    void textChangedSlot(const QString &);
+public slots:
+#endif
 
     void clearText();
 

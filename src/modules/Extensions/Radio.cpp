@@ -24,18 +24,25 @@
 #include <Functions.hpp>
 
 #include <QDesktopServices>
-#include <QJsonDocument>
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QFileDialog>
-#include <QJsonObject>
 #include <QScrollBar>
-#include <QJsonArray>
 #include <QMimeData>
 #include <qevent.h>
 #include <QTimer>
 #include <QMenu>
 #include <QUrl>
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    #include <QJsonDocument>
+    #include <QJsonObject>
+    #include <QJsonArray>
+#else
+    #include <QJsonDocument.h>
+    #include <QJsonObject.h>
+    #include <QJsonArray.h>
+#endif
 
 constexpr const char *g_fileDialogFilter = "QMPlay2 radio station list (*.qmplay2radio)";
 

@@ -20,8 +20,14 @@
 
 #include <Functions.hpp>
 
-#include <QSaveFile>
 #include <QBuffer>
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    #include <QSaveFile>
+#else
+    #include <QFile>
+    #define QSaveFile QFile
+#endif
 
 #include <memory>
 
@@ -50,11 +56,13 @@ protected:
 
 class QMPlay2FileWriter : public IODeviceWriter
 {
+  #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     ~QMPlay2FileWriter()
     {
         if (auto f = static_cast<QSaveFile *>(m_io.get()))
             f->commit();
     }
+  #endif
 
     QString name() const override final
     {

@@ -23,13 +23,20 @@
 #include <Functions.hpp>
 #include <CppUtils.hpp>
 
-#include <QStandardPaths>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
 #include <QFileInfo>
 #include <QMutex>
 #include <QFile>
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    #include <QStandardPaths>
+    #include <QJsonDocument>
+    #include <QJsonObject>
+    #include <QJsonArray>
+#else
+    #include <QJsonDocument.h>
+    #include <QJsonObject.h>
+    #include <QJsonArray.h>
+#endif
 
 constexpr const char *g_name = "YouTubeDL";
 static bool g_mustUpdate = true;
@@ -181,7 +188,11 @@ QStringList YouTubeDL::exec(const QString &url, const QStringList &args, QString
         }
         else
         {
+    #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
             result = result.constFirst().split('\n', QString::SkipEmptyParts);
+    #else
+            result = result[0].split('\n', QString::SkipEmptyParts);
+    #endif
 
             // Verify if URLs has printable characters, because sometimes we
             // can get binary garbage at output (especially on Openload).
@@ -460,6 +471,7 @@ void YouTubeDL::startProcess(QStringList args)
         if (shebang.startsWith("#!") && idx > -1)
         {
             const auto pythonCmd = shebang.mid(idx);
+    #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
             if (!QStandardPaths::findExecutable(pythonCmd).endsWith(pythonCmd))
             {
                 QStringList pythonCmdsToCheck {
@@ -478,6 +490,7 @@ void YouTubeDL::startProcess(QStringList args)
                     }
                 }
             }
+    #endif
         }
         ytDlFile.close();
     }

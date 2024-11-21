@@ -84,6 +84,15 @@ void InDockW::setWidget(QWidget *newW)
     w = newW;
     if (w)
     {
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+        // Workaround for BUG in Qt4
+        QWidget *mainWidget = window();
+        if (mainWidget && mainWidget->isMinimized() && w->internalWinId() && !internalWinId())
+        {
+            mainWidget->hide();
+            mainWidget->show();
+        }
+#endif
         w->setMinimumSize(2, 2);
         w->setParent(this);
         resizeEvent(nullptr);

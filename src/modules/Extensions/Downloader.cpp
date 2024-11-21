@@ -30,7 +30,6 @@
 #include <QLabel>
 #include <QAction>
 #include <QScreen>
-#include <QWindow>
 #include <QProcess>
 #include <QMimeData>
 #include <QClipboard>
@@ -46,13 +45,20 @@
 #include <QProgressBar>
 #include <QApplication>
 #include <QElapsedTimer>
-#include <QStandardPaths>
-#include <QLoggingCategory>
 #include <QDialogButtonBox>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    #include <QWindow>
+    #include <QStandardPaths>
+    #include <QLoggingCategory>
+#else
+    #include <qdesktopservices.h>
+#endif
 
 #include <functional>
 
-Q_LOGGING_CATEGORY(downloader, "Downloader")
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    Q_LOGGING_CATEGORY(downloader, "Downloader")
+#endif
 
 /**/
 
@@ -879,7 +885,11 @@ void Downloader::init()
     layout->addItem(new QSpacerItem(10, 0, QSizePolicy::Fixed, QSizePolicy::Minimum), 1, 4, 1, 1);
     layout->addWidget(m_convertsPresetsB, 1, 5, 1, 1);
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     QString defDownloadPath = QStandardPaths::standardLocations(QStandardPaths::DownloadLocation).value(0, QDir::homePath()) + "/";
+#else
+    defDownloadPath = QDir::homePath() + "/Downloads/";
+#endif
 #ifdef Q_OS_WIN
     defDownloadPath.replace('\\', '/');
 #endif

@@ -22,9 +22,16 @@
 #include <Functions.hpp>
 #include <CppUtils.hpp>
 
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    #include <QJsonDocument>
+    #include <QJsonObject>
+    #include <QJsonArray>
+#else
+    #include <QJsonDocument.h>
+    #include <QJsonObject.h>
+    #include <QJsonArray.h>
+#endif
+
 #include <QPainter>
 #include <QWidget>
 #include <QUrl>

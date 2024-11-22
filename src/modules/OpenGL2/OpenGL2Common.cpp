@@ -86,7 +86,9 @@ void RotAnimation::updateCurrentValue(const QVariant &value)
 OpenGL2Common::OpenGL2Common() :
 #ifndef OPENGL_ES2
     supportsShaders(false), canCreateNonPowerOfTwoTextures(false),
+#ifndef Q_OS_MACOS
     glActiveTexture(nullptr),
+#endif
 #endif
     vSync(true),
     hwAccellnterface(nullptr),
@@ -208,7 +210,7 @@ void OpenGL2Common::initializeGL()
         return;
     }
 
-#ifndef OPENGL_ES2
+#if !defined(OPENGL_ES2) && !defined(Q_OS_MACOS)
     if (!glActiveTexture) //Be sure that "glActiveTexture" has valid pointer (don't check "supportsShaders" here)!
     {
         showOpenGLMissingFeaturesMessage();
@@ -452,7 +454,9 @@ void OpenGL2Common::paintGL()
                 return;
             for (int p = 0; p < numPlanes; ++p)
             {
+    #ifndef Q_OS_MACOS
                 glActiveTexture(GL_TEXTURE0 + p);
+    #endif
                 glBindTexture(target, textures[p + 1]);
                 if (m_useMipmaps)
                     glGenerateMipmap(target);
@@ -490,7 +494,9 @@ void OpenGL2Common::paintGL()
                         data = nullptr;
                     }
                 }
+    #ifndef Q_OS_MACOS
                 glActiveTexture(GL_TEXTURE0 + p);
+    #endif
                 glBindTexture(GL_TEXTURE_2D, textures[p + 1]);
                 if (hasPbo || correctLinesize)
                     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
@@ -611,7 +617,9 @@ void OpenGL2Common::paintGL()
     shaderProgramVideo->disableAttributeArray(texCoordYCbCrLoc);
     shaderProgramVideo->disableAttributeArray(positionYCbCrLoc);
 
+#ifndef Q_OS_MACOS
     glActiveTexture(GL_TEXTURE3);
+#endif
 
     /* OSD */
     osdMutex.lock();
@@ -736,14 +744,20 @@ void OpenGL2Common::testGLInternal()
     {
         isOK = false;
     }
-    else if (!canCreateNonPowerOfTwoTextures || !supportsShaders || !glActiveTexture)
+    else if (!canCreateNonPowerOfTwoTextures || !supportsShaders
+#ifndef Q_OS_MACOS
+    || !glActiveTexture
+#endif
+    )
     {
         showOpenGLMissingFeaturesMessage();
         isOK = false;
     }
     /* Reset variables */
     supportsShaders = canCreateNonPowerOfTwoTextures = false;
+#ifndef Q_OS_MACOS
     glActiveTexture = nullptr;
+#endif
 #endif
 
     numPlanes = 3;
@@ -862,7 +876,9 @@ bool OpenGL2Common::initGLProc()
         supportsShaders = !!strstr(glExtensions, "GL_ARB_vertex_shader") && !!strstr(glExtensions, "GL_ARB_fragment_shader") && !!strstr(glExtensions, "GL_ARB_shader_objects");
         canCreateNonPowerOfTwoTextures = !!strstr(glExtensions, "GL_ARB_texture_non_power_of_two");
     }
+#ifndef Q_OS_MACOS
     glActiveTexture = (GLActiveTexture)context->getProcAddress("glActiveTexture");
+#endif
     glGenBuffers = (GLGenBuffers)context->getProcAddress("glGenBuffers");
     glBindBuffer = (GLBindBuffer)context->getProcAddress("glBindBuffer");
     glBufferData = (GLBufferData)context->getProcAddress("glBufferData");
@@ -889,10 +905,14 @@ void OpenGL2Common::showOpenGLMissingFeaturesMessage()
         stderr,
         "GL_ARB_texture_non_power_of_two : %s\n"
         "Vertex & fragment shader: %s\n"
+#ifndef Q_OS_MACOS
         "glActiveTexture: %s\n",
+#endif
         canCreateNonPowerOfTwoTextures ? "yes" : "no",
         supportsShaders ? "yes" : "no",
+#ifndef Q_OS_MACOS
         glActiveTexture ? "yes" : "no"
+#endif
     );
     QMPlay2Core.logError("OpenGL 2 :: " + tr("Driver must support multitexturing, shaders and Non-Power-Of-Two texture size"), true, true);
 }

@@ -60,7 +60,9 @@ class OpenGL2Common
 {
     Q_DECLARE_TR_FUNCTIONS(OpenGL2Common)
 #ifndef OPENGL_ES2
+#ifndef Q_OS_MACOS
     using GLActiveTexture  = void  (APIENTRY *)(GLenum);
+#endif
     using GLGenBuffers     = void  (APIENTRY *)(GLsizei, GLuint *);
     using GLBindBuffer     = void  (APIENTRY *)(GLenum, GLuint);
     using GLBufferData     = void  (APIENTRY *)(GLenum, GLsizeiptr, const void *, GLenum);
@@ -99,7 +101,9 @@ protected:
     void showOpenGLMissingFeaturesMessage();
 
     bool supportsShaders, canCreateNonPowerOfTwoTextures;
+#ifndef Q_OS_MACOS
     GLActiveTexture glActiveTexture;
+#endif
     GLGenBuffers glGenBuffers;
     GLBindBuffer glBindBuffer;
     GLBufferData glBufferData;

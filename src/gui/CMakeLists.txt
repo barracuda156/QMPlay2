@@ -34,9 +34,14 @@ set(GUI_HDR
     KeyBindingsDialog.hpp
     Updater.hpp
     RepeatMode.hpp
-    PanGestureEventFilter.hpp
-    EventFilterWorkarounds.hpp
 )
+
+if(NOT USE_QT4)
+    list(APPEND GUI_HDR
+        PanGestureEventFilter.hpp
+        EventFilterWorkarounds.hpp
+    )
+endif()
 
 set(GUI_SRC
     Main.cpp

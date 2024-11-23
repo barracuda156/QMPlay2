@@ -231,9 +231,11 @@ elseif(APPLE)
 
     set(QT_LIBS_DIR "${Qt5Widgets_DIR}/../..")
     set(QT_PLUGINS_DIR "${QT_LIBS_DIR}/../plugins")
+if(NOT USE_QT4)
     install(FILES
         "${QT_PLUGINS_DIR}/platforms/libqcocoa.dylib"
         DESTINATION "${MAC_BUNDLE_PATH}/Contents/plugins/platforms")
+endif()
     install(FILES
         "${QT_PLUGINS_DIR}/iconengines/libqsvgicon.dylib"
         DESTINATION "${MAC_BUNDLE_PATH}/Contents/plugins/iconengines")

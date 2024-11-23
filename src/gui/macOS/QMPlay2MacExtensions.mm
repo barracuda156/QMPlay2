@@ -1,14 +1,18 @@
 #include "QMPlay2MacExtensions.hpp"
+#include <QtGlobal>
 
-#include <QAbstractNativeEventFilter>
-#include <QGuiApplication>
-#include <QWindow>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    #include <QAbstractNativeEventFilter>
+    #include <QGuiApplication>
+    #include <QWindow>
+#endif
 
 #include <IOKit/hidsystem/ev_keymap.h>
 #include <AppKit/NSApplication.h>
 #include <AppKit/NSScreen.h>
 #include <AppKit/NSEvent.h>
 
+#if defined(MAC_OS_X_VERSION_10_7) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_7)
 class MediaKeysFilter : public QAbstractNativeEventFilter
 {
 public:
@@ -59,6 +63,7 @@ private:
 
     QMPlay2MacExtensions::MediaKeysCallback m_mediaKeysCallback;
 } static *g_mediaKeysFilter;
+#endif
 
 /**/
 
@@ -71,6 +76,7 @@ void QMPlay2MacExtensions::setApplicationVisible(bool visible)
         [app hide:nil];
 }
 
+#if defined(MAC_OS_X_VERSION_10_7) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_7)
 void QMPlay2MacExtensions::registerMacOSMediaKeys(const MediaKeysCallback &cb)
 {
     if (!g_mediaKeysFilter)
@@ -88,7 +94,9 @@ void QMPlay2MacExtensions::unregisterMacOSMediaKeys()
         g_mediaKeysFilter = nullptr;
     }
 }
+#endif
 
+#if defined(MAC_OS_X_VERSION_10_7) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_7)
 void QMPlay2MacExtensions::showSystemUi(QWindow *mainWindow, bool visible)
 {
 #if defined(MAC_OS_X_VERSION_10_9) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_9)
@@ -102,3 +110,4 @@ void QMPlay2MacExtensions::showSystemUi(QWindow *mainWindow, bool visible)
         flags = NSApplicationPresentationHideDock | NSApplicationPresentationAutoHideMenuBar;
     [NSApp setPresentationOptions:flags];
 }
+#endif

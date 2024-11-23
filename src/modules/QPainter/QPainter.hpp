@@ -37,7 +37,7 @@ private:
 
 class QCheckBox;
 
-class ModuleSettingsWidget : public Module::SettingsWidgett
+class ModuleSettingsWidget : public Module::SettingsWidget
 {
     Q_DECLARE_TR_FUNCTIONS(ModuleSettingsWidget)
 public:

@@ -46,17 +46,22 @@
 #include <QApplication>
 #include <QElapsedTimer>
 #include <QDialogButtonBox>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 2, 0)
+    #include <QLoggingCategory>
+#else
+    #include <QtLogging>
+    #define qCWarning qWarning
+#endif
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     #include <QWindow>
     #include <QStandardPaths>
-    #include <QLoggingCategory>
 #else
-    #include <qdesktopservices.h>
+    #include <QDesktopServices>
 #endif
 
 #include <functional>
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#if QT_VERSION >= QT_VERSION_CHECK(5, 2, 0)
     Q_LOGGING_CATEGORY(downloader, "Downloader")
 #endif
 

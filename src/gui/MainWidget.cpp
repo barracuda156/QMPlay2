@@ -30,8 +30,10 @@
 #include <QFileDialog>
 #include <QTreeWidget>
 #include <QListWidget>
-#ifdef Q_OS_MACOS
+#ifndef QMPLAY2_ALLOW_ONLY_ONE_INSTANCE
     #include <QProcess>
+#endif
+#if defined(Q_OS_MACOS) && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     #include <QScreen>
     #include <QWindow>
 #endif
@@ -61,8 +63,11 @@
 #include <ShortcutHandler.hpp>
 #include <VolWidget.hpp>
 #include <ScreenSaver.hpp>
-#ifdef Q_OS_MACOS
+#if defined(Q_OS_MACOS) && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     #include <QMPlay2MacExtensions.hpp>
+#else
+    #include <Carbon/Carbon.h>
+    extern void qt_mac_set_dock_menu(QMenu *);
 #endif
 
 using Functions::timeToStr;
@@ -76,8 +81,9 @@ using Functions::timeToStr;
 
 #include <cmath>
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 /* MainWidgetTmpStyle -  dock widget separator extent must be larger for touch screens */
-class MainWidgetTmpStyle final : public QCommonStyle
+class MainWidgetTmpStyle : public QCommonStyle
 {
 public:
     ~MainWidgetTmpStyle() = default;
@@ -90,6 +96,7 @@ public:
         return pM;
     }
 };
+#endif
 
 #ifndef Q_OS_MACOS
 static void copyMenu(QMenu *dest, QMenu *src, QMenu *dontCopy = nullptr)
@@ -110,13 +117,18 @@ static void copyMenu(QMenu *dest, QMenu *src, QMenu *dontCopy = nullptr)
 #endif
 
 /* MainWidget */
+#if QT_VERSION >= QT_VERSION_CHECK(5, 2, 0)
 MainWidget::MainWidget(QList<QPair<QString, QString>> &arguments) :
+#else
+MainWidget::MainWidget(QPair<QStringList, QStringList> &arguments) :
+#endif
     updater(this)
 {
     QMPlay2GUI.videoAdjustment = new VideoAdjustmentW;
     QMPlay2GUI.shortcutHandler = new ShortcutHandler(this);
     QMPlay2GUI.mainW = this;
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     /* Looking for touch screen */
     for (const QTouchDevice *touchDev : QTouchDevice::devices())
     {
@@ -128,6 +140,7 @@ MainWidget::MainWidget(QList<QPair<QString, QString>> &arguments) :
             break;
         }
     }
+#endif
 
     setObjectName("MainWidget");
 
@@ -284,9 +297,11 @@ MainWidget::MainWidget(QList<QPair<QString, QString>> &arguments) :
     connect(playlistDock, SIGNAL(play(const QString &)), &playC, SLOT(play(const QString &)));
     connect(playlistDock, SIGNAL(repeatEntry(bool)), &playC, SLOT(repeatEntry(bool)));
     connect(playlistDock, SIGNAL(stop()), &playC, SLOT(stop()));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     connect(playlistDock, &PlaylistDock::addAndPlayRestoreWindow, this, [this] {
         m_restoreWindowOnVideo = true;
     });
+#endif
 
     connect(seekS, SIGNAL(valueChanged(int)), this, SLOT(seek(int)));
     connect(seekS, SIGNAL(mousePosition(int)), this, SLOT(mousePositionOnSlider(int)));
@@ -300,9 +315,11 @@ MainWidget::MainWidget(QList<QPair<QString, QString>> &arguments) :
     connect(&QMPlay2Core, SIGNAL(processParam(const QString &, const QString &)), this, SLOT(processParam(const QString &, const QString &)));
     connect(&QMPlay2Core, SIGNAL(statusBarMessage(const QString &, int)), this, SLOT(statusBarMessage(const QString &, int)));
     connect(&QMPlay2Core, SIGNAL(showSettings(const QString &)), this, SLOT(showSettings(const QString &)));
-
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     connect(QMPlay2GUI.videoAdjustment, SIGNAL(videoAdjustmentChanged(const QString &)), &playC, SLOT(videoAdjustmentChanged(const QString &)));
-
+#else
+    connect(QMPlay2GUI.videoAdjustment, SIGNAL(videoAdjustmentChanged()), &playC, SLOT(videoAdjustmentChanged()));
+#endif
     connect(&playC, SIGNAL(chText(const QString &)), stateL, SLOT(setText(const QString &)));
     connect(&playC, SIGNAL(updateLength(int)), this, SLOT(setSeekSMaximum(int)));
     connect(&playC, SIGNAL(updatePos(double)), this, SLOT(updatePos(double)));
@@ -320,17 +337,23 @@ MainWidget::MainWidget(QList<QPair<QString, QString>> &arguments) :
     connect(&playC, SIGNAL(updateBufferedRange(int, int)), seekS, SLOT(drawRange(int, int)));
     connect(&playC, SIGNAL(updateWindowTitle(const QString &)), this, SLOT(updateWindowTitle(const QString &)));
     connect(&playC, SIGNAL(updateImage(const QImage &)), videoDock, SLOT(updateImage(const QImage &)));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     connect(&playC, &PlayClass::videoStarted, this, &MainWidget::videoStarted);
     connect(&playC, &PlayClass::videoNotStarted, this, [this] {
         m_restoreWindowOnVideo = false;
     });
+#else
+    connect(&playC, SIGNAL(videoStarted()), this, SLOT(videoStarted()));
+#endif
     connect(&playC, SIGNAL(uncheckSuspend()), this, SLOT(uncheckSuspend()));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     connect(&playC, &PlayClass::setVideoCheckState, this, [this](bool rotate90, bool hFlip, bool vFlip, bool spherical) {
         menuBar->playback->videoFilters->rotate90->setChecked(rotate90);
         menuBar->playback->videoFilters->hFlip->setChecked(hFlip);
         menuBar->playback->videoFilters->vFlip->setChecked(vFlip);
         menuBar->playback->videoFilters->spherical->setChecked(spherical);
     });
+#endif
     /**/
 
     if (settings.getBool("MainWidget/TabPositionNorth"))
@@ -361,7 +384,9 @@ MainWidget::MainWidget(QList<QPair<QString, QString>> &arguments) :
     QMPlay2GUI.menuBar->widgets->lockWidgetsAct = lockWidgetsAct;
 
     QMPlay2GUI.menuBar->setKeyShortcuts();
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     QMPlay2GUI.videoAdjustment->setKeyShortcuts();
+#endif
 
     volW->setVolume(settings.getInt("VolumeL"), settings.getInt("VolumeR"), true);
     if (settings.getBool("Mute"))
@@ -390,13 +415,16 @@ MainWidget::MainWidget(QList<QPair<QString, QString>> &arguments) :
         if (tabBar && tabBar->property("changeCurrentOnDrag").isValid())
         {
             tabBar->setAcceptDrops(true);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
             tabBar->setChangeCurrentOnDrag(true);
+#endif
         }
     }
 
     playlistDock->load(QMPlay2Core.getSettingsDir() + "Playlist.pls");
 
     bool noplay = false;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 2, 0)
     for (const auto &argument : asConst(arguments))
     {
         const QString &param = argument.first;
@@ -405,6 +433,15 @@ MainWidget::MainWidget(QList<QPair<QString, QString>> &arguments) :
         processParam(param, data);
     }
     arguments.clear();
+#else
+    while (!arguments.first.isEmpty())
+    {
+        const QString param = arguments.first.takeFirst();
+        const QString data  = arguments.second.takeFirst();
+        noplay |= (param == "open" || param == "noplay");
+        processParam(param, data);
+    }
+#endif
 
     if (!noplay)
     {
@@ -421,7 +458,7 @@ MainWidget::MainWidget(QList<QPair<QString, QString>> &arguments) :
             playStateChanged(false);
     }
 
-#ifdef Q_OS_MACOS
+#if defined(Q_OS_MACOS) && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     qApp->installEventFilter(this);
     fileOpenTimer.setSingleShot(true);
     connect(&fileOpenTimer, &QTimer::timeout, this, &MainWidget::fileOpenTimerTimeout);
@@ -434,7 +471,7 @@ MainWidget::MainWidget(QList<QPair<QString, QString>> &arguments) :
 }
 MainWidget::~MainWidget()
 {
-#ifdef Q_OS_MACOS
+#if defined(Q_OS_MACOS) && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     QMPlay2MacExtensions::unregisterMacOSMediaKeys();
 #endif
     QMPlay2Extensions::closeExtensions();
@@ -501,8 +538,10 @@ void MainWidget::processParam(const QString &param, const QString &data)
         else
             playlistDock->add(data);
     }
+#if QT_VERSION >= QT_VERSION_CHECK(5, 2, 0)
     else if (param == "play")
         playlistDock->start();
+#endif
     else if (param == "toggle")
         togglePlay();
     else if (param == "show")
@@ -692,6 +731,7 @@ void MainWidget::resetSpherical()
 
 void MainWidget::visualizationFullScreen()
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     QWidget *senderW = (QWidget *)sender();
     const auto maybeGoFullScreen = [this, senderW] {
         if (!fullScreen)
@@ -705,6 +745,13 @@ void MainWidget::visualizationFullScreen()
     QTimer::singleShot(200, maybeGoFullScreen);
 #else
     maybeGoFullScreen();
+#endif
+#else
+    if (!fullScreen)
+    {
+        videoDock->setWidget((QWidget *)sender());
+        toggleFullScreen();
+    }
 #endif
 }
 void MainWidget::hideAllExtensions()
@@ -724,7 +771,7 @@ void MainWidget::toggleVisibility()
             toggleFullScreen();
         if (!isTray)
         {
-#ifndef Q_OS_MACOS
+#if !defined(Q_OS_MACOS) || (QT_VERSION < QT_VERSION_CHECK(5, 0, 0))
             showMinimized();
 #else
             QMPlay2MacExtensions::setApplicationVisible(false);
@@ -779,7 +826,9 @@ void MainWidget::createMenuBar()
     connect(menuBar->window->toggleVisibility, SIGNAL(triggered()), this, SLOT(toggleVisibility()));
     connect(menuBar->window->toggleFullScreen, SIGNAL(triggered()), this, SLOT(toggleFullScreen()));
     connect(menuBar->window->toggleCompactView, SIGNAL(triggered()), this, SLOT(toggleCompactView()));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     connect(menuBar->window->alwaysOnTop, &QAction::triggered, this, &MainWidget::toggleAlwaysOnTop);
+#endif
     connect(menuBar->window->close, SIGNAL(triggered()), this, SLOT(close()));
 
     connect(menuBar->playlist->add->address, SIGNAL(triggered()), this, SLOT(openUrl()));
@@ -794,7 +843,9 @@ void MainWidget::createMenuBar()
     connect(menuBar->playlist->newGroup, SIGNAL(triggered()), playlistDock, SLOT(newGroup()));
     connect(menuBar->playlist->renameGroup, SIGNAL(triggered()), playlistDock, SLOT(renameGroup()));
     connect(menuBar->playlist->lock, SIGNAL(triggered()), playlistDock, SLOT(toggleLock()));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     connect(menuBar->playlist->alwaysSync, &QAction::triggered, playlistDock, &PlaylistDock::alwaysSyncTriggered);
+#endif
     connect(menuBar->playlist->delEntries, SIGNAL(triggered()), playlistDock, SLOT(delEntries()));
     connect(menuBar->playlist->delNonGroupEntries, SIGNAL(triggered()), playlistDock, SLOT(delNonGroupEntries()));
     connect(menuBar->playlist->clear, SIGNAL(triggered()), playlistDock, SLOT(clear()));
@@ -921,7 +972,7 @@ void MainWidget::createMenuBar()
     copyMenu(secondMenu, menuBar->help);
     if (tray)
         tray->setContextMenu(secondMenu);
-#else //On OS X add only the most important menu actions to dock menu
+#else // On OS X add only the most important menu actions to dock menu
     secondMenu->addAction(menuBar->player->togglePlay);
     secondMenu->addAction(menuBar->player->stop);
     secondMenu->addAction(menuBar->player->next);
@@ -930,16 +981,20 @@ void MainWidget::createMenuBar()
     secondMenu->addAction(menuBar->player->toggleMute);
     secondMenu->addSeparator();
     // Copy action, because PreferencesRole doesn't show in dock menu.
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     QAction *settings = new QAction(menuBar->options->settings->icon(), menuBar->options->settings->text(), menuBar->options->settings->parent());
     connect(settings, &QAction::triggered, menuBar->options->settings, &QAction::trigger);
     secondMenu->addAction(settings);
+#endif
 
+#ifndef QMPLAY2_ALLOW_ONLY_ONE_INSTANCE
     QAction *newInstanceAct = new QAction(tr("New window"), secondMenu);
     connect(newInstanceAct, &QAction::triggered, [] {
         QProcess::startDetached(QCoreApplication::applicationFilePath(), {"-noplay"}, QCoreApplication::applicationDirPath());
     });
     secondMenu->addSeparator();
     secondMenu->addAction(newInstanceAct);
+#endif
 
     qt_mac_set_dock_menu(secondMenu);
 #endif
@@ -1022,7 +1077,7 @@ void MainWidget::toggleFullScreen()
 #ifndef Q_OS_ANDROID
     static bool maximized;
 #endif
-#ifdef Q_OS_MACOS
+#if defined(Q_OS_MACOS) && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     if (isFullScreen())
     {
         showNormal();
@@ -1089,13 +1144,13 @@ void MainWidget::toggleFullScreen()
         menuBar->window->toggleFullScreen->setShortcuts(QList<QKeySequence>() << menuBar->window->toggleFullScreen->shortcut() << QKeySequence("ESC"));
         fullScreen = true;
 
-#ifndef Q_OS_MACOS
-        showFullScreen();
-#else
+#if defined(Q_OS_MACOS) && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
         setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
         setGeometry(window()->windowHandle()->screen()->geometry());
         QMPlay2MacExtensions::showSystemUi(windowHandle(), false);
         show();
+#else
+        showFullScreen();
 #endif
 
         if (playC.isPlaying())
@@ -1113,7 +1168,7 @@ void MainWidget::toggleFullScreen()
         fullScreen = false;
 
 #ifndef Q_OS_ANDROID
-#ifdef Q_OS_MACOS
+#if defined(Q_OS_MACOS) && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
         QMPlay2MacExtensions::showSystemUi(windowHandle(), true);
         setWindowFlags(Qt::Window);
 #else
@@ -1123,7 +1178,7 @@ void MainWidget::toggleFullScreen()
             showMaximized();
         else
         {
-#ifdef Q_OS_MACOS
+#if defined(Q_OS_MACOS) && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
             showNormal();
 #endif
             setGeometry(savedGeo);
@@ -1407,6 +1462,7 @@ void MainWidget::hideDocksSlot()
 }
 void MainWidget::doRestoreState(const QByteArray &data)
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     if (isMaximized())
     {
         setUpdatesEnabled(false);
@@ -1419,6 +1475,7 @@ void MainWidget::doRestoreState(const QByteArray &data)
         });
     }
     else
+#endif
     {
         restoreState(data);
     }
@@ -1773,12 +1830,13 @@ void MainWidget::hideEvent(QHideEvent *)
 
 bool MainWidget::eventFilter(QObject *obj, QEvent *event)
 {
+#if defined(Q_OS_MACOS) && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     if (tray && obj == tray && event->type() == QEvent::Wheel)
     {
         QWheelEvent *we = static_cast<QWheelEvent *>(event);
         volW->changeVolume(we->angleDelta().y() / 30);
     }
-#ifdef Q_OS_MACOS
+
     else if (event->type() == QEvent::FileOpen)
     {
         filesToAdd.append(((QFileOpenEvent *)event)->file());
@@ -1788,7 +1846,7 @@ bool MainWidget::eventFilter(QObject *obj, QEvent *event)
     return QMainWindow::eventFilter(obj, event);
 }
 
-#ifdef Q_OS_MACOS
+#if defined(Q_OS_MACOS) && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 void MainWidget::fileOpenTimerTimeout()
 {
     if (filesToAdd.count() == 1)

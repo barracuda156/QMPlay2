@@ -27,13 +27,14 @@
 #include <Playlist.hpp>
 #include <Version.hpp>
 #include <Module.hpp>
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#if QT_VERSION >= QT_VERSION_CHECK(5, 2, 0)
     #include <QLoggingCategory>
+#endif
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     #include <QWindow>
 #else
-	#define QT_VERSION_MAJOR 4
-	#define QT_VERSION_MINOR 8 // Qt 4.8.0 is the oldest supported Qt version
+    #define QT_VERSION_MAJOR 4
+    #define QT_VERSION_MINOR 8 // Qt 4.8.x is the oldest supported Qt version
 #endif
 
 #include <QApplication>

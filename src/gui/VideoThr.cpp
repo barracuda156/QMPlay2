@@ -181,7 +181,11 @@ void VideoThr::initFilters(bool processParams)
     {
         for (QString filterName : QMPSettings.getStringList("VideoFilters"))
         {
-            if (filterName.leftRef(1).toInt()) //if filter is enabled
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+            if (filterName.leftRef(1).toInt()) // if filter is enabled
+#else
+			if (filterName.left(1).toInt()) // if filter is enabled
+#endif
             {
                 VideoFilter *filter = filters.on((filterName = filterName.mid(1)));
                 bool ok = false;
@@ -660,7 +664,11 @@ void VideoThr::screenshot(VideoFrame videoFrame)
             quint16 num = 0;
             for (const QString &f : QDir(dir).entryList({"QMPlay2_snap_?????" + ext}, QDir::Files, QDir::Name))
             {
+    #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
                 const quint16 n = f.midRef(13, 5).toUShort();
+    #else
+                const quint16 n = f.mid(13, 5).toUShort();
+    #endif
                 if (n > num)
                     num = n;
             }

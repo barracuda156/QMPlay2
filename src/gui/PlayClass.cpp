@@ -33,10 +33,19 @@
 #include <Decoder.hpp>
 #include <Reader.hpp>
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+	#define USE_QRAWFONT
+#endif
+
+#ifdef USE_QRAWFONT
+	#include <QRawFont>
+#else
+	#include <QFontDatabase>
+#endif
+
 #include <QCoreApplication>
 #include <QInputDialog>
 #include <QMessageBox>
-#include <QRawFont>
 #include <QAction>
 #include <QDir>
 
@@ -303,13 +312,14 @@ void PlayClass::seek(double pos, bool allowAccurate)
             demuxThr->seek(false);
         demuxThr->seekMutex.unlock();
     }
-    emit QMPlay2Core.seeked(pos); //Signal for MPRIS2
+    emit QMPlay2Core.seeked(pos); // Signal for MPRIS2
     fillBufferB = true;
     if (aThr && paused)
         aThr->silence(true, true);
 }
 void PlayClass::chStream(const QString &s)
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     if (s.startsWith("audio"))
         chosenAudioStream = s.rightRef(s.length() - 5).toInt();
     else if (s.startsWith("video"))
@@ -322,9 +332,23 @@ void PlayClass::chStream(const QString &s)
         if (fileSubsList.count() > idx)
             loadSubsFile(fileSubsList[idx]);
     }
+#else
+    if (s.startsWith("audio"))
+        chosenAudioStream = s.right(s.length() - 5).toInt();
+    else if (s.startsWith("video"))
+        chosenVideoStream = s.right(s.length() - 5).toInt();
+    else if (s.startsWith("subtitles"))
+        chosenSubtitlesStream = s.right(s.length() - 9).toInt();
+    else if (s.startsWith("fileSubs"))
+    {
+        int idx = s.right(s.length() - 8).toInt();
+        if (fileSubsList.count() > idx)
+            loadSubsFile(fileSubsList[idx]);
+    }
+#endif
     else
     {
-        //TODO: What if one of type will not be found in next program?
+        // TODO: What if one of type will not be found in next program?
         chosenAudioStream = -1;
         chosenVideoStream = -1;
         chosenSubtitlesStream = -1;
@@ -401,9 +425,20 @@ void PlayClass::loadSubsFile(const QString &fileName)
                     {
                         const QByteArray fontData = f.readAll();
                         f.close();
+#ifdef USE_QRAWFONT
                         const QString fontName = QRawFont(fontData, 0.0).familyName();
                         if (!fontName.isEmpty())
                             ass->addFont(fontName.toUtf8(), fontData);
+#else // For Qt older than 5.0
+                        const int fontID = QFontDatabase::addApplicationFontFromData(fontData);
+                        if (fontID != -1)
+                        {
+                            const QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontID);
+                            QFontDatabase::removeApplicationFont(fontID);
+                            if (!fontFamilies.isEmpty())
+                                ass->addFont(fontFamilies.first().toUtf8(), fontData);
+                        }
+#endif
                     }
                 }
 
@@ -735,15 +770,27 @@ void PlayClass::videoResized(int w, int h)
     videoWinH = h;
 }
 
-void PlayClass::videoAdjustmentChanged(const QString &osdText)
+// MOC is stupid.
+// #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+// void PlayClass::videoAdjustmentChanged(const QString &osdText)
+// {
+//     if (vThr)
+//     {
+//         vThr->setVideoAdjustment();
+//         vThr->processParams();
+//         messageAndOSD(osdText);
+//     }
+// }
+// #else
+void PlayClass::videoAdjustmentChanged()
 {
     if (vThr)
     {
         vThr->setVideoAdjustment();
         vThr->processParams();
-        messageAndOSD(osdText);
     }
 }
+// #endif
 
 void PlayClass::setAB()
 {

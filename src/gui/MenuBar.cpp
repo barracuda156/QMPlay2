@@ -366,7 +366,7 @@ MenuBar::Playback::VideoFilters::VideoFilters(QMenu *parent) :
     widgetAction->setDefaultWidget(QMPlay2GUI.videoAdjustment);
     QMPlay2GUI.videoAdjustment->setObjectName(videoAdjustmentMenu->title().remove('&'));
     videoAdjustmentMenu->addAction(widgetAction);
-#ifdef Q_OS_MACOS
+#if defined(Q_OS_MACOS) && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     // Update visibility and update geometry of video adjustment widget
     connect(videoAdjustmentMenu, &VideoFilters::aboutToShow, [] {
         QWidget *parent = QMPlay2GUI.videoAdjustment->parentWidget();

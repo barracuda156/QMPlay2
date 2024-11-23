@@ -23,7 +23,6 @@
 
 #include <QStringListModel>
 #include <QDesktopServices>
-#include <QJsonParseError>
 #include <QTextDocument>
 #include <QProgressBar>
 #include <QApplication>
@@ -37,9 +36,12 @@
 #include <QAction>
 #include <QMenu>
 #include <QUrl>
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#if QT_VERSION >= QT_VERSION_CHECK(5, 2, 0)
     #include <QLoggingCategory>
+#else
+    #define qCWarning qWarning
+#endif
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     #include <QJsonParseError>
     #include <QJsonDocument>
     #include <QJsonObject>
@@ -51,7 +53,7 @@
     #include <QJsonArray.h>
 #endif
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#if QT_VERSION >= QT_VERSION_CHECK(5, 2, 0)
     Q_LOGGING_CATEGORY(youtube, "Extensions/YouTube")
 #endif
 
@@ -62,6 +64,7 @@ static inline QString toPercentEncoding(const QString &txt)
     return txt.toUtf8().toPercentEncoding();
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 static inline QString getYtUrl(const QString &title, const int page, const int sortByIdx)
 {
     static constexpr const char *sortBy[4] {
@@ -73,6 +76,13 @@ static inline QString getYtUrl(const QString &title, const int page, const int s
     Q_ASSERT(sortByIdx >= 0 && sortByIdx <= 3);
     return QString(YOUTUBE_URL "/results?search_query=%1%2&page=%3").arg(toPercentEncoding(title), sortBy[sortByIdx]).arg(page);
 }
+#else
+static inline QString getYtUrl(const QString &title, const int page, const bool sortByDate)
+{
+    return QString(YOUTUBE_URL "/results?search_query=%1%2&page=%3").arg(toPercentEncoding(title), sortByDate ? "&sp=CAI%253D" : QString()).arg(page);
+}
+#endif
+
 static inline QString getAutocompleteUrl(const QString &text)
 {
     return QString("http://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=%1").arg(toPercentEncoding(text));
@@ -100,8 +110,13 @@ ResultsYoutube::ResultsYoutube()
     headerItem()->setText(2, tr("User"));
 
     header()->setStretchLastSection(false);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     header()->setSectionResizeMode(0, QHeaderView::Stretch);
     header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+#else
+    header()->setResizeMode(0, QHeaderView::Stretch);
+    header()->setResizeMode(1, QHeaderView::ResizeToContents);
+#endif
 
     connect(this, SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)), this, SLOT(playEntry(QTreeWidgetItem *)));
     connect(this, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(contextMenu(const QPoint &)));
@@ -281,9 +296,13 @@ YouTube::YouTube(Module &module) :
     searchB->setAutoRaise(true);
 
     QToolButton *showSettingsB = new QToolButton;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     connect(showSettingsB, &QToolButton::clicked, this, [] {
         emit QMPlay2Core.showSettings("Extensions");
     });
+#else
+    connect(showSettingsB, SIGNAL(clicked()), this, SLOT(showSettings()));
+#endif
     showSettingsB->setIcon(QMPlay2Core.getIconFromTheme("configure"));
     showSettingsB->setToolTip(tr("Settings"));
     showSettingsB->setAutoRaise(true);
@@ -292,6 +311,7 @@ YouTube::YouTube(Module &module) :
     for (auto &&qualityPreset : getQualityPresets())
         m_qualityGroup->addAction(qualityPreset);
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     QMenu *qualityMenu = new QMenu(this);
     int qualityIdx = 0;
     for (QAction *act : m_qualityGroup->actions())
@@ -307,6 +327,18 @@ YouTube::YouTube(Module &module) :
         qualityMenu->addAction(act);
         ++qualityIdx;
     }
+#else
+    qualityMenu = new QMenu(this);
+    int qualityIdx = 0;
+    for (QAction *act : m_qualityGroup->actions())
+    {
+        connect(act, SIGNAL(triggered(bool)), this, SLOT(setQualityFromMenu()));
+        act->setObjectName(QString::number(qualityIdx++));
+        act->setCheckable(true);
+        qualityMenu->addAction(act);
+    }
+#endif
+
     qualityMenu->insertSeparator(qualityMenu->actions().at(5));
 
     QToolButton *qualityB = new QToolButton;
@@ -322,6 +354,7 @@ YouTube::YouTube(Module &module) :
     m_sortByGroup->addAction(tr("View count"));
     m_sortByGroup->addAction(tr("Rating"));
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     QMenu *sortByMenu = new QMenu(this);
     int sortByIdx = 0;
     for (QAction *act : m_sortByGroup->actions())
@@ -352,6 +385,9 @@ YouTube::YouTube(Module &module) :
     }
     sortByB->setMenu(sortByMenu);
     sortByB->setAutoRaise(true);
+#else
+    // FIXME: implement in Qt4 syntax.
+#endif
 
     resultsW = new ResultsYoutube;
 
@@ -366,6 +402,7 @@ YouTube::YouTube(Module &module) :
     QGridLayout *layout = new QGridLayout;
     layout->addWidget(showSettingsB, 0, 0, 1, 1);
     layout->addWidget(qualityB, 0, 1, 1, 1);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     layout->addWidget(sortByB, 0, 2, 1, 1);
     layout->addWidget(searchE, 0, 3, 1, 1);
     layout->addWidget(searchB, 0, 4, 1, 1);
@@ -373,6 +410,13 @@ YouTube::YouTube(Module &module) :
     layout->addWidget(resultsW, 1, 0, 1, 6);
     layout->addWidget(progressB, 2, 0, 1, 6);
     layout->setSpacing(3);
+#else
+    layout->addWidget(searchE, 0, 2, 1, 1);
+    layout->addWidget(searchB, 0, 3, 1, 1);
+    layout->addWidget(pageSwitcher, 0, 4, 1, 1);
+    layout->addWidget(resultsW, 1, 0, 1, 5);
+    layout->addWidget(progressB, 2, 0, 1, 5);
+#endif
     setLayout(layout);
 
     SetModule(module);
@@ -402,8 +446,10 @@ bool YouTube::set()
 
     resultsW->setColumnCount(sets().getBool("YouTube/ShowUserName") ? 3 : 2);
     m_allowSubtitles = sets().getBool("YouTube/Subtitles");
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     m_sortByIdx = qBound(0, sets().getInt("YouTube/SortBy"), 3);
     m_sortByGroup->actions().at(m_sortByIdx)->setChecked(true);
+#endif
     return true;
 }
 
@@ -484,6 +530,21 @@ QVector<QAction *> YouTube::getActions(const QString &name, double, const QStrin
     return {};
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+void YouTube::showSettings()
+{
+    emit QMPlay2Core.showSettings("Extensions");
+}
+void YouTube::setQualityFromMenu() // Call it only from quality menu!
+{
+    const int qualityIdx = sender()->objectName().toInt();
+    sets().set("YouTube/MultiStream", true);
+    sets().set("YouTube/ItagVideoList", getQualityPresetString(qualityIdx));
+    sets().set("YouTube/ItagAudioList", QStringList{"251", "171", "140"});
+    setItags();
+}
+#endif
+
 void YouTube::next()
 {
     pageSwitcher->currPageB->setValue(pageSwitcher->currPageB->value() + 1);
@@ -523,9 +584,14 @@ void YouTube::search()
     resultsW->clear();
     if (!title.isEmpty())
     {
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
         if (lastTitle != title || sender() == searchE || sender() == searchB || qobject_cast<QAction *>(sender()))
             currPage = 1;
         searchReply = net.start(getYtUrl(title, currPage, m_sortByIdx));
+#else
+        if (lastTitle != title || sender() == searchE || sender() == searchB)
+        searchReply = net.start(getYtUrl(title, currPage, sets().getBool("YouTube/SortByDate")));
+#endif
         progressB->setRange(0, 0);
         progressB->show();
     }
@@ -949,8 +1015,8 @@ QStringList YouTube::getYouTubeVideo(const QString &param, const QString &url, I
         if (format.isEmpty())
             continue;
 
-        const auto container = format["container"].toString();
-        if (container.contains("dash", Qt::CaseInsensitive))
+        const auto protocol = format["protocol"].toString();
+        if (protocol.contains("dash", Qt::CaseInsensitive))
         {
             // Skip MP4 DASH, because it doesn't work properly
             continue;

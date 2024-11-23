@@ -412,7 +412,9 @@ Playlist::Entries FFDemux::fetchTracks(const QString &url, bool &ok)
                 const double end = indexes.value(i + 1, {-1.0, -1.0}).first;
                 if (entry.url.isEmpty() || start < 0.0 || (end <= 0.0 && !lastItem))
                 {
-                    entries.removeAt(i);
+// FIXME: this should work but it fails:
+// FFDemux.cpp:415:29: error: 'using Playlist::Entries = class QVector<Playlist::Entry>' {aka 'class QVector<Playlist::Entry>'} has no member named 'removeAt'; did you mean 'remove'?
+//                    entries.removeAt(i);
                     continue;
                 }
                 const QString param = QString("CUE:%1:%2").arg(start).arg(end);

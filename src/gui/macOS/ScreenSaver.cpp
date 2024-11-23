@@ -20,6 +20,8 @@
 
 #include <IOKit/pwr_mgt/IOPMLib.h>
 
+#include <AvailabilityMacros.h>
+
 #define QMPLAY2_MEDIA_PLAYBACK CFSTR("QMPlay2 media playback")
 
 class ScreenSaverPriv
@@ -32,8 +34,13 @@ public:
 
     inline void inhibit()
     {
-        m_okDisp = (IOPMAssertionCreateWithName(kIOPMAssertPreventUserIdleDisplaySleep, kIOPMAssertionLevelOn, QMPLAY2_MEDIA_PLAYBACK, &m_idDisp) == kIOReturnSuccess);
-        m_okSys  = (IOPMAssertionCreateWithName(kIOPMAssertPreventUserIdleSystemSleep,  kIOPMAssertionLevelOn, QMPLAY2_MEDIA_PLAYBACK, &m_idSys)  == kIOReturnSuccess);
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1060
+		m_okDisp = (IOPMAssertionCreate(kIOPMAssertionTypeNoDisplaySleep, kIOPMAssertionLevelOn, &m_idDisp) == kIOReturnSuccess);
+		m_okSys  = (IOPMAssertionCreate(kIOPMAssertionTypeNoIdleSleep, kIOPMAssertionLevelOn, &m_idSys)  == kIOReturnSuccess);
+#else
+		m_okDisp = (IOPMAssertionCreateWithName(kIOPMAssertionTypeNoDisplaySleep, kIOPMAssertionLevelOn, QMPLAY2_MEDIA_PLAYBACK, &m_idDisp) == kIOReturnSuccess);
+		m_okSys  = (IOPMAssertionCreateWithName(kIOPMAssertionTypeNoIdleSleep, kIOPMAssertionLevelOn, QMPLAY2_MEDIA_PLAYBACK, &m_idSys) == kIOReturnSuccess);
+#endif
     }
     inline void unInhibit()
     {

@@ -18,15 +18,20 @@
 
 #include <VideoAdjustmentW.hpp>
 
-#include <ShortcutHandler.hpp>
 #include <ModuleParams.hpp>
 #include <Settings.hpp>
 #include <Slider.hpp>
-#include <Main.hpp>
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    #include <ShortcutHandler.hpp>
+    #include <Main.hpp>
+    #include <QAction>
+#else
+    #include <QVariant>
+#endif
 
 #include <QGridLayout>
 #include <QPushButton>
-#include <QAction>
 #include <QLabel>
 
 enum CONTROLS
@@ -46,9 +51,12 @@ constexpr const char *g_controlsNames[CONTROLS_COUNT] = {
     QT_TRANSLATE_NOOP("VideoAdjustmentW", "Hue"),
     QT_TRANSLATE_NOOP("VideoAdjustmentW", "Sharpness")
 };
-constexpr int g_step = 5;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    constexpr int g_step = 5;
+#endif
 
 VideoAdjustmentW::VideoAdjustmentW()
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 {
     QGridLayout *layout = new QGridLayout;
 
@@ -106,35 +114,108 @@ VideoAdjustmentW::VideoAdjustmentW()
 
     setLayout(layout);
 }
+#else
+    : m_sliders(new Slider[CONTROLS_COUNT])
+{
+    QGridLayout *layout = new QGridLayout;
+    int i;
+    for (i = 0; i < CONTROLS_COUNT; ++i)
+    {
+
+        QLabel *titleL = new QLabel(tr(g_controlsNames[i]) + ": ");
+        titleL->setAlignment(Qt::AlignRight);
+
+        QLabel *valueL = new QLabel("0");
+
+        Slider *slider = &m_sliders[i];
+        slider->setProperty("valueL", qVariantFromValue((void *)valueL));
+        slider->setTickPosition(QSlider::TicksBelow);
+        slider->setMinimumWidth(50);
+        slider->setTickInterval(25);
+        slider->setRange(-100, 100);
+        slider->setWheelStep(1);
+        slider->setValue(0);
+        connect(slider, SIGNAL(valueChanged(int)), this, SLOT(setValue(int)));
+
+        layout->addWidget(titleL, i, 0);
+        layout->addWidget(slider, i, 1);
+        layout->addWidget(valueL, i, 2);
+    }
+
+    QPushButton *resetB = new QPushButton(tr("Reset"));
+    connect(resetB, SIGNAL(clicked()), this, SLOT(reset()));
+
+    layout->addWidget(resetB, i++, 0, 1, 3);
+    layout->addItem(new QSpacerItem(40, 0, QSizePolicy::Maximum, QSizePolicy::Minimum), i, 2);
+
+    setLayout(layout);
+}
+#endif
+
 VideoAdjustmentW::~VideoAdjustmentW()
-{}
+{
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+    delete[] m_sliders;
+#endif
+}
 
 void VideoAdjustmentW::restoreValues()
 {
     for (int i = 0; i < CONTROLS_COUNT; ++i)
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         m_sliders[i]->setValue(QMPlay2Core.getSettings().getInt(QString("VideoAdjustment/") + g_controlsNames[i]));
+#else
+        m_sliders[i].setValue(QMPlay2Core.getSettings().getInt(QString("VideoAdjustment/") + g_controlsNames[i]));
+#endif
 }
 void VideoAdjustmentW::saveValues()
 {
     for (int i = 0; i < CONTROLS_COUNT; ++i)
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         QMPlay2Core.getSettings().set(QString("VideoAdjustment/") + g_controlsNames[i], m_sliders[i]->value());
+#else
+        QMPlay2Core.getSettings().set(QString("VideoAdjustment/") + g_controlsNames[i], m_sliders[i].value());
+#endif
 }
 
 void VideoAdjustmentW::setModuleParam(ModuleParams *writer)
 {
     for (int i = 0; i < CONTROLS_COUNT; ++i)
     {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         m_sliders[i]->setEnabled(writer->hasParam(g_controlsNames[i]));
         writer->modParam(g_controlsNames[i], m_sliders[i]->value());
+#else
+        m_sliders[i].setEnabled(writer->hasParam(g_controlsNames[i]));
+        writer->modParam(g_controlsNames[i], m_sliders[i].value());
+#endif
     }
 }
 
 void VideoAdjustmentW::enableControls()
 {
     for (int i = 0; i < CONTROLS_COUNT; ++i)
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         m_sliders[i]->setEnabled(true);
+#else
+        m_sliders[i].setEnabled(true);
+#endif
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+void VideoAdjustmentW::setValue(int v)
+{
+    ((QLabel *)sender()->property("valueL").value<void *>())->setText(QString::number(v));
+    emit videoAdjustmentChanged();
+}
+void VideoAdjustmentW::reset()
+{
+    for (int i = 0; i < CONTROLS_COUNT; ++i)
+        m_sliders[i].setValue(0);
+}
+#endif
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 void VideoAdjustmentW::setKeyShortcuts()
 {
     ShortcutHandler *shortcuts = QMPlay2GUI.shortcutHandler;
@@ -171,3 +252,4 @@ void VideoAdjustmentW::addActionsToWidget(QWidget *w)
     }
     w->addAction(m_resetAction);
 }
+#endif

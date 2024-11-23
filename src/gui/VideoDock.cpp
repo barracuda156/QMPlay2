@@ -18,7 +18,9 @@
 
 #include <VideoDock.hpp>
 
-#include <VideoAdjustmentW.hpp>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    #include <VideoAdjustmentW.hpp>
+#endif
 #include <Settings.hpp>
 #include <MenuBar.hpp>
 #include <Main.hpp>
@@ -69,7 +71,9 @@ VideoDock::VideoDock() :
         addAction(act);
     for (QAction *act : QMPlay2GUI.menuBar->help->actions())
         addAction(act);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     QMPlay2GUI.videoAdjustment->addActionsToWidget(this);
+#endif
     /**/
 
     setMouseTracking(true);
@@ -88,10 +92,14 @@ VideoDock::VideoDock() :
     connect(&iDW, SIGNAL(resized(int, int)), this, SLOT(resizedIDW(int, int)));
     connect(&iDW, SIGNAL(hasCoverImage(bool)), this, SLOT(hasCoverImage(bool)));
     connect(this, SIGNAL(visibilityChanged(bool)), this, SLOT(visibilityChanged(bool)));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     connect(&QMPlay2Core, &QMPlay2CoreClass::dockVideo, this, [this](QWidget *w) {
         iDW.setWidget(w);
         mouseMoveEvent(nullptr);
     });
+#else
+    connect(&QMPlay2Core, SIGNAL(dockVideo(QWidget *)), &iDW, SLOT(setWidget(QWidget *)));
+#endif
 
     if ((isBreeze = QApplication::style()->objectName() == "breeze"))
         setStyle(&commonStyle);

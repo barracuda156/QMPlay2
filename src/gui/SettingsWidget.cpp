@@ -29,7 +29,7 @@
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     #include <QStandardPaths>
 #else
-    #include <qdesktopservices.h>
+    #include <QDesktopServices>
 #endif
 #include <QStyleFactory>
 #include <QRadioButton>
@@ -131,7 +131,7 @@ void SettingsWidget::InitSettings()
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     QMPSettings.init("screenshotPth", QStandardPaths::standardLocations(QStandardPaths::PicturesLocation).value(0, QDir::homePath()));
 #else
-    QMPSettings.init("screenshotPth", QDesktopServices::standardLocations(QDesktopServices::PicturesLocation).value(0, QDir::homePath()));
+    QMPSettings.init("screenshotPth", QDesktopServices::storageLocation(QDesktopServices::PicturesLocation));
 #endif
 #ifdef Q_OS_WIN
     QMPSettings.init("screenshotFormat", ".bmp");
@@ -458,6 +458,7 @@ SettingsWidget::SettingsWidget(int page, const QString &moduleName, QWidget *vid
         page2->wheelSeekB->setChecked(QMPSettings.getBool("WheelSeek"));
         page2->wheelVolumeB->setChecked(QMPSettings.getBool("WheelVolume"));
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         page2->storeARatioAndZoomB->setChecked(QMPSettings.getBool("StoreARatioAndZoom"));
         connect(page2->storeARatioAndZoomB, &QCheckBox::toggled, this, [this](bool checked) {
             if (checked)
@@ -482,6 +483,7 @@ SettingsWidget::SettingsWidget(int page, const QString &moduleName, QWidget *vid
                 page2->storeARatioAndZoomB->setChecked(false);
             }
         });
+#endif
 
         page2->showBufferedTimeOnSlider->setChecked(QMPSettings.getBool("ShowBufferedTimeOnSlider"));
         page2->savePos->setChecked(QMPSettings.getBool("SavePos"));
@@ -685,7 +687,11 @@ void SettingsWidget::applyProxy()
     Settings &QMPSettings = QMPlay2Core.getSettings();
     if (!QMPSettings.getBool("Proxy/Use"))
     {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         qunsetenv("http_proxy");
+#else
+        unsetenv("http_proxy");
+#endif
     }
     else
     {
@@ -708,7 +714,11 @@ void SettingsWidget::applyProxy()
             auth += '@';
             proxyEnv.insert(7, auth);
         }
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         qputenv("http_proxy", proxyEnv.toLocal8Bit());
+#else
+        setenv("http_proxy", proxyEnv.toLocal8Bit(), true);
+#endif
     }
 }
 

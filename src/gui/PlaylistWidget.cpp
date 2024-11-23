@@ -57,6 +57,7 @@ static inline MenuBar::Playlist *playlistMenu()
     return QMPlay2GUI.menuBar->playlist;
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 /* PlaylistItem class */
 class PlaylistItem : public QTreeWidgetItem
 {
@@ -70,6 +71,7 @@ public:
         return QTreeWidgetItem::operator <(other);
     }
 };
+#endif
 
 /* UpdateEntryThr class */
 UpdateEntryThr::UpdateEntryThr(PlaylistWidget &pLW) :
@@ -595,7 +597,11 @@ PlaylistWidget::PlaylistWidget() :
     setAnimated(true);
     header()->setStretchLastSection(false);
     setHeaderHidden(true);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     header()->setSectionResizeMode(0, QHeaderView::Stretch);
+#else
+    header()->setResizeMode(0, QHeaderView::Stretch);
+#endif
     header()->hideSection(1);
     setItemsResizeToContents(true);
     setIconSize({22, 22});
@@ -608,7 +614,9 @@ PlaylistWidget::PlaylistWidget() :
     connect(&animationTimer, SIGNAL(timeout()), this, SLOT(animationUpdate()));
     connect(&addTimer, SIGNAL(timeout()), this, SLOT(addTimerElapsed()));
     connect(&addThr, SIGNAL(status(bool)), this, SIGNAL(addStatus(bool)));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     connect(playlistMenu(), &MenuBar::Playlist::aboutToShow, this, &PlaylistWidget::createExtensionsMenu);
+#endif
 }
 
 QString PlaylistWidget::getUrl(QTreeWidgetItem *tWI) const
@@ -622,7 +630,11 @@ void PlaylistWidget::setItemsResizeToContents(bool b)
 {
     const QHeaderView::ResizeMode rm = b ? QHeaderView::ResizeToContents : QHeaderView::Fixed;
     for (int i = 1; i <= 2; ++i)
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         header()->setSectionResizeMode(i, rm);
+#else
+        header()->setResizeMode(i, rm);
+#endif
 }
 
 void PlaylistWidget::sortCurrentGroup(int column, Qt::SortOrder sortOrder)
@@ -915,7 +927,11 @@ void PlaylistWidget::setEntryFont(QTreeWidgetItem *tWI, const int flags)
 
 QTreeWidgetItem *PlaylistWidget::newGroup(const QString &name, const QString &url, QTreeWidgetItem *parent, int insertChildAt, QStringList *existingEntries)
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     QTreeWidgetItem *tWI = new PlaylistItem;
+#else
+    QTreeWidgetItem *tWI = new QTreeWidgetItem;
+#endif
 
     tWI->setFlags(tWI->flags() | Qt::ItemIsEditable);
     QMPlay2GUI.setTreeWidgetItemIcon(tWI, url.isEmpty() ? *QMPlay2GUI.groupIcon : *QMPlay2GUI.folderIcon, 0, this);
@@ -930,7 +946,11 @@ QTreeWidgetItem *PlaylistWidget::newGroup(const QString &name, const QString &ur
 }
 QTreeWidgetItem *PlaylistWidget::newEntry(const Playlist::Entry &entry, QTreeWidgetItem *parent, const Functions::DemuxersInfo &demuxersInfo, int insertChildAt, QStringList *existingEntries)
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     QTreeWidgetItem *tWI = new PlaylistItem;
+#else
+    QTreeWidgetItem *tWI = new QTreeWidgetItem;
+#endif
 
     QIcon icon;
     Functions::getDataIfHasPluginPrefix(entry.url, nullptr, nullptr, &icon, nullptr, demuxersInfo);

@@ -49,6 +49,11 @@
 #include "AudioDevice.h"
 #import <Cocoa/Cocoa.h>
 
+#include <AvailabilityMacros.h>
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101300
+    #define __Verify_noErr verify_noerr
+#endif
+
 char *OSTStr(OSType type)
 {
     static union OSTStr {

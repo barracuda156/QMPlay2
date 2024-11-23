@@ -38,7 +38,11 @@ static void appendColon(const QObjectList &objects)
 void OSDSettingsW::init(const QString &prefix, int a, int b, int c, int d, int e, int f, double g, double h, const QColor &i, const QColor &j, const QColor &k)
 {
     Settings &QMPSettings = QMPlay2Core.getSettings();
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     QMPSettings.init(prefix + "/FontName", QGuiApplication::font().family());
+#else
+    QMPSettings.init(prefix + "/FontName", QFontComboBox().currentText());
+#endif
     QMPSettings.init(prefix + "/FontSize", a);
     QMPSettings.init(prefix + "/Spacing", b);
     QMPSettings.init(prefix + "/LeftMargin", c);

@@ -62,7 +62,11 @@ private:
     QCheckBox *MPRIS2B;
 #endif
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     QCheckBox *userNameB, *subtitlesB;
+#else
+    QCheckBox *userNameB, *subtitlesB, *sortByDateB;
+#endif
     QComboBox *qualityPreset;
 
 #ifdef USE_LASTFM

@@ -91,8 +91,13 @@ Radio::Radio(Module &module) :
     ui->radioView->setIconSize({m_radioBrowserModel->elementHeight(), m_radioBrowserModel->elementHeight()});
 
     QHeaderView *header = ui->radioView->header();
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     header->setSectionResizeMode(0, QHeaderView::Stretch);
     header->setSectionResizeMode(4, QHeaderView::ResizeToContents);
+#else
+    header->setResizeMode(0, QHeaderView::Stretch);
+    header->setResizeMode(4, QHeaderView::ResizeToContents);
+#endif
 
     connect(m_radioBrowserMenu->addAction(tr("Play")), SIGNAL(triggered(bool)), this, SLOT(radioBrowserPlay()));
     connect(m_radioBrowserMenu->addAction(tr("Enqueue")), SIGNAL(triggered(bool)), this, SLOT(radioBrowserEnqueue()));

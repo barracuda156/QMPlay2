@@ -20,8 +20,10 @@
 
 #include <QWidget>
 
-#include <vector>
-#include <array>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    #include <vector>
+    #include <array>
+#endif
 
 class ModuleParams;
 class QAction;
@@ -41,14 +43,31 @@ public:
     void setModuleParam(ModuleParams *writer);
     void enableControls();
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     void setKeyShortcuts();
     void addActionsToWidget(QWidget *w);
+#endif
 
 signals:
-    void videoAdjustmentChanged(const QString &osdText);
+// MOC is stupid.
+// #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+//     void videoAdjustmentChanged(const QString &osdText);
+// #else
+    void videoAdjustmentChanged();
+// #endif
+
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+private slots:
+	void setValue(int);
+	void reset();
+#endif
 
 private:
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     std::vector<Slider *> m_sliders;
     std::vector<std::array<QAction *, 2>> m_actions;
     QAction *m_resetAction = nullptr;
+#else
+    Slider *m_sliders;
+#endif
 };

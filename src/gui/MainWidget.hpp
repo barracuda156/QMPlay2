@@ -48,7 +48,11 @@ class MainWidget : public QMainWindow
     Q_PROPERTY(bool fullScreen READ getFullScreen)
     Q_OBJECT
 public:
+#if QT_VERSION >= QT_VERSION_CHECK(5, 2, 0)
     MainWidget(QList<QPair<QString, QString>> &argument);
+#else
+    MainWidget(QPair<QStringList, QStringList> &argument);
+#endif
     ~MainWidget() final;
 private slots:
     void detachFromPipe();
@@ -145,7 +149,7 @@ private:
 
     bool eventFilter(QObject *obj, QEvent *event) override final;
 
-#ifdef Q_OS_MACOS
+#if defined(Q_OS_MACOS) && (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     void fileOpenTimerTimeout();
 
     QTimer fileOpenTimer;

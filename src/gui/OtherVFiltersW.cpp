@@ -37,7 +37,11 @@ OtherVFiltersW::OtherVFiltersW(bool hw) :
         for (const QString &filter : QMPlay2Core.getSettings().getStringList("VideoFilters"))
         {
             videoFilters.first += filter.mid(1);
+    #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
             videoFilters.second += filter.leftRef(1).toInt();
+    #else
+            videoFilters.second += filter.left(1).toInt();
+    #endif
         }
 
         for (int i = 0; i < videoFilters.first.count(); ++i)

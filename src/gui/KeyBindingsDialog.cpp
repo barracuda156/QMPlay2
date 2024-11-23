@@ -35,8 +35,13 @@ KeyBindingsDialog::KeyBindingsDialog(QWidget *p) :
     shortcuts->setModel(QMPlay2GUI.shortcutHandler);
     shortcuts->setFrameShape(QFrame::NoFrame);
     shortcuts->setAlternatingRowColors(true);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     shortcuts->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     shortcuts->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
+#else
+    shortcuts->horizontalHeader()->setResizeMode(0, QHeaderView::ResizeToContents);
+    shortcuts->horizontalHeader()->setResizeMode(1, QHeaderView::Stretch);
+#endif
     shortcuts->setSelectionMode(QAbstractItemView::SingleSelection);
     shortcuts->verticalHeader()->setVisible(false);
 

@@ -170,7 +170,12 @@ private slots:
     void settingsChanged(int, bool);
     void videoResized(int, int);
 
-    void videoAdjustmentChanged(const QString &osdText);
+// MOC is stupid.
+// #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+//     void videoAdjustmentChanged(const QString &osdText);
+// #else
+    void videoAdjustmentChanged();
+// #endif
 
     void setAB();
     void speedUp();

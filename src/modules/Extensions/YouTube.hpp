@@ -100,6 +100,10 @@ public:
     QVector<QAction *> getActions(const QString &, double, const QString &, const QString &, const QString &) override final;
 
 private slots:
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+    void showSettings();
+    void setQualityFromMenu();
+#endif
     void next();
     void prev();
     void chPage();
@@ -129,6 +133,9 @@ private:
 
     LineEdit *searchE;
     QToolButton *searchB;
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+    QMenu *qualityMenu;
+#endif
     ResultsYoutube *resultsW;
     QProgressBar *progressB;
     PageSwitcher *pageSwitcher;
@@ -143,9 +150,11 @@ private:
 
     bool m_allowSubtitles;
 
+#if QT_VERSION > QT_VERSION_CHECK(5, 0, 0)
     QActionGroup *m_qualityGroup = nullptr, *m_sortByGroup = nullptr;
 
     int m_sortByIdx = 0;
+#endif
 
     QMutex m_itagsMutex;
     QList<int> m_videoItags, m_audioItags, m_hlsItags, m_singleUrlItags;

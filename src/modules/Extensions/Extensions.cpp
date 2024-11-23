@@ -49,7 +49,11 @@ Extensions::Extensions() :
 
     init("YouTube/ShowUserName", false);
     init("YouTube/Subtitles", true);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     init("YouTube/SortBy", 0);
+#else
+    init("YouTube/SortByDate", false);
+#endif
 
 #ifdef USE_LASTFM
     init("LastFM/DownloadCovers", true);
@@ -150,6 +154,11 @@ ModuleSettingsWidget::ModuleSettingsWidget(Module &module) :
     subtitlesB->setToolTip(tr("Displays subtitles from YouTube. Follows default subtitles language and QMPlay2 language."));
     subtitlesB->setChecked(sets().getBool("YouTube/Subtitles"));
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+    sortByDateB = new QCheckBox(tr("Sort search results by date"));
+    sortByDateB->setChecked(sets().getBool("YouTube/SortByDate"));
+#endif
+
     qualityPreset = new QComboBox;
     qualityPreset->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred));
     qualityPreset->addItems(YouTube::getQualityPresets());
@@ -159,6 +168,9 @@ ModuleSettingsWidget::ModuleSettingsWidget(Module &module) :
     layout = new QGridLayout(youTubeB);
     layout->addWidget(userNameB, 0, 0, 1, 2);
     layout->addWidget(subtitlesB, 1, 0, 1, 2);
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+    layout->addWidget(sortByDateB, 3, 0, 1, 3);
+#endif
     layout->addWidget(new QLabel(tr("Preferred quality") + ": "), 2, 0, 1, 1);
     layout->addWidget(qualityPreset, 2, 1, 1, 1);
     layout->setMargin(2);
@@ -232,6 +244,9 @@ void ModuleSettingsWidget::saveSettings()
 
     sets().set("YouTube/ShowUserName", userNameB->isChecked());
     sets().set("YouTube/Subtitles", subtitlesB->isChecked());
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+    sets().set("YouTube/SortByDate", sortByDateB->isChecked());
+#endif
     sets().set("YouTube/QualityPreset", qualityPreset->currentText());
 
 #ifdef USE_LASTFM

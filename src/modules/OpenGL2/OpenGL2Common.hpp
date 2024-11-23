@@ -21,7 +21,9 @@
 #include <VideoFrame.hpp>
 #include <VideoAdjustment.hpp>
 
-#include <QOpenGLShaderProgram>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    #include <QOpenGLShaderProgram>
+#endif
 
 #include <QVariantAnimation>
 #include <QCoreApplication>

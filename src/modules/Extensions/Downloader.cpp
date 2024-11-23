@@ -49,7 +49,6 @@
 #if QT_VERSION >= QT_VERSION_CHECK(5, 2, 0)
     #include <QLoggingCategory>
 #else
-    #include <QtLogging>
     #define qCWarning qWarning
 #endif
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)

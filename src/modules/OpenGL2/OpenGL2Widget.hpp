@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <OpenGL2Common.hpp>
+// #include <OpenGL2Common.hpp>
 
 #include <QSurfaceFormat>
 #include <QOpenGLWidget>

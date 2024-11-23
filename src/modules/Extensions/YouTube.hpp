@@ -116,7 +116,11 @@ private slots:
     void searchMenu();
 
 private:
-    void setItags(int qualityIdx);
+// #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+//     void setItags(int qualityIdx);
+// #else
+    void setItags();
+// #endif
 
     void deleteReplies();
 
@@ -150,11 +154,11 @@ private:
 
     bool m_allowSubtitles;
 
-#if QT_VERSION > QT_VERSION_CHECK(5, 0, 0)
-    QActionGroup *m_qualityGroup = nullptr, *m_sortByGroup = nullptr;
-
-    int m_sortByIdx = 0;
-#endif
+// #if QT_VERSION > QT_VERSION_CHECK(5, 0, 0)
+//     QActionGroup *m_qualityGroup = nullptr, *m_sortByGroup = nullptr;
+// 
+//     int m_sortByIdx = 0;
+// #endif
 
     QMutex m_itagsMutex;
     QList<int> m_videoItags, m_audioItags, m_hlsItags, m_singleUrlItags;

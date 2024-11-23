@@ -169,6 +169,19 @@ void ResultsYoutube::copyPageURL()
     }
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+
+void ResultsYoutube::enqueue()
+{
+	playOrEnqueue("enqueue", currentItem(), param);
+}
+void ResultsYoutube::playCurrentEntry()
+{
+	playOrEnqueue("open", currentItem(), param);
+}
+
+#endif
+
 void ResultsYoutube::contextMenu(const QPoint &point)
 {
     menu->clear();
@@ -186,12 +199,17 @@ void ResultsYoutube::contextMenu(const QPoint &point)
         if (!tWI->isDisabled())
         {
             const auto param = i == 0 ? QString() : QString("audio");
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
             menu->addAction(tr("Play"), this, [=] {
                 playOrEnqueue("open", currentItem(), param);
             });
             menu->addAction(tr("Enqueue"), this, [=] {
                 playOrEnqueue("enqueue", currentItem(), param);
             });
+#else
+            menu->addAction(tr("Enqueue"), this, SLOT(enqueue()));
+            menu->addAction(tr("Play"), this, SLOT(playCurrentEntry()));
+#endif
             menu->addSeparator();
         }
 
@@ -265,6 +283,16 @@ const QStringList YouTube::getQualityPresets()
     };
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+QStringList YouTube::getQualityPresetString(int qualityIdx)
+{
+    QStringList videoItags;
+    for (int itag : getQualityPresets()[qualityIdx])
+        videoItags.append(QString::number(itag));
+    return videoItags;
+}
+#endif
+
 YouTube::YouTube(Module &module) :
     completer(new QCompleter(new QStringListModel(this), this)),
     currPage(1),
@@ -307,11 +335,11 @@ YouTube::YouTube(Module &module) :
     showSettingsB->setToolTip(tr("Settings"));
     showSettingsB->setAutoRaise(true);
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     m_qualityGroup = new QActionGroup(this);
     for (auto &&qualityPreset : getQualityPresets())
         m_qualityGroup->addAction(qualityPreset);
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     QMenu *qualityMenu = new QMenu(this);
     int qualityIdx = 0;
     for (QAction *act : m_qualityGroup->actions())
@@ -328,6 +356,19 @@ YouTube::YouTube(Module &module) :
         ++qualityIdx;
     }
 #else
+	QActionGroup *m_qualityGroup = new QActionGroup(this);
+	m_qualityGroup->addAction("4320p 60FPS");
+	m_qualityGroup->addAction("2160p 60FPS");
+	m_qualityGroup->addAction("1440p 60FPS");
+	m_qualityGroup->addAction("1080p 60FPS");
+	m_qualityGroup->addAction("720p 60FPS");
+	m_qualityGroup->addAction("4320p");
+	m_qualityGroup->addAction("2160p");
+	m_qualityGroup->addAction("1440p");
+	m_qualityGroup->addAction("1080p");
+	m_qualityGroup->addAction("720p");
+	m_qualityGroup->addAction("480p");
+
     qualityMenu = new QMenu(this);
     int qualityIdx = 0;
     for (QAction *act : m_qualityGroup->actions())
@@ -584,7 +625,7 @@ void YouTube::search()
     resultsW->clear();
     if (!title.isEmpty())
     {
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         if (lastTitle != title || sender() == searchE || sender() == searchB || qobject_cast<QAction *>(sender()))
             currPage = 1;
         searchReply = net.start(getYtUrl(title, currPage, m_sortByIdx));
@@ -802,13 +843,21 @@ void YouTube::setAutocomplete(const QByteArray &data)
     const QJsonDocument json = QJsonDocument::fromJson(data, &jsonErr);
     if (jsonErr.error != QJsonParseError::NoError)
     {
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
         qCWarning(youtube) << "Cannot parse autocomplete JSON:" << jsonErr.errorString();
+#else
+        qWarning() << "Cannot parse autocomplete JSON:" << jsonErr.errorString();
+#endif
         return;
     }
     const QJsonArray mainArr = json.array();
     if (mainArr.count() < 2)
     {
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
         qCWarning(youtube) << "Invalid autocomplete JSON array";
+#else
+        qWarning() << "Invalid autocomplete JSON array";
+#endif
         return;
     }
     const QJsonArray arr = mainArr.at(1).toArray();
@@ -1033,7 +1082,11 @@ QStringList YouTube::getYouTubeVideo(const QString &param, const QString &url, I
         for (auto &&itag : itags)
         {
             auto it = itagsData.constFind(itag);
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
             if (it != itagsData.cend())
+#else
+            if (it != itagsData.constEnd())
+#endif
             {
                 urls += it->first;
                 exts += it->second;
@@ -1059,7 +1112,10 @@ QStringList YouTube::getYouTubeVideo(const QString &param, const QString &url, I
 
     if (urls.isEmpty())
     {
+// FIXME: error: invalid use of incomplete type 'class QDebug'
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
         qCritical() << "YouTube :: Can't find desired format, available:" << itagsData.keys();
+#endif
         return {};
     }
 

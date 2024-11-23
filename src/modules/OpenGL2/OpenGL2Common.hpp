@@ -21,8 +21,11 @@
 #include <VideoFrame.hpp>
 #include <VideoAdjustment.hpp>
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#ifdef OPENGL_NEW_API
     #include <QOpenGLShaderProgram>
+#else
+    #include <QGLShaderProgram>
+    #define QOpenGLShaderProgram QGLShaderProgram
 #endif
 
 #include <QVariantAnimation>

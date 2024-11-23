@@ -217,6 +217,9 @@ void PlayClass::play(const QString &_url)
 
             paused = false;
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+            QMPlay2Core.setVideoDevicePixelRatio();
+#endif
             demuxThr->start();
         }
     }
@@ -226,6 +229,7 @@ void PlayClass::play(const QString &_url)
         stop();
     }
 }
+
 void PlayClass::stop(bool _quitApp)
 {
     quitApp = _quitApp;
@@ -254,6 +258,7 @@ void PlayClass::stop(bool _quitApp)
         stopPauseMutex.unlock();
     }
 }
+
 void PlayClass::restart()
 {
     if (!url.isEmpty())
@@ -289,6 +294,7 @@ void PlayClass::togglePause()
         stopPauseMutex.unlock();
     }
 }
+
 void PlayClass::seek(double pos, bool allowAccurate)
 {
     if (pos < 0.0)
@@ -317,6 +323,7 @@ void PlayClass::seek(double pos, bool allowAccurate)
     if (aThr && paused)
         aThr->silence(true, true);
 }
+
 void PlayClass::chStream(const QString &s)
 {
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)

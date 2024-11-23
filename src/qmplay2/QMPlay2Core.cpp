@@ -120,6 +120,10 @@ QMPlay2CoreClass::QMPlay2CoreClass()
 {
     qmplay2Core = this;
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+    videoDevicePixelRatio = 1.0;
+#endif
+
     QFile f(":/Languages.txt");
     if (f.open(QFile::ReadOnly))
     {
@@ -429,12 +433,16 @@ QStringList QMPlay2CoreClass::getModules(const QString &type, int typeLen) const
     return modules + availableModules;
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 qreal QMPlay2CoreClass::getVideoDevicePixelRatio() const
 {
-  #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     return getVideoDock()->devicePixelRatioF();
-  #endif
 }
+#else
+void QMPlay2CoreClass::setVideoDevicePixelRatio()
+{
+}
+#endif
 
 QIcon QMPlay2CoreClass::getIconFromTheme(const QString &iconName, const QIcon &fallback)
 {

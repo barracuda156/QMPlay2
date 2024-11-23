@@ -18,18 +18,26 @@
 
 #include <OpenGL2Writer.hpp>
 
-#include <OpenGL2Window.hpp>
-#include <OpenGL2Widget.hpp>
+#ifdef OPENGL_NEW_API
+    #include <OpenGL2Window.hpp>
+    #include <OpenGL2Widget.hpp>
+#else
+    #include <OpenGL2OldWidget.hpp>
+#endif
 
 #include <HWAccelInterface.hpp>
 #include <VideoFrame.hpp>
 
-#include <QGuiApplication>
+#ifdef OPENGL_NEW_API
+    #include <QGuiApplication>
+#endif
 
 OpenGL2Writer::OpenGL2Writer(Module &module)
     : drawable(nullptr)
     , allowPBO(true)
+#ifdef OPENGL_NEW_API
     , forceRtt(false)
+#endif
 {
     addParam("W");
     addParam("H");
@@ -70,11 +78,12 @@ bool OpenGL2Writer::set()
     if (drawable && !drawable->setVSync(vSync))
         doReset = true;
 
+#ifdef OPENGL_NEW_API
     const bool newForceRtt = sets().getBool("ForceRtt");
     if (forceRtt != newForceRtt)
         doReset = true;
     forceRtt = newForceRtt;
-
+#endif
 #ifdef Q_OS_WIN
     bool newPreventFullScreen = sets().getBool("PreventFullScreen");
     if (preventFullScreen != newPreventFullScreen)
@@ -205,8 +214,10 @@ QString OpenGL2Writer::name() const
     QString glStr = drawable->glVer ? QString("%1.%2").arg(drawable->glVer / 10).arg(drawable->glVer % 10) : "2";
     if (drawable->hwAccellnterface)
         glStr += " " + drawable->hwAccellnterface->name();
+#ifdef OPENGL_NEW_API
     if (useRtt)
         glStr += " (render-to-texture)";
+#endif
 #ifdef OPENGL_ES2
     return "OpenGL|ES " + glStr;
 #else
@@ -216,6 +227,7 @@ QString OpenGL2Writer::name() const
 
 bool OpenGL2Writer::open()
 {
+#ifdef OPENGL_NEW_API
     static const QString platformName = QGuiApplication::platformName();
     useRtt = platformName.startsWith("wayland") || platformName == "android" || forceRtt;
     if (useRtt)
@@ -228,6 +240,9 @@ bool OpenGL2Writer::open()
         drawable = new OpenGL2Widget;
     else
         drawable = new OpenGL2Window;
+#else
+    drawable = new OpenGL2OldWidget;
+#endif
     drawable->hwAccellnterface = m_hwAccelInterface;
 #ifdef Q_OS_WIN
     drawable->preventFullScreen = preventFullScreen;

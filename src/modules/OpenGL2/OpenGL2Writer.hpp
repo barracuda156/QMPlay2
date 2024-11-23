@@ -57,8 +57,10 @@ private:
 
     OpenGL2Common *drawable;
     bool allowPBO;
+#ifdef OPENGL_NEW_API
     bool m_hqScaling = false;
     bool forceRtt, useRtt;
+#endif
     bool vSync;
 #ifdef Q_OS_WIN
     bool preventFullScreen;

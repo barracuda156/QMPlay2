@@ -131,9 +131,14 @@ LibASS::~LibASS()
 
 void LibASS::setWindowSize(int _winW, int _winH)
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     const qreal dpr = QMPlay2Core.getVideoDevicePixelRatio();
     winW = _winW * dpr;
     winH = _winH * dpr;
+#else
+	winW = _winW * QMPlay2Core.getVideoDevicePixelRatio();
+	winH = _winH * QMPlay2Core.getVideoDevicePixelRatio();
+#endif
     calcSize();
 }
 void LibASS::setARatio(double _aspect_ratio)

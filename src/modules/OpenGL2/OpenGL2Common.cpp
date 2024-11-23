@@ -26,9 +26,16 @@
 #include <VideoFrame.hpp>
 #include <Functions.hpp>
 
-#include <QOffscreenSurface>
-#include <QOpenGLContext>
-#include <QOpenGLShader>
+#ifdef OPENGL_NEW_API
+    #include <QOffscreenSurface>
+    #include <QOpenGLContext>
+    #include <QOpenGLShader>
+#else
+    #include <QGLContext>
+    #include <QGLShader>
+    #define QOpenGLContext QGLContext
+    #define QOpenGLShader QGLShader
+#endif
 #include <QResizeEvent>
 #include <QMatrix4x4>
 #include <QMatrix3x3>

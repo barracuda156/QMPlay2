@@ -36,6 +36,7 @@
 #include <QMouseEvent>
 #include <QToolButton>
 #include <QMessageBox>
+#include <QRegExp>
 #include <QCompleter>
 #include <QClipboard>
 #include <QMimeData>
@@ -93,27 +94,6 @@ static inline QString getQMPlay2Url(const QTreeWidgetItem *tWI)
 static inline QString unescape(const QString &str)
 {
 	return QByteArray::fromPercentEncoding(str.toLatin1());
-}
-
-static QString fromU(QString s)
-{
-	int uIdx = 0;
-	for (;;)
-	{
-		uIdx = s.indexOf("\\u", uIdx);
-		if (uIdx == -1)
-			break;
-		bool ok;
-		const QChar chr = s.mid(uIdx + 2, 4).toUShort(&ok, 16);
-		if (ok)
-		{
-			s.replace(uIdx, 6, chr);
-			++uIdx;
-		}
-		else
-			uIdx += 6;
-	}
-	return s;
 }
 
 static inline bool isPlaylist(QTreeWidgetItem *tWI)
@@ -813,14 +793,33 @@ void YouTube::deleteReplies()
 
 void YouTube::setAutocomplete(const QByteArray &data)
 {
-	QStringList suggestions = fromU(QString(data).remove('"').remove('[').remove(']')).split(',');
-	if (suggestions.size() > 1)
+	QJsonParseError jsonErr;
+	const QJsonDocument json = QJsonDocument::fromJson(data, &jsonErr);
+	if (jsonErr.error != QJsonParseError::NoError)
 	{
 		suggestions.removeFirst();
 		((QStringListModel *)completer->model())->setStringList(suggestions);
 		if (searchE->hasFocus())
 			completer->complete();
+		qWarning(youtube) << "Cannot parse autocomplete JSON:" << jsonErr.errorString();
+		return;
 	}
+	const QJsonArray mainArr = json.array();
+	if (mainArr.count() < 2)
+	{
+		qWarning(youtube) << "Invalid autocomplete JSON array";
+		return;
+	}
+	const QJsonArray arr = mainArr.at(1).toArray();
+	if (arr.isEmpty())
+		return;
+	QStringList list;
+	list.reserve(arr.count());
+	for (const QJsonValue &val : arr)
+		list += val.toString();
+	((QStringListModel *)completer->model())->setStringList(list);
+	if (searchE->hasFocus())
+		completer->complete();
 }
 void YouTube::setSearchResults(const QByteArray &data)
 {
@@ -921,36 +920,55 @@ void YouTube::setSearchResults(const QByteArray &data)
 
 QStringList YouTube::getYouTubeVideo(const QString &data, const QString &PARAM, QTreeWidgetItem *tWI, const QString &url, IOController<YouTubeDL> *youtube_dl)
 {
+	QJsonObject args;
+	int idx = data.indexOf(QRegExp("ytplayer.config\\s*="));
+	if (idx > -1)
+	{
+		idx = data.indexOf('{', idx);
+		if (idx > -1)
+		{
+			int bracketStack = 0;
+			for (int i = idx; i < data.length(); ++i)
+			{
+				const QChar c = data.at(i);
+				if (c == '{')
+					++bracketStack;
+				else if (c == '}')
+					--bracketStack;
+				if (bracketStack == 0)
+				{
+					QJsonParseError jsonErr;
+					const QJsonDocument json = QJsonDocument::fromJson(data.midRef(idx, i - idx + 1).toUtf8(), &jsonErr);
+					if (!json.isObject())
+					{
+						qWarning(youtube) << "Cannot parse JSON:" << jsonErr.errorString();
+						return {};
+					}
+					else
+					{
+						args = json.object()["args"].toObject();
+					}
+					break;
+				}
+			}
+		}
+	}
+	if (args.isEmpty())
+	{
+		qWarning(youtube) << "Invalid JSON or JSON not found at \"ytplayer.config\"";
+	}
 	QString subsUrl;
 	if (subtitles && !tWI)
 	{
+		const QJsonDocument playerResponseJson = QJsonDocument::fromJson(args["player_response"].toString().toUtf8());
+		const QJsonArray captionTracks = playerResponseJson.object()["captions"].toObject()["playerCaptionsTracklistRenderer"].toObject()["captionTracks"].toArray();
+		const int count = captionTracks.count();
 		QStringList langCodes;
-		int captionIdx = data.indexOf("caption_tracks\":\"");
-		if (captionIdx > -1)
+		for (int i = 0; i < count; ++i)
 		{
-			captionIdx += 17;
-			const int captionEndIdx = data.indexOf('"', captionIdx);
-			if (captionEndIdx > -1)
-			{
-				for (const QString &caption : data.mid(captionIdx, captionEndIdx - captionIdx).split(','))
-				{
-					bool isAutomated = false;
-					QString lc;
-					for (const QString &captionParams : caption.split("\\u0026"))
-					{
-						const QStringList paramL = captionParams.split('=');
-						if (paramL.count() == 2)
-						{
-							if (paramL[0] == "lc")
-								lc = paramL[1];
-							else if (paramL[0] == "k")
-								isAutomated = paramL[1].startsWith("asr");
-						}
-					}
-					if (!isAutomated && !lc.isEmpty())
-						langCodes += lc;
-				}
-			}
+			const QString langCode = captionTracks[i].toObject()["languageCode"].toString();
+			if (!langCode.isEmpty())
+				langCodes += langCode;
 		}
 		if (!langCodes.isEmpty())
 		{
@@ -1004,71 +1022,82 @@ QStringList YouTube::getYouTubeVideo(const QString &data, const QString &PARAM, 
 		}
 	}
 
-	QStringList ret;
-	for (int i = 0; i <= 1; ++i)
+	const bool isLive = args["hlsvp"].isString();
+	QStringList fmts, ret;
+	if (!isLive)
 	{
-		const QString fmts = QString(i ? "adaptive_fmts" : "url_encoded_fmt_stream_map") + "\":\""; //"adaptive_fmts" contains audio or video urls
-		int streamsIdx = data.indexOf(fmts);
-		if (streamsIdx > -1)
+		fmts = QStringList {
+			args["url_encoded_fmt_stream_map"].toString(),
+			args["adaptive_fmts"].toString(), // contains audio or video urls
+		};
+	}
+	for (const QString &fmt : fmts)
+	{
+		bool br = false;
+		for (const QString &stream : fmt.split(','))
 		{
-			streamsIdx += fmts.length();
-			const int streamsEndIdx = data.indexOf('"', streamsIdx);
-			if (streamsEndIdx > -1)
+			int itag = -1;
+			QString ITAG, URL, Signature;
+			for (const QString &streamParams : stream.split('&'))
 			{
-				for (const QString &stream : data.mid(streamsIdx, streamsEndIdx - streamsIdx).split(','))
+				const QStringList paramL = streamParams.split('=');
+				if (paramL.count() == 2)
 				{
-					int itag = -1;
-					QString ITAG, URL, Signature;
-					for (const QString &streamParams : stream.split("\\u0026"))
+					if (paramL[0] == "itag")
 					{
-						const QStringList paramL = streamParams.split('=');
-						if (paramL.count() == 2)
-						{
-							if (paramL[0] == "itag")
-							{
-								ITAG = "itag=" + paramL[1];
-								itag = paramL[1].toInt();
-							}
-							else if (paramL[0] == "url")
-								URL = unescape(paramL[1]);
-							else if (paramL[0] == "sig")
-								Signature = paramL[1];
-							else if (paramL[0] == "s")
-								Signature = "ENCRYPTED";
-						}
+						ITAG = "itag=" + paramL[1];
+						itag = paramL[1].toInt();
 					}
-
-					if (!URL.isEmpty() && g_itagArr.contains(itag) && (!Signature.isEmpty() || URL.contains("signature")))
+					else if (paramL[0] == "url")
 					{
-						if (!Signature.isEmpty())
-							URL += "&signature=" + Signature;
-						if (!tWI)
-						{
-							if (ITAG == PARAM)
-							{
-								ret << URL << getFileExtension(g_itagArr[itag]);
-								++i; //ensures end of the loop
-								break;
-							}
-							else if (PARAM.isEmpty())
-								ret << URL << getFileExtension(g_itagArr[itag]) << QString::number(itag);
-						}
-						else
-						{
-							QTreeWidgetItem *ch = new QTreeWidgetItem(tWI);
-							ch->setText(0, g_itagArr[itag]); //Tekst widoczny, informacje o jakości
-							if (!URL.contains("ENCRYPTED")) //youtube-dl działa za wolno, żeby go tu wykonać
-								ch->setData(0, Qt::UserRole + 0, URL); //Adres do pliku
-							ch->setData(0, Qt::UserRole + 1, ITAG); //Dodatkowy parametr
-							ch->setData(0, Qt::UserRole + 2, itag); //Dodatkowy parametr (jako liczba)
-						}
+						URL = unescape(paramL[1]);
+					}
+					else if (paramL[0] == "sig")
+					{
+						Signature = paramL[1];
+					}
+					else if (paramL[0] == "s")
+					{
+						Signature = "ENCRYPTED";
 					}
 				}
 			}
+
+			if (!URL.isEmpty() && g_itagArr.contains(itag) && (!Signature.isEmpty() || URL.contains("signature")))
+			{
+				if (!Signature.isEmpty())
+				{
+					URL += "&signature=" + Signature;
+				}
+				if (!tWI)
+				{
+					if (ITAG == PARAM)
+					{
+						ret << URL << getFileExtension(g_itagArr[itag]);
+						br = true;
+						break;
+					}
+					else if (PARAM.isEmpty())
+					{
+						ret << URL << getFileExtension(g_itagArr[itag]) << QString::number(itag);
+					}
+				}
+				else
+				{
+					QTreeWidgetItem *ch = new QTreeWidgetItem(tWI);
+					ch->setText(0, g_itagArr[itag]); // texts visible, quality information
+					if (!URL.contains("ENCRYPTED")) // youtube-dl works too slowly to run it here
+						ch->setData(0, Qt::UserRole + 0, URL); // file address
+					ch->setData(0, Qt::UserRole + 1, ITAG); // additional parameter
+					ch->setData(0, Qt::UserRole + 2, itag); // additional parameter (as integer)
+				}
+			}
 		}
+		if (br)
+			break;
 	}
 
-	if (PARAM.isEmpty() && ret.count() >= 3) //Wyszukiwanie domyślnej jakości
+	if (PARAM.isEmpty() && ret.count() >= 3) // Wyszukiwanie domyślnej jakości
 	{
 		bool forceSingleStream = false;
 		if (multiStream)
@@ -1102,29 +1131,16 @@ QStringList YouTube::getYouTubeVideo(const QString &data, const QString &PARAM, 
 		}
 	}
 
-	if (tWI) //Włącza item
-		tWI->setDisabled(false);
-	else if (ret.count() == 2) //Pobiera tytuł
+	if (tWI) // Włącza item
 	{
-		int ytplayerIdx = data.indexOf("ytplayer.config");
-		if (ytplayerIdx > -1)
-		{
-			int titleIdx = data.indexOf("title\":\"", ytplayerIdx);
-			if (titleIdx > -1)
-			{
-				int titleEndIdx = titleIdx += 8;
-				for (;;) //szukanie końca tytułu
-				{
-					titleEndIdx = data.indexOf('"', titleEndIdx);
-					if (titleEndIdx < 0 || data[titleEndIdx-1] != '\\')
-						break;
-					++titleEndIdx;
-				}
-				if (titleEndIdx > -1)
-					ret << fromU(data.mid(titleIdx, titleEndIdx - titleIdx).replace("\\\"", "\"").replace("\\/", "/"));
-			}
-		}
-		if (ret.count() == 2)
+		tWI->setDisabled(false);
+	}
+	else if (ret.count() == 2) // get title
+	{
+		const QJsonValue titleVal = args["title"];
+		if (titleVal.isString())
+			ret << titleVal.toString();
+		else
 			ret << g_cantFindTheTitle;
 	}
 

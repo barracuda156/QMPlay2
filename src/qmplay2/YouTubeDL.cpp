@@ -21,7 +21,6 @@
 #include <NetworkAccess.hpp>
 #include <QMPlay2Core.hpp>
 #include <Version.hpp>
-#include <Json11.hpp>
 #include <Functions.hpp>
 
 #include <QRegExp>

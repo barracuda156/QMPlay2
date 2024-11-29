@@ -49,6 +49,7 @@
 #include <QFile>
 #include <QDir>
 #include <QUrl>
+#include <QDebug>
 
 #define YOUTUBE_URL "https://www.youtube.com"
 
@@ -60,9 +61,9 @@ static inline QString toPercentEncoding(const QString &txt)
 	return txt.toUtf8().toPercentEncoding();
 }
 
-static inline QString getYtUrl(const QString &title, const int page)
+static inline QString getYtUrl(const QString &title, const int page, const bool sortByDate)
 {
-	return QString(YOUTUBE_URL "/results?search_query=%1&page=%2").arg(toPercentEncoding(title)).arg(page);
+	return QString(YOUTUBE_URL "/results?search_query=%1%2&page=%3").arg(toPercentEncoding(title), sortByDate ? "&sp=CAI%253D" : QString()).arg(page);
 }
 static inline QString getAutocompleteUrl(const QString &text)
 {
@@ -675,7 +676,7 @@ void YouTube::search()
 	{
 		if (lastTitle != title || sender() == searchE || sender() == searchB)
 			currPage = 1;
-		searchReply = net.start(getYtUrl(title, currPage));
+		searchReply = net.start(getYtUrl(title, currPage, sets().getBool("YouTube/SortByDate")));
 		progressB->setRange(0, 0);
 		progressB->show();
 	}
@@ -797,17 +798,13 @@ void YouTube::setAutocomplete(const QByteArray &data)
 	const QJsonDocument json = QJsonDocument::fromJson(data, &jsonErr);
 	if (jsonErr.error != QJsonParseError::NoError)
 	{
-		suggestions.removeFirst();
-		((QStringListModel *)completer->model())->setStringList(suggestions);
-		if (searchE->hasFocus())
-			completer->complete();
-		qWarning(youtube) << "Cannot parse autocomplete JSON:" << jsonErr.errorString();
+		qWarning() << "Cannot parse autocomplete JSON:" << jsonErr.errorString();
 		return;
 	}
 	const QJsonArray mainArr = json.array();
 	if (mainArr.count() < 2)
 	{
-		qWarning(youtube) << "Invalid autocomplete JSON array";
+		qWarning() << "Invalid autocomplete JSON array";
 		return;
 	}
 	const QJsonArray arr = mainArr.at(1).toArray();
@@ -941,7 +938,7 @@ QStringList YouTube::getYouTubeVideo(const QString &data, const QString &PARAM, 
 					const QJsonDocument json = QJsonDocument::fromJson(data.midRef(idx, i - idx + 1).toUtf8(), &jsonErr);
 					if (!json.isObject())
 					{
-						qWarning(youtube) << "Cannot parse JSON:" << jsonErr.errorString();
+						qWarning() << "Cannot parse JSON:" << jsonErr.errorString();
 						return {};
 					}
 					else
@@ -955,7 +952,7 @@ QStringList YouTube::getYouTubeVideo(const QString &data, const QString &PARAM, 
 	}
 	if (args.isEmpty())
 	{
-		qWarning(youtube) << "Invalid JSON or JSON not found at \"ytplayer.config\"";
+		qWarning() << "Invalid JSON or JSON not found at \"ytplayer.config\"";
 	}
 	QString subsUrl;
 	if (subtitles && !tWI)

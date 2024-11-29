@@ -30,6 +30,11 @@
 #include <QJsonArray.h>
 #include <QFile>
 
+/* Avoid downloading yt-dlp, it fails to work correctly. */
+#ifndef BUNDLED_YTDLP
+#define BUNDLED_YTDLP 0
+#endif
+
 constexpr char g_name[] = "YouTubeDL";
 
 static QReadWriteLock g_lock;
@@ -264,6 +269,7 @@ QStringList YouTubeDL::exec(const QString &url, const QStringList &args, QString
 				if (error.indexOf("ERROR: ") == 0)
 					error.remove(0, 7);
 			}
+	#if BUNDLED_YTDLP
 			if (canUpdate && !error.contains("said:")) // Probably update can fix the error, so do it!
 			{
 				if (!doLock(Lock::Write, true)) // Unlock for read and lock for write
@@ -301,6 +307,7 @@ QStringList YouTubeDL::exec(const QString &url, const QStringList &args, QString
 				if (!doLock(Lock::Read, true)) // Unlock for write and lock for read
 					return {};
 			}
+	#endif
 			finishWithError(error);
 			return {};
 		}
@@ -318,6 +325,7 @@ QStringList YouTubeDL::exec(const QString &url, const QStringList &args, QString
 		g_lock.unlock(); // Unlock for read
 		return result;
 	}
+#if BUNDLED_YTDLP
 	else if (canUpdate && !m_aborted && m_process.error() == QProcess::FailedToStart)
 	{
 		const QString downloadUrl = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"
@@ -362,6 +370,7 @@ QStringList YouTubeDL::exec(const QString &url, const QStringList &args, QString
 			QMPlay2Core.setWorking(false);
 		}
 	}
+#endif
 
 	g_lock.unlock(); // Unlock for read or for write (if download has failed)
 #else

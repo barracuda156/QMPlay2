@@ -68,7 +68,7 @@ void SimpleVisW::paint(QPainter &p)
     if (size >= chn)
     {
         const float *samples = (const float *)soundData.constData();
-        const qreal dpr = devicePixelRatioF();
+        const qreal dpr = 1.0f;
 
         qreal lr[2] = {0.0f, 0.0f};
 

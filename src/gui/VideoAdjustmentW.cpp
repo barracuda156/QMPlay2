@@ -202,7 +202,6 @@ void VideoAdjustmentW::enableControls()
 #endif
 }
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
 void VideoAdjustmentW::setValue(int v)
 {
     ((QLabel *)sender()->property("valueL").value<void *>())->setText(QString::number(v));
@@ -213,7 +212,6 @@ void VideoAdjustmentW::reset()
     for (int i = 0; i < CONTROLS_COUNT; ++i)
         m_sliders[i].setValue(0);
 }
-#endif
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 void VideoAdjustmentW::setKeyShortcuts()

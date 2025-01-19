@@ -343,7 +343,7 @@ MainWidget::MainWidget(QPair<QStringList, QStringList> &arguments) :
         m_restoreWindowOnVideo = false;
     });
 #else
-    connect(&playC, SIGNAL(videoStarted()), this, SLOT(videoStarted()));
+    connect(&playC, SIGNAL(videoStarted(bool)), this, SLOT(videoStarted(bool)));
 #endif
     connect(&playC, SIGNAL(uncheckSuspend()), this, SLOT(uncheckSuspend()));
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)

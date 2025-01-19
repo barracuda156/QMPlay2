@@ -56,11 +56,9 @@ signals:
     void videoAdjustmentChanged();
 // #endif
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
 private slots:
 	void setValue(int);
 	void reset();
-#endif
 
 private:
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)

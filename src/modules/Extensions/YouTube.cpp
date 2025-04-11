@@ -21,19 +21,14 @@
 #include <YouTubeDL.hpp>
 #include <LineEdit.hpp>
 
-#include <QLoggingCategory>
 #include <QStringListModel>
 #include <QDesktopServices>
-#include <QJsonParseError>
 #include <QTextDocument>
-#include <QJsonDocument>
 #include <QProgressBar>
 #include <QApplication>
-#include <QJsonObject>
 #include <QHeaderView>
 #include <QGridLayout>
 #include <QToolButton>
-#include <QJsonArray>
 #include <QCompleter>
 #include <QClipboard>
 #include <QMimeData>
@@ -41,8 +36,13 @@
 #include <QAction>
 #include <QMenu>
 #include <QUrl>
+#include <QSignalMapper>
+#include <QDebug>
 
-Q_LOGGING_CATEGORY(youtube, "Extensions/YouTube")
+#include <QJsonParseError.h>
+#include <QJsonDocument.h>
+#include <QJsonObject.h>
+#include <QJsonArray.h>
 
 #define YOUTUBE_URL "https://www.youtube.com"
 
@@ -53,7 +53,7 @@ static inline QString toPercentEncoding(const QString &txt)
 
 static inline QString getYtUrl(const QString &title, const int page, const int sortByIdx)
 {
-    static constexpr const char *sortBy[4] {
+    static const char *sortBy[4] {
         "",             // Relevance ("&sp=CAA%253D")
         "&sp=CAI%253D", // Upload date
         "&sp=CAM%253D", // View count
@@ -89,8 +89,8 @@ ResultsYoutube::ResultsYoutube()
     headerItem()->setText(2, tr("User"));
 
     header()->setStretchLastSection(false);
-    header()->setSectionResizeMode(0, QHeaderView::Stretch);
-    header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    header()->setResizeMode(0, QHeaderView::Stretch);
+    header()->setResizeMode(1, QHeaderView::ResizeToContents);
 
     connect(this, SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)), this, SLOT(playEntry(QTreeWidgetItem *)));
     connect(this, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(contextMenu(const QPoint &)));
@@ -126,6 +126,24 @@ void ResultsYoutube::playEntry(QTreeWidgetItem *tWI)
     playOrEnqueue("open", tWI);
 }
 
+void ResultsYoutube::playCurrentItem()
+{
+    QTreeWidgetItem *tWI = currentItem();
+    if (!tWI)
+        return;
+
+    playOrEnqueue("open", tWI, currentParam);
+}
+
+void ResultsYoutube::enqueueCurrentItem()
+{
+    QTreeWidgetItem *tWI = currentItem();
+    if (!tWI)
+        return;
+
+    playOrEnqueue("enqueue", tWI, currentParam);
+}
+
 void ResultsYoutube::openPage()
 {
     QTreeWidgetItem *tWI = currentItem();
@@ -155,17 +173,19 @@ void ResultsYoutube::contextMenu(const QPoint &point)
 
     for (int i = 0; i < 2; ++i)
     {
-        menu->addSection(i == 0 ? tr("Audio and video") : tr("Audio only"));
+        QAction *section = new QAction(i == 0 ? tr("Audio and video") : tr("Audio only"), menu);
+        section->setEnabled(false); // Make it non-interactive
+        menu->addAction(section);
 
         if (!tWI->isDisabled())
         {
-            const auto param = i == 0 ? QString() : QString("audio");
-            menu->addAction(tr("Play"), this, [=] {
-                playOrEnqueue("open", currentItem(), param);
-            });
-            menu->addAction(tr("Enqueue"), this, [=] {
-                playOrEnqueue("enqueue", currentItem(), param);
-            });
+            currentParam = (i == 0 ? QString() : QString("audio"));
+            QAction *playAction = menu->addAction(tr("Play"));
+            QAction *enqueueAction = menu->addAction(tr("Enqueue"));
+
+            connect(playAction, SIGNAL(triggered()), this, SLOT(playCurrentItem()));
+            connect(enqueueAction, SIGNAL(triggered()), this, SLOT(enqueueCurrentItem()));
+
             menu->addSeparator();
         }
 
@@ -239,6 +259,18 @@ const QStringList YouTube::getQualityPresets()
     };
 }
 
+void YouTube::onQualityPresetChanged(const QString &preset) {
+    sets().set("YouTube/QualityPreset", preset);
+}
+
+void YouTube::onQualityToggled() {
+    QAction *act = qobject_cast<QAction *>(sender());
+    if (act && act->isChecked()) {
+        int qualityIdx = m_qualityGroup->actions().indexOf(act);
+        setItags(qualityIdx);
+    }
+}
+
 YouTube::YouTube(Module &module) :
     completer(new QCompleter(new QStringListModel(this), this)),
     currPage(1),
@@ -270,9 +302,8 @@ YouTube::YouTube(Module &module) :
     searchB->setAutoRaise(true);
 
     QToolButton *showSettingsB = new QToolButton;
-    connect(showSettingsB, &QToolButton::clicked, this, [] {
-        emit QMPlay2Core.showSettings("Extensions");
-    });
+    connect(showSettingsB, SIGNAL(clicked()), this, SLOT(onShowSettingsClicked()));
+
     showSettingsB->setIcon(QMPlay2Core.getIconFromTheme("configure"));
     showSettingsB->setToolTip(tr("Settings"));
     showSettingsB->setAutoRaise(true);
@@ -283,20 +314,23 @@ YouTube::YouTube(Module &module) :
 
     QMenu *qualityMenu = new QMenu(this);
     int qualityIdx = 0;
-    for (QAction *act : m_qualityGroup->actions())
-    {
-        connect(act, &QAction::triggered, this, [=] {
-            sets().set("YouTube/QualityPreset", act->text());
-        });
-        connect(act, &QAction::toggled, this, [=](bool checked) {
-            if (checked)
-                setItags(qualityIdx);
-        });
+    QSignalMapper *qualitySignalMapper = new QSignalMapper(this);
+
+    for (int i = 0; i < m_qualityGroup->actions().size(); ++i) {
+        QAction *act = m_qualityGroup->actions().at(i);
+
+        qualitySignalMapper->setMapping(act, act->text());
+        connect(act, SIGNAL(triggered()), qualitySignalMapper, SLOT(map()));
+        connect(act, SIGNAL(toggled(bool)), this, SLOT(onQualityToggled()));
+
         act->setCheckable(true);
         qualityMenu->addAction(act);
         ++qualityIdx;
     }
-    qualityMenu->insertSeparator(qualityMenu->actions().at(5));
+    connect(qualitySignalMapper, SIGNAL(mapped(QString)), this, SLOT(onQualityPresetChanged(QString)));
+    if (qualityMenu->actions().size() > 5) {
+        qualityMenu->insertSeparator(qualityMenu->actions().at(5));
+    }
 
     QToolButton *qualityB = new QToolButton;
     qualityB->setPopupMode(QToolButton::InstantPopup);
@@ -312,21 +346,18 @@ YouTube::YouTube(Module &module) :
     m_sortByGroup->addAction(tr("Rating"));
 
     QMenu *sortByMenu = new QMenu(this);
-    int sortByIdx = 0;
-    for (QAction *act : m_sortByGroup->actions())
-    {
-        connect(act, &QAction::triggered, this, [=] {
-            if (m_sortByIdx != sortByIdx)
-            {
-                m_sortByIdx = sortByIdx;
-                sets().set("YouTube/SortBy", m_sortByIdx);
-                search();
-            }
-        });
+    QSignalMapper *sortBySignalMapper = new QSignalMapper(this);
+
+    for (int i = 0; i < m_sortByGroup->actions().size(); ++i) {
+        QAction *act = m_sortByGroup->actions().at(i);
+
+        sortBySignalMapper->setMapping(act, i);
+        connect(act, SIGNAL(triggered()), sortBySignalMapper, SLOT(map()));
+
         act->setCheckable(true);
         sortByMenu->addAction(act);
-        ++sortByIdx;
     }
+    connect(sortBySignalMapper, SIGNAL(mapped(int)), this, SLOT(onSortByChanged(int)));
 
     QToolButton *sortByB = new QToolButton;
     sortByB->setPopupMode(QToolButton::InstantPopup);
@@ -725,13 +756,13 @@ void YouTube::setAutocomplete(const QByteArray &data)
     const QJsonDocument json = QJsonDocument::fromJson(data, &jsonErr);
     if (jsonErr.error != QJsonParseError::NoError)
     {
-        qCWarning(youtube) << "Cannot parse autocomplete JSON:" << jsonErr.errorString();
+        qWarning() << "Cannot parse autocomplete JSON:" << jsonErr.errorString();
         return;
     }
     const QJsonArray mainArr = json.array();
     if (mainArr.count() < 2)
     {
-        qCWarning(youtube) << "Invalid autocomplete JSON array";
+        qWarning() << "Invalid autocomplete JSON array";
         return;
     }
     const QJsonArray arr = mainArr.at(1).toArray();
@@ -956,7 +987,7 @@ QStringList YouTube::getYouTubeVideo(const QString &param, const QString &url, I
         for (auto &&itag : itags)
         {
             auto it = itagsData.constFind(itag);
-            if (it != itagsData.cend())
+            if (it != itagsData.constEnd())
             {
                 urls += it->first;
                 exts += it->second;
@@ -1095,5 +1126,17 @@ void YouTube::preparePlaylist(const QString &data, QTreeWidgetItem *tWI)
             tWI->setData(0, Qt::UserRole + 1, playlist);
             tWI->setDisabled(false);
         }
+    }
+}
+
+void YouTube::onShowSettingsClicked() {
+    emit QMPlay2Core.showSettings("Extensions");
+}
+
+void YouTube::onSortByChanged(int index) {
+    if (m_sortByIdx != index) {
+        m_sortByIdx = index;
+        sets().set("YouTube/SortBy", m_sortByIdx);
+        search();
     }
 }

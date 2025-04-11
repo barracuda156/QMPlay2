@@ -22,12 +22,13 @@
 #include <Functions.hpp>
 #include <CppUtils.hpp>
 
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
 #include <QPainter>
 #include <QWidget>
 #include <QUrl>
+
+#include <QJsonArray.h>
+#include <QJsonDocument.h>
+#include <QJsonObject.h>
 
 #include <algorithm>
 

@@ -230,6 +230,31 @@ void SettingsWidget::SetAudioChannels(int chn)
     QMPlay2Core.getSettings().set("ForceChannels", forceChannels);
 }
 
+void SettingsWidget::onStoreARatioAndZoomToggled(bool checked)
+{
+    if (checked)
+    {
+        page2->keepZoom->setChecked(true);
+        page2->keepARatio->setChecked(true);
+    }
+}
+
+void SettingsWidget::onKeepZoomToggled(bool checked)
+{
+    if (!checked && !page2->keepARatio->isChecked())
+    {
+        page2->storeARatioAndZoomB->setChecked(false);
+    }
+}
+
+void SettingsWidget::onKeepARatioToggled(bool checked)
+{
+    if (!checked && !page2->keepZoom->isChecked())
+    {
+        page2->storeARatioAndZoomB->setChecked(false);
+    }
+}
+
 SettingsWidget::SettingsWidget(int page, const QString &moduleName, QWidget *videoEq) :
     videoEq(videoEq), videoEqOriginalParent(videoEq->parentWidget()),
     wasShow(false),
@@ -451,29 +476,13 @@ SettingsWidget::SettingsWidget(int page, const QString &moduleName, QWidget *vid
         page2->wheelVolumeB->setChecked(QMPSettings.getBool("WheelVolume"));
 
         page2->storeARatioAndZoomB->setChecked(QMPSettings.getBool("StoreARatioAndZoom"));
-        connect(page2->storeARatioAndZoomB, &QCheckBox::toggled, this, [this](bool checked) {
-            if (checked)
-            {
-                page2->keepZoom->setChecked(true);
-                page2->keepARatio->setChecked(true);
-            }
-        });
+        connect(page2->storeARatioAndZoomB, SIGNAL(toggled(bool)), this, SLOT(onStoreARatioAndZoomToggled(bool)));
 
         page2->keepZoom->setChecked(QMPSettings.getBool("KeepZoom"));
-        connect(page2->keepZoom, &QCheckBox::toggled, this, [this](bool checked) {
-            if (!checked && !page2->keepARatio->isChecked())
-            {
-                page2->storeARatioAndZoomB->setChecked(false);
-            }
-        });
+        connect(page2->keepZoom, SIGNAL(toggled(bool)), this, SLOT(onKeepZoomToggled(bool)));
 
         page2->keepARatio->setChecked(QMPSettings.getBool("KeepARatio"));
-        connect(page2->keepARatio, &QCheckBox::toggled, this, [this](bool checked) {
-            if (!checked && !page2->keepZoom->isChecked())
-            {
-                page2->storeARatioAndZoomB->setChecked(false);
-            }
-        });
+        connect(page2->keepARatio, SIGNAL(toggled(bool)), this, SLOT(onKeepARatioToggled(bool)));
 
         page2->showBufferedTimeOnSlider->setChecked(QMPSettings.getBool("ShowBufferedTimeOnSlider"));
         page2->savePos->setChecked(QMPSettings.getBool("SavePos"));

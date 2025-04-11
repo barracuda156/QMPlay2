@@ -89,6 +89,9 @@ private slots:
     void resetSettings();
     void profileListIndexChanged(int index);
     void removeProfile();
+    void onStoreARatioAndZoomToggled(bool checked);
+    void onKeepZoomToggled(bool checked);
+    void onKeepARatioToggled(bool checked);
 signals:
     void settingsChanged(int, bool);
     void setWheelStep(int);

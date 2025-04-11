@@ -76,6 +76,7 @@ private slots:
     void updateImage(const QImage &);
     void visibilityChanged(bool);
     void hasCoverImage(bool);
+    void onDockVideo(QWidget *w);
 signals:
     void resized(int, int);
     void itemDropped(const QString &, bool);

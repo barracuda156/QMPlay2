@@ -38,6 +38,12 @@
 
 constexpr int g_hideCursorTimeout = 750;
 
+void VideoDock::onDockVideo(QWidget *w)
+{
+    iDW.setWidget(w);
+    mouseMoveEvent(nullptr);
+}
+
 VideoDock::VideoDock() :
     isTouch(false), touchEnded(false),
     iDW(QMPlay2GUI.grad1, QMPlay2GUI.grad2, QMPlay2GUI.qmpTxt),
@@ -88,10 +94,7 @@ VideoDock::VideoDock() :
     connect(&iDW, SIGNAL(resized(int, int)), this, SLOT(resizedIDW(int, int)));
     connect(&iDW, SIGNAL(hasCoverImage(bool)), this, SLOT(hasCoverImage(bool)));
     connect(this, SIGNAL(visibilityChanged(bool)), this, SLOT(visibilityChanged(bool)));
-    connect(&QMPlay2Core, &QMPlay2CoreClass::dockVideo, this, [this](QWidget *w) {
-        iDW.setWidget(w);
-        mouseMoveEvent(nullptr);
-    });
+    connect(&QMPlay2Core, SIGNAL(dockVideo(QWidget *)), this, SLOT(onDockVideo(QWidget *)));
 
     if ((isBreeze = QApplication::style()->objectName() == "breeze"))
         setStyle(&commonStyle);

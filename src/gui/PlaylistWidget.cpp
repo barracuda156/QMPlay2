@@ -595,7 +595,7 @@ PlaylistWidget::PlaylistWidget() :
     setAnimated(true);
     header()->setStretchLastSection(false);
     setHeaderHidden(true);
-    header()->setSectionResizeMode(0, QHeaderView::Stretch);
+    header()->setResizeMode(0, QHeaderView::Stretch);
     header()->hideSection(1);
     setItemsResizeToContents(true);
     setIconSize({22, 22});
@@ -608,7 +608,7 @@ PlaylistWidget::PlaylistWidget() :
     connect(&animationTimer, SIGNAL(timeout()), this, SLOT(animationUpdate()));
     connect(&addTimer, SIGNAL(timeout()), this, SLOT(addTimerElapsed()));
     connect(&addThr, SIGNAL(status(bool)), this, SIGNAL(addStatus(bool)));
-    connect(playlistMenu(), &MenuBar::Playlist::aboutToShow, this, &PlaylistWidget::createExtensionsMenu);
+    connect(playlistMenu(), SIGNAL(aboutToShow()), this, SLOT(createExtensionsMenu()));
 }
 
 QString PlaylistWidget::getUrl(QTreeWidgetItem *tWI) const
@@ -622,7 +622,7 @@ void PlaylistWidget::setItemsResizeToContents(bool b)
 {
     const QHeaderView::ResizeMode rm = b ? QHeaderView::ResizeToContents : QHeaderView::Fixed;
     for (int i = 1; i <= 2; ++i)
-        header()->setSectionResizeMode(i, rm);
+        header()->setResizeMode(i, rm);
 }
 
 void PlaylistWidget::sortCurrentGroup(int column, Qt::SortOrder sortOrder)

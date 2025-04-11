@@ -60,6 +60,8 @@ private slots:
     void audioChannelsChanged();
 
     void updateWindowTitle(const QString &t = QString());
+    void onAddAndPlayRestoreWindow();
+    void onVideoNotStarted();
     void videoStarted(bool noVideo);
 
     void togglePlay();
@@ -77,6 +79,7 @@ private slots:
     void resetSpherical();
 
     void visualizationFullScreen();
+    void maybeGoFullScreen(QWidget *senderW);
     void hideAllExtensions();
     void toggleVisibility();
     void createMenuBar();
@@ -86,6 +89,7 @@ private slots:
     void toggleFullScreen();
     void showMessage(const QString &, const QString &, int, int);
     void statusBarMessage(const QString &, int ms);
+    void createNewWindow();
 
     void openUrl();
     void openFiles();

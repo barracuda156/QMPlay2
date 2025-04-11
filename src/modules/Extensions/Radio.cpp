@@ -24,18 +24,19 @@
 #include <Functions.hpp>
 
 #include <QDesktopServices>
-#include <QJsonDocument>
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QFileDialog>
-#include <QJsonObject>
 #include <QScrollBar>
-#include <QJsonArray>
 #include <QMimeData>
 #include <qevent.h>
 #include <QTimer>
 #include <QMenu>
 #include <QUrl>
+
+#include <QJsonArray.h>
+#include <QJsonDocument.h>
+#include <QJsonObject.h>
 
 constexpr const char *g_fileDialogFilter = "QMPlay2 radio station list (*.qmplay2radio)";
 
@@ -84,8 +85,8 @@ Radio::Radio(Module &module) :
     ui->radioView->setIconSize({m_radioBrowserModel->elementHeight(), m_radioBrowserModel->elementHeight()});
 
     QHeaderView *header = ui->radioView->header();
-    header->setSectionResizeMode(0, QHeaderView::Stretch);
-    header->setSectionResizeMode(4, QHeaderView::ResizeToContents);
+    header->setResizeMode(0, QHeaderView::Stretch);
+    header->setResizeMode(4, QHeaderView::ResizeToContents);
 
     connect(m_radioBrowserMenu->addAction(tr("Play")), SIGNAL(triggered(bool)), this, SLOT(radioBrowserPlay()));
     connect(m_radioBrowserMenu->addAction(tr("Enqueue")), SIGNAL(triggered(bool)), this, SLOT(radioBrowserEnqueue()));

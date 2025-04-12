@@ -29,8 +29,6 @@
 #include <QTimer>
 #include <QLabel>
 #include <QAction>
-#include <QScreen>
-#include <QWindow>
 #include <QProcess>
 #include <QMimeData>
 #include <QClipboard>
@@ -46,13 +44,9 @@
 #include <QProgressBar>
 #include <QApplication>
 #include <QElapsedTimer>
-#include <QStandardPaths>
-#include <QLoggingCategory>
 #include <QDialogButtonBox>
 
 #include <functional>
-
-Q_LOGGING_CATEGORY(downloader, "Downloader")
 
 /**/
 
@@ -367,31 +361,13 @@ void DownloadItemW::startConversion()
 {
     deleteConvertProcess();
 
-    m_convertProcess = new QProcess(this);
-    m_convertProcessConn[0] = connect(m_convertProcess, Overload<int>::of(&QProcess::finished), this, [this](int exitCode) {
-        if (exitCode == 0)
-        {
-            sizeL->setText(tr(g_downloadComplete));
-            QFile::remove(filePath);
-            m_needsConversion = false;
-            filePath = m_convertedFilePath;
-            downloadStop(true);
-        }
-        else
-        {
-            sizeL->setText(tr(g_conversionError));
-            qCWarning(downloader) << "Failed to convert:" << m_convertProcess->program() << m_convertProcess->arguments() << m_convertProcess->readAllStandardError().constData();
-            downloadStop(false);
-        }
-    });
-    m_convertProcessConn[1] = connect(m_convertProcess, &QProcess::errorOccurred, this, [this](QProcess::ProcessError error) {
-        if (error == QProcess::FailedToStart)
-        {
-            sizeL->setText(tr(g_conversionError));
-            downloadStop(false);
-            qCWarning(downloader) << "Failed to start process:" << m_convertProcess->program();
-        }
-    });
+    m_convertProcess = new QProcess(this);  // Pass 'this' as the parent after QObject inheritance
+
+    // Use old-style connect for Qt4 compatibility
+    m_convertProcessConn[0] = connect(m_convertProcess, SIGNAL(finished(int, QProcess::ExitStatus)),
+                                      this, SLOT(handleConversionFinished(int, QProcess::ExitStatus)));
+    m_convertProcessConn[1] = connect(m_convertProcess, SIGNAL(error(QProcess::ProcessError)),
+                                      this, SLOT(handleConversionError(QProcess::ProcessError)));
 
     m_needsConversion = true;
     finished = false;
@@ -451,6 +427,7 @@ void DownloadItemW::startConversion()
     qDebug() << "Starting conversion:" << convertCommand.toUtf8().constData();
     m_convertProcess->start(convertCommand);
 }
+
 void DownloadItemW::deleteConvertProcess()
 {
     if (m_convertProcess)
@@ -460,6 +437,36 @@ void DownloadItemW::deleteConvertProcess()
         m_convertProcess->close();
         delete m_convertProcess;
         m_convertProcess = nullptr;
+    }
+}
+
+void DownloadItemW::handleConversionFinished(int exitCode, QProcess::ExitStatus)
+{
+    if (exitCode == 0) // Conversion succeeded
+    {
+        sizeL->setText(tr(g_downloadComplete));
+        QFile::remove(filePath);
+        m_needsConversion = false;
+        filePath = m_convertedFilePath;
+        downloadStop(true);
+    }
+    else // Conversion failed
+    {
+        sizeL->setText(tr(g_conversionError));
+        qWarning() << "Failed to convert:" << m_convertProcess->program()
+                   << m_convertProcess->arguments()
+                   << m_convertProcess->readAllStandardError().constData();
+        downloadStop(false);
+    }
+}
+
+void DownloadItemW::handleConversionError(QProcess::ProcessError error)
+{
+    if (error == QProcess::FailedToStart)
+    {
+        sizeL->setText(tr(g_conversionError));
+        downloadStop(false);
+        qWarning() << "Failed to start process:" << m_convertProcess->program();
     }
 }
 
@@ -879,7 +886,7 @@ void Downloader::init()
     layout->addItem(new QSpacerItem(10, 0, QSizePolicy::Fixed, QSizePolicy::Minimum), 1, 4, 1, 1);
     layout->addWidget(m_convertsPresetsB, 1, 5, 1, 1);
 
-    QString defDownloadPath = QStandardPaths::standardLocations(QStandardPaths::DownloadLocation).value(0, QDir::homePath()) + "/";
+    QString defDownloadPath = QDir::homePath() + "/";
 #ifdef Q_OS_WIN
     defDownloadPath.replace('\\', '/');
 #endif
@@ -1051,11 +1058,7 @@ bool Downloader::modifyConvertAction(QAction *action, bool addRemoveButton)
     layout->addRow(tr("Command line"), commandE);
     layout->addRow(buttons);
 
-    if (QWindow *win = window()->windowHandle())
-    {
-        if (QScreen *screen = win->screen())
-            dialog.resize(screen->availableGeometry().width() / 2, 1);
-    }
+    dialog.resize(400, 1); // Replace with a fixed width
 
     while (dialog.exec() == QDialog::Accepted)
     {

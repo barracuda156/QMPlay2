@@ -21,9 +21,11 @@
 #include <QMPlay2Extensions.hpp>
 #include <IOController.hpp>
 
+#include <QProcess>
 #include <QTreeWidget>
 #include <QToolButton>
 #include <QThread>
+#include <QWidget>
 
 class QLabel;
 class QProcess;
@@ -32,11 +34,11 @@ class QProgressBar;
 class QTreeWidgetItem;
 class DownloaderThread;
 
-class DownloadItemW final : public QWidget
+class DownloadItemW public QWidget, public QObject
 {
     Q_OBJECT
 public:
-    DownloadItemW(DownloaderThread *downloaderThr, QString name, const QIcon &icon, QDataStream *stream, QString preset);
+    explicit DownloadItemW(DownloaderThread *downloaderThr, QString name, const QIcon &icon, QDataStream *stream, QString preset);
     ~DownloadItemW();
 
     void setName(const QString &);
@@ -69,6 +71,8 @@ signals:
     void stop();
 private slots:
     void toggleStartStop();
+    void handleConversionFinished(int exitCode, QProcess::ExitStatus);
+    void handleConversionError(QProcess::ProcessError);
 private:
     void downloadStop(bool);
 
@@ -89,8 +93,8 @@ private:
         QProgressBar *progressB;
     } *speedProgressW = nullptr;
 
-    QProcess *m_convertProcess = nullptr;
-    QMetaObject::Connection m_convertProcessConn[2];
+    QProcess *m_convertProcess; // QProcess is now fully included
+    int m_convertProcessConn[2]; // Replace QMetaObject::Connection with int
     bool finished, readyToPlay, m_needsConversion = false;
     QString m_convertPreset;
     QString filePath;
@@ -99,7 +103,7 @@ private:
 
 /**/
 
-class DownloadListW final : public QTreeWidget
+class DownloadListW public QTreeWidget
 {
     friend class Downloader;
 public:
@@ -113,13 +117,13 @@ private:
 
 /**/
 
-class DownloaderThread final : public QThread
+class DownloaderThread public QThread
 {
     Q_OBJECT
     enum {ADD_ENTRY, NAME, SET, SET_POS, SET_SPEED, DOWNLOAD_ERROR, FINISH};
 public:
     DownloaderThread(QDataStream *stream, const QString &url, DownloadListW *downloadLW, const QMenu *convertsMenu, const QString &name = QString(), const QString &prefix = QString(), const QString &param = QString(), const QString &preset = QString());
-    ~DownloaderThread();
+    ~DownloaderThread() final;
 
     void serialize(QDataStream &stream);
 
@@ -131,7 +135,7 @@ private slots:
     void stop();
     void finished();
 private:
-    void run() override;
+    void run() override final;
 
     QIcon getIcon();
 
@@ -145,19 +149,19 @@ private:
 
 /**/
 
-class Downloader final : public QWidget, public QMPlay2Extensions
+class Downloader public QWidget, public QMPlay2Extensions
 {
     Q_OBJECT
 
 public:
     Downloader(Module &module);
-    ~Downloader();
+    ~Downloader() final;
 
-    void init() override;
+    void init() override final;
 
-    DockWidget *getDockWidget() override;
+    DockWidget *getDockWidget() override final;
 
-    QVector<QAction *> getActions(const QString &, double, const QString &, const QString &, const QString &) override;
+    QVector<QAction *> getActions(const QString &, double, const QString &, const QString &, const QString &) override final;
 
 private:
     void addConvertPreset();

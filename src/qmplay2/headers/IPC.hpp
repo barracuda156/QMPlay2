@@ -31,18 +31,18 @@ class IPCServerPriv;
 
 class QSocketNotifier;
 
-class QMPLAY2SHAREDLIB_EXPORT IPCSocket final : public QIODevice
+class IPCSocket : public QIODevice
 {
     Q_OBJECT
     friend class IPCServer;
 public:
     IPCSocket(const QString &fileName, QObject *parent = nullptr);
-    ~IPCSocket();
+    ~IPCSocket() final;
 
     bool isConnected() const;
 
-    bool open(OpenMode mode) override;
-    void close() override;
+    bool open(OpenMode mode) override final;
+    void close() override final;
 
 private slots:
     void socketReadActive();
@@ -54,20 +54,20 @@ private:
     IPCSocket(int socket, QObject *parent);
 #endif
 
-    qint64 readData(char *data, qint64 maxSize) override;
-    qint64 writeData(const char *data, qint64 maxSize) override;
+    qint64 readData(char *data, qint64 maxSize) override final;
+    qint64 writeData(const char *data, qint64 maxSize) override final;
 
     IPCSocketPriv *m_priv;
 };
 
 /**/
 
-class QMPLAY2SHAREDLIB_EXPORT IPCServer final : public QObject
+class IPCServer : public QObject
 {
     Q_OBJECT
 public:
     IPCServer(const QString &fileName, QObject *parent = nullptr);
-    ~IPCServer();
+    ~IPCServer() final;
 
     bool listen();
     void close();

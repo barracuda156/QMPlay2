@@ -34,9 +34,14 @@ set(GUI_HDR
     KeyBindingsDialog.hpp
     Updater.hpp
     RepeatMode.hpp
-    PanGestureEventFilter.hpp
-    EventFilterWorkarounds.hpp
 )
+
+if(NOT USE_QT4)
+    list(APPEND GUI_HDR
+        PanGestureEventFilter.hpp
+        EventFilterWorkarounds.hpp
+    )
+endif()
 
 set(GUI_SRC
     Main.cpp
@@ -79,10 +84,15 @@ set(GUI_RESOURCES
     resources.qrc
 )
 
-if(NOT WIN32)
+if(NOT USE_QT4)
     list(APPEND GUI_SRC
-        PanGestureEventFilter.cpp
+        EventFilterWorkarounds.cpp
     )
+    if(NOT WIN32)
+        list(APPEND GUI_SRC
+            PanGestureEventFilter.cpp
+        )
+    endif()
 endif()
 
 if(APPLE)
@@ -96,7 +106,11 @@ if(APPLE)
     include_directories("macOS")
 endif()
 
-qt5_wrap_ui(GUI_FORM_HDR ${GUI_FORMS})
+if(USE_QT4)
+    qt4_wrap_ui(GUI_FORM_HDR ${GUI_FORMS})
+else()
+    qt5_wrap_ui(GUI_FORM_HDR ${GUI_FORMS})
+endif()
 set_property(SOURCE ${GUI_FORM_HDR} PROPERTY SKIP_AUTOMOC ON)
 
 include_directories(../qmplay2/headers)
@@ -121,7 +135,7 @@ if(USE_TAGLIB)
     list(APPEND GUI_SRC TagEditor.cpp)
 endif()
 
-if(NOT APPLE)
+if(USE_QT4 OR NOT APPLE)
     add_definitions(-DQMPLAY2_ALLOW_ONLY_ONE_INSTANCE)
 endif()
 
@@ -216,11 +230,13 @@ if(WIN32)
 elseif(APPLE)
     install(TARGETS ${PROJECT_NAME} BUNDLE DESTINATION ${CMAKE_INSTALL_PREFIX})
 
-    set(QT_LIBS_DIR "${Qt5Widgets_DIR}/../..")
-    set(QT_PLUGINS_DIR "${QT_LIBS_DIR}/../plugins")
+    set(QT_LIBS_DIR "${QT_LIBS_DIR}")
+    set(QT_PLUGINS_DIR "${QT_PLUGINS_DIR}")
+if(NOT USE_QT4)
     install(FILES
         "${QT_PLUGINS_DIR}/platforms/libqcocoa.dylib"
         DESTINATION "${MAC_BUNDLE_PATH}/Contents/plugins/platforms")
+endif()
     install(FILES
         "${QT_PLUGINS_DIR}/iconengines/libqsvgicon.dylib"
         DESTINATION "${MAC_BUNDLE_PATH}/Contents/plugins/iconengines")
@@ -238,23 +254,7 @@ elseif(APPLE)
         DESTINATION "${MAC_BUNDLE_PATH}/Contents"
         FILES_MATCHING
         PATTERN "qtbase_*.qm")
-    if(EXISTS "/usr/local/bin/ffmpeg")
-        install(PROGRAMS
-            "/usr/local/bin/ffmpeg"
-            DESTINATION "${MAC_BUNDLE_PATH}/Contents/MacOS")
-    else()
-        message(WARNING "FFmpeg executable not copied!")
-    endif()
-    install(CODE "
-        include(BundleUtilities)
-        set(BU_CHMOD_BUNDLE_ITEMS ON)
-        list(APPEND DIRS /usr/local/lib ${QT_LIBS_DIR})
-        file(GLOB_RECURSE QMPLAY2_MODULES_AND_QT_PLUGINS
-            \"${MAC_BUNDLE_PATH}/Contents/MacOS/modules/*\"
-            \"${MAC_BUNDLE_PATH}/Contents/plugins/*.dylib\")
-        file(WRITE \"${MAC_BUNDLE_PATH}/Contents/Resources/qt.conf\")
-        fixup_bundle(${MAC_BUNDLE_PATH} \"\${QMPLAY2_MODULES_AND_QT_PLUGINS}\" \"\${DIRS}\")
-    ")
+    file(WRITE \"${DESTDIR}${MAC_BUNDLE_PATH}/Contents/Resources/qt.conf\")
 else()
     # executable
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

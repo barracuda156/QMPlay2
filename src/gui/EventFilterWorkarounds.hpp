@@ -20,7 +20,7 @@
 
 #include <QObject>
 
-class EventFilterWorkarounds final : public QObject
+class EventFilterWorkarounds : public QObject
 {
     Q_OBJECT
 
@@ -29,5 +29,5 @@ public:
     ~EventFilterWorkarounds();
 
 private:
-    bool eventFilter(QObject *watched, QEvent *event) override;
+    bool eventFilter(QObject *watched, QEvent *event) override final;
 };

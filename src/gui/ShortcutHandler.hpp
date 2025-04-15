@@ -23,23 +23,23 @@
 
 class QAction;
 
-class ShortcutHandler final : public QAbstractTableModel
+class ShortcutHandler : public QAbstractTableModel
 {
     Q_DECLARE_TR_FUNCTIONS(ShortcutHandler)
 
 public:
     ShortcutHandler(QObject *parent);
-    ~ShortcutHandler();
+    ~ShortcutHandler() final;
 
-    int columnCount(const QModelIndex &parent) const override;
-    int rowCount(const QModelIndex &parent) const override;
+    int columnCount(const QModelIndex &parent) const override final;
+    int rowCount(const QModelIndex &parent) const override final;
 
-    Qt::ItemFlags flags(const QModelIndex &index) const override;
+    Qt::ItemFlags flags(const QModelIndex &index) const override final;
 
-    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const override final;
 
-    QVariant data(const QModelIndex &index, int role) const override;
-    bool setData(const QModelIndex &index, const QVariant &value, int role) override;
+    QVariant data(const QModelIndex &index, int role) const override final;
+    bool setData(const QModelIndex &index, const QVariant &value, int role) override final;
 
     void appendAction(QAction *action, const QString &settingsName, const QString &defaultShortcut);
 

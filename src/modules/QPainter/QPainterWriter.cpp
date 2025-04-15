@@ -72,9 +72,9 @@ void Drawable::draw(const VideoFrame &newVideoFrame, bool canRepaint, bool entir
 
 void Drawable::resizeEvent(QResizeEvent *e)
 {
-    const qreal dpr = devicePixelRatioF();
+    const qreal scale = QMPlay2Core.getVideoDevicePixelRatio();
     Functions::getImageSize(writer.aspect_ratio, writer.zoom, width(), height(), W, H, &X, &Y);
-    Functions::getImageSize(writer.aspect_ratio, writer.zoom, width() * dpr, height() * dpr, imgW, imgH);
+    Functions::getImageSize(writer.aspect_ratio, writer.zoom, width() * scale, height() * scale, imgW, imgH);
     imgW = Functions::aligned(imgW, 8);
 
     imgScaler.destroy();
@@ -82,6 +82,7 @@ void Drawable::resizeEvent(QResizeEvent *e)
 
     draw(VideoFrame(), e ? false : true, true);
 }
+
 void Drawable::paintEvent(QPaintEvent *)
 {
     QPainter p(this);
@@ -94,14 +95,15 @@ void Drawable::paintEvent(QPaintEvent *)
     osd_mutex.lock();
     if (!osd_list.isEmpty())
     {
-        const qreal dpr = devicePixelRatioF();
-        if (!qFuzzyCompare(dpr, 1.0))
-            p.scale(1.0 / dpr, 1.0 / dpr);
+        const qreal scale = QMPlay2Core.getVideoDevicePixelRatio();
+        if (!qFuzzyCompare(scale, 1.0))
+            p.scale(1.0 / scale, 1.0 / scale);
         p.setClipRect(0, 0, imgW, imgH);
-        Functions::paintOSD(true, osd_list, W * dpr / writer.outW, H * dpr / writer.outH, p);
+        Functions::paintOSD(true, osd_list, (qreal)W / writer.outW, (qreal)H / writer.outH, p);
     }
     osd_mutex.unlock();
 }
+
 bool Drawable::event(QEvent *e)
 {
     /* Pass gesture and touch event to the parent */

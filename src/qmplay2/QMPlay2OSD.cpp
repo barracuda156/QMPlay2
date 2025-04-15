@@ -17,13 +17,13 @@
 */
 
 #include <QMPlay2OSD.hpp>
+#include <QAtomicInt>
 
-#include <QAtomicInteger>
-static QAtomicInteger<quint64> g_id;
+static QAtomicInt g_id;
 
 void QMPlay2OSD::genId()
 {
-    m_id = ++g_id;
+    m_id = g_id.fetchAndAddOrdered(1) + 1;
 }
 
 void QMPlay2OSD::clear(bool all)

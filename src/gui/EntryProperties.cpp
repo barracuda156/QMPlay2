@@ -107,12 +107,6 @@ EntryProperties::EntryProperties(QWidget *p, QTreeWidgetItem *_tWI, bool &sync, 
         addrB = new AddressBox(Qt::Horizontal, url);
         layout.addWidget(addrB, row, 0, 1, 2);
 
-        openUrlB = new QToolButton;
-        openUrlB->setToolTip(tr("Open URL or directory containing chosen file"));
-        openUrlB->setIcon(QMPlay2Core.getIconFromTheme("folder-open"));
-        connect(openUrlB, &QToolButton::clicked, this, &EntryProperties::openUrl);
-        layout.addWidget(openUrlB, row, 2, 1, 1);
-
         fileSizeL = new QLabel;
 
 #ifdef QMPlay2_TagEditor

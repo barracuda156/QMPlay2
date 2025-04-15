@@ -23,6 +23,10 @@
     #define MMSYSERR_NODRIVER 6
 #endif
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+    #define QStringLiteral QString::fromUtf8
+#endif
+
 #ifdef Q_OS_MACOS
     #include "3rdparty/CoreAudio/AudioDeviceList.h"
     #include "3rdparty/CoreAudio/AudioDevice.h"
@@ -47,6 +51,7 @@ PortAudioWriter::PortAudioWriter(Module &module) :
 
     SetModule(module);
 }
+
 PortAudioWriter::~PortAudioWriter()
 {
 #ifdef Q_OS_MACOS
@@ -130,6 +135,7 @@ bool PortAudioWriter::processParams(bool *paramsCorrected)
 
     return readyWrite();
 }
+
 qint64 PortAudioWriter::write(const QByteArray &arr)
 {
     if (!readyWrite())
@@ -192,6 +198,7 @@ qint64 PortAudioWriter::write(const QByteArray &arr)
 
     return arr.size();
 }
+
 void PortAudioWriter::pause()
 {
     if (readyWrite())
@@ -253,6 +260,7 @@ bool PortAudioWriter::openStream()
     }
     return false;
 }
+
 bool PortAudioWriter::startStream()
 {
     const PaError e = Pa_StartStream(stream);
@@ -266,6 +274,7 @@ bool PortAudioWriter::startStream()
     }
     return true;
 }
+
 inline bool PortAudioWriter::writeStream(const QByteArray &arr)
 {
     const PaError e = Pa_WriteStream(stream, arr.constData(), arr.size() / outputParameters.channelCount / sizeof(float));
@@ -288,6 +297,7 @@ inline bool PortAudioWriter::writeStream(const QByteArray &arr)
     }
     return (e != paUnanticipatedHostError);
 }
+
 qint64 PortAudioWriter::playbackError()
 {
     QMPlay2Core.logError("PortAudio :: " + tr("Playback error"));
@@ -302,6 +312,7 @@ bool PortAudioWriter::isNoDriverError() const
     return errorInfo && errorInfo->hostApiType == paMME && errorInfo->errorCode == MMSYSERR_NODRIVER;
 }
 #endif
+
 bool PortAudioWriter::reopenStream()
 {
     Pa_CloseStream(stream);

@@ -8,7 +8,7 @@
 
 class NetworkAccess;
 
-class QMPLAY2SHAREDLIB_EXPORT NetworkAccessJS : public QObject
+class NetworkAccessJS : public QObject
 {
     Q_OBJECT
 

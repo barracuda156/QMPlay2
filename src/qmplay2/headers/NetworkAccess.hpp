@@ -26,7 +26,7 @@
 class NetworkReplyPriv;
 struct NetworkAccessParams;
 
-class QMPLAY2SHAREDLIB_EXPORT NetworkReply final : public QObject, public BasicIO
+class NetworkReply : public QObject, public BasicIO
 {
     Q_OBJECT
 
@@ -84,7 +84,7 @@ private:
 
 /**/
 
-class QMPLAY2SHAREDLIB_EXPORT NetworkAccess : public QObject
+class NetworkAccess : public QObject
 {
     Q_OBJECT
 

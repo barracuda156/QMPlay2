@@ -24,7 +24,7 @@
 #include <QString>
 #include <QVariant>
 
-class QMPLAY2SHAREDLIB_EXPORT ModuleParams
+class ModuleParams
 {
     Q_DISABLE_COPY(ModuleParams)
 public:

@@ -22,7 +22,7 @@
 
 #include <QPushButton>
 
-class QMPLAY2SHAREDLIB_EXPORT ColorButton final : public QPushButton
+class ColorButton : public QPushButton
 {
     Q_OBJECT
 public:
@@ -34,7 +34,7 @@ public:
         return m_color;
     }
 protected:
-    void paintEvent(QPaintEvent *) override;
+    void paintEvent(QPaintEvent *) override final;
 private:
     QColor m_color;
     bool m_alphaChannel;

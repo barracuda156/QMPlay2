@@ -23,7 +23,7 @@
 struct FFTContext;
 struct FFTComplex;
 
-class Equalizer final : public AudioFilter
+class Equalizer : public AudioFilter
 {
 public:
     static QVector<float> interpolate(const QVector<float> &, const int);
@@ -31,14 +31,14 @@ public:
     static float getAmpl(int val);
 
     Equalizer(Module &);
-    ~Equalizer();
+    ~Equalizer() final;
 
-    bool set() override;
+    bool set() override final;
 private:
-    bool setAudioParameters(uchar, uint) override;
-    int bufferedSamples() const override;
-    void clearBuffers() override;
-    double filter(Buffer &data, bool flush) override;
+    bool setAudioParameters(uchar, uint) override final;
+    int bufferedSamples() const override final;
+    void clearBuffers() override final;
+    double filter(Buffer &data, bool flush) override final;
 
     /**/
 

@@ -20,15 +20,15 @@
 
 #include <AudioFilter.hpp>
 
-class Echo final : public AudioFilter
+class Echo : public AudioFilter
 {
 public:
     Echo(Module &);
 
-    bool set() override;
+    bool set() override final;
 private:
-    bool setAudioParameters(uchar, uint) override;
-    double filter(Buffer &, bool) override;
+    bool setAudioParameters(uchar, uint) override final;
+    double filter(Buffer &, bool) override final;
 
     void alloc(bool);
 

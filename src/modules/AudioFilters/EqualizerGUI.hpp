@@ -20,7 +20,7 @@
 
 #include <QMPlay2Extensions.hpp>
 
-class GraphW final : public QWidget
+class GraphW : public QWidget
 {
 public:
     GraphW();
@@ -31,7 +31,7 @@ public:
         values.resize(vals);
     }
 private:
-    void paintEvent(QPaintEvent *) override;
+    void paintEvent(QPaintEvent *) override final;
 
     QVector<float> values;
     float preamp;
@@ -44,15 +44,15 @@ class QCheckBox;
 class QSlider;
 class QMenu;
 
-class EqualizerGUI final : public QWidget, public QMPlay2Extensions
+class EqualizerGUI : public QWidget, public QMPlay2Extensions
 {
     Q_OBJECT
 public:
     EqualizerGUI(Module &);
 
-    bool set() override;
+    bool set() override final;
 
-    DockWidget *getDockWidget() override;
+    DockWidget *getDockWidget() override final;
 private slots:
     void wallpaperChanged(bool hasWallpaper, double alpha);
     void enabled(bool);
@@ -80,7 +80,7 @@ private:
 
     void loadPresets();
 
-    void showEvent(QShowEvent *event) override;
+    void showEvent(QShowEvent *event) override final;
 
     QMap<int, int> getPresetValues(const QString &name);
 

@@ -94,7 +94,11 @@ public:
         return *settings;
     }
 
-    qreal getVideoDevicePixelRatio() const;
+    inline qreal getVideoDevicePixelRatio() const
+    {
+        return videoDevicePixelRatio;
+    }
+    void setVideoDevicePixelRatio();
 
     QIcon getIconFromTheme(const QString &iconName, const QIcon &fallback = QIcon());
 
@@ -211,6 +215,7 @@ private:
     QStringList logs;
     QMap<QString, QString> languages;
     QList<QPointer<QWidget>> videoFilters;
+    qreal videoDevicePixelRatio;
     QString lang;
 
     struct

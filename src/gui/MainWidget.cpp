@@ -32,8 +32,6 @@
 #include <QListWidget>
 #ifdef Q_OS_MACOS
     #include <QProcess>
-    #include <QScreen>
-    #include <QWindow>
 #endif
 #ifdef Q_OS_WIN
     #include <QWinThumbnailToolButton>
@@ -62,7 +60,8 @@
 #include <VolWidget.hpp>
 #include <ScreenSaver.hpp>
 #ifdef Q_OS_MACOS
-    #include <QMPlay2MacExtensions.hpp>
+    #include <Carbon/Carbon.h>
+    extern void qt_mac_set_dock_menu(QMenu *);
 #endif
 
 using Functions::timeToStr;
@@ -75,21 +74,6 @@ using Functions::timeToStr;
 #include <IPC.hpp>
 
 #include <cmath>
-
-/* MainWidgetTmpStyle -  dock widget separator extent must be larger for touch screens */
-class MainWidgetTmpStyle final : public QCommonStyle
-{
-public:
-    ~MainWidgetTmpStyle() = default;
-
-    int pixelMetric(PixelMetric metric, const QStyleOption *option, const QWidget *widget) const override
-    {
-        const int pM = QCommonStyle::pixelMetric(metric, option, widget);
-        if (metric == QStyle::PM_DockWidgetSeparatorExtent)
-            return pM * 5 / 2;
-        return pM;
-    }
-};
 
 #ifndef Q_OS_MACOS
 static void copyMenu(QMenu *dest, QMenu *src, QMenu *dontCopy = nullptr)
@@ -110,24 +94,12 @@ static void copyMenu(QMenu *dest, QMenu *src, QMenu *dontCopy = nullptr)
 #endif
 
 /* MainWidget */
-MainWidget::MainWidget(QList<QPair<QString, QString>> &arguments) :
+MainWidget::MainWidget(QPair<QStringList, QStringList> &arguments) :
     updater(this)
 {
     QMPlay2GUI.videoAdjustment = new VideoAdjustmentW;
     QMPlay2GUI.shortcutHandler = new ShortcutHandler(this);
     QMPlay2GUI.mainW = this;
-
-    /* Looking for touch screen */
-    for (const QTouchDevice *touchDev : QTouchDevice::devices())
-    {
-        /* Touchscreen found */
-        if (touchDev->type() == QTouchDevice::TouchScreen)
-        {
-            MainWidgetTmpStyle mainWidgetTmpStyle;
-            setStyle(&mainWidgetTmpStyle);
-            break;
-        }
-    }
 
     setObjectName("MainWidget");
 
@@ -284,7 +256,7 @@ MainWidget::MainWidget(QList<QPair<QString, QString>> &arguments) :
     connect(playlistDock, SIGNAL(play(const QString &)), &playC, SLOT(play(const QString &)));
     connect(playlistDock, SIGNAL(repeatEntry(bool)), &playC, SLOT(repeatEntry(bool)));
     connect(playlistDock, SIGNAL(stop()), &playC, SLOT(stop()));
-    connect(&playC, SIGNAL(videoNotStarted()), this, SLOT(onVideoNotStarted()));
+    connect(playlistDock, SIGNAL(addAndPlayRestoreWindow()), this, SLOT(handleAddAndPlayRestoreWindow()));
 
     connect(seekS, SIGNAL(valueChanged(int)), this, SLOT(seek(int)));
     connect(seekS, SIGNAL(mousePosition(int)), this, SLOT(mousePositionOnSlider(int)));
@@ -318,15 +290,10 @@ MainWidget::MainWidget(QList<QPair<QString, QString>> &arguments) :
     connect(&playC, SIGNAL(updateBufferedRange(int, int)), seekS, SLOT(drawRange(int, int)));
     connect(&playC, SIGNAL(updateWindowTitle(const QString &)), this, SLOT(updateWindowTitle(const QString &)));
     connect(&playC, SIGNAL(updateImage(const QImage &)), videoDock, SLOT(updateImage(const QImage &)));
-    connect(&playC, &PlayClass::videoStarted, this, &MainWidget::videoStarted);
+    connect(&playC, SIGNAL(videoNotStarted()), this, SLOT(handleVideoNotStarted()));
     connect(playlistDock, SIGNAL(addAndPlayRestoreWindow()), this, SLOT(onAddAndPlayRestoreWindow()));
     connect(&playC, SIGNAL(uncheckSuspend()), this, SLOT(uncheckSuspend()));
-    connect(&playC, &PlayClass::setVideoCheckState, this, [this](bool rotate90, bool hFlip, bool vFlip, bool spherical) {
-        menuBar->playback->videoFilters->rotate90->setChecked(rotate90);
-        menuBar->playback->videoFilters->hFlip->setChecked(hFlip);
-        menuBar->playback->videoFilters->vFlip->setChecked(vFlip);
-        menuBar->playback->videoFilters->spherical->setChecked(spherical);
-    });
+    connect(&playC, SIGNAL(setVideoCheckState(bool, bool, bool, bool)), this, SLOT(handleSetVideoCheckState(bool, bool, bool, bool)));
     /**/
 
     if (settings.getBool("MainWidget/TabPositionNorth"))
@@ -554,11 +521,11 @@ void MainWidget::updateWindowTitle(const QString &t)
     setWindowTitle(title);
 }
 
-void MainWidget::onAddAndPlayRestoreWindow() {
+void MainWidget::handleAddAndPlayRestoreWindow() {
     m_restoreWindowOnVideo = true;
 }
 
-void MainWidget::onVideoNotStarted() {
+void MainWidget::handleVideoNotStarted() {
     m_restoreWindowOnVideo = false;
 }
 
@@ -1807,3 +1774,10 @@ void MainWidget::fileOpenTimerTimeout()
     filesToAdd.clear();
 }
 #endif
+
+void MainWidget::handleSetVideoCheckState(bool rotate90, bool hFlip, bool vFlip, bool spherical) {
+    menuBar->playback->videoFilters->rotate90->setChecked(rotate90);
+    menuBar->playback->videoFilters->hFlip->setChecked(hFlip);
+    menuBar->playback->videoFilters->vFlip->setChecked(vFlip);
+    menuBar->playback->videoFilters->spherical->setChecked(spherical);
+}

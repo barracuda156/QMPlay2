@@ -25,15 +25,15 @@
 #include <QTextEdit>
 #include <QPointer>
 
-class Lyrics final : public QTextEdit, public QMPlay2Extensions
+class Lyrics : public QTextEdit, public QMPlay2Extensions
 {
     Q_OBJECT
 
 public:
     Lyrics(Module &module);
-    ~Lyrics();
+    ~Lyrics() final;
 
-    DockWidget *getDockWidget() override;
+    DockWidget *getDockWidget() override final;
 
 private slots:
     void visibilityChanged(bool v);

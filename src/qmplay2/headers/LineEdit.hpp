@@ -21,16 +21,36 @@
 #include <QMPlay2Lib.hpp>
 
 #include <QLineEdit>
+#include <QLabel>
 
-class QMPLAY2SHAREDLIB_EXPORT LineEdit final : public QLineEdit
+class LineEditButton : public QLabel
 {
     Q_OBJECT
+public:
+    LineEditButton();
+private:
+    void mousePressEvent(QMouseEvent *) override final;
+signals:
+    void clicked();
+};
 
+/**/
+
+class LineEdit : public QLineEdit
+{
+    Q_OBJECT
 public:
     LineEdit(QWidget *parent = nullptr);
 
-    void clearText();
+private:
+    void resizeEvent(QResizeEvent *) override final;
+    void mousePressEvent(QMouseEvent *) override final;
+    void mouseMoveEvent(QMouseEvent *) override final;
 
+    LineEditButton b;
+private slots:
+    void textChangedSlot(const QString &);
+    void clearText();
 signals:
     void clearButtonClicked();
 };

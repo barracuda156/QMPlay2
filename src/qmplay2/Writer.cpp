@@ -20,7 +20,7 @@
 
 #include <Functions.hpp>
 
-#include <QSaveFile>
+#include <QFile>
 #include <QBuffer>
 
 #include <memory>
@@ -52,8 +52,10 @@ class QMPlay2FileWriter : public IODeviceWriter
 {
     ~QMPlay2FileWriter()
     {
-        if (auto f = static_cast<QSaveFile *>(m_io.get()))
-            f->commit();
+        if (auto f = static_cast<QFile *>(m_io.get()))
+        {
+            f->close();
+        }
     }
 
     QString name() const override final
@@ -63,7 +65,7 @@ class QMPlay2FileWriter : public IODeviceWriter
 
     bool open() override final
     {
-        m_io.reset(new QSaveFile(getUrl().mid(7)));
+        m_io.reset(new QFile(getUrl().mid(7)));
         return IODeviceWriter::open();
     }
 };

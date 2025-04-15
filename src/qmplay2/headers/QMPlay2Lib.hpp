@@ -20,8 +20,13 @@
 
 #include <QtGlobal>
 
-#if defined(QMPLAY2SHAREDLIB_LIBRARY)
-    #define QMPLAY2SHAREDLIB_EXPORT Q_DECL_EXPORT
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+    // Define to nothing, it breaks linking otherwise
+    #define QMPLAY2SHAREDLIB_EXPORT
 #else
-    #define QMPLAY2SHAREDLIB_EXPORT Q_DECL_IMPORT
+    #if defined(QMPLAY2SHAREDLIB_LIBRARY)
+        #define QMPLAY2SHAREDLIB_EXPORT Q_DECL_EXPORT
+    #else
+        #define QMPLAY2SHAREDLIB_EXPORT Q_DECL_IMPORT
+    #endif
 #endif

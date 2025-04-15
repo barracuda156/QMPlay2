@@ -34,7 +34,7 @@ class QProgressBar;
 class QTreeWidgetItem;
 class DownloaderThread;
 
-class DownloadItemW public QWidget, public QObject
+class DownloadItemW : public QWidget
 {
     Q_OBJECT
 public:
@@ -103,7 +103,7 @@ private:
 
 /**/
 
-class DownloadListW public QTreeWidget
+class DownloadListW : public QTreeWidget
 {
     friend class Downloader;
 public:
@@ -117,7 +117,7 @@ private:
 
 /**/
 
-class DownloaderThread public QThread
+class DownloaderThread : public QThread
 {
     Q_OBJECT
     enum {ADD_ENTRY, NAME, SET, SET_POS, SET_SPEED, DOWNLOAD_ERROR, FINISH};
@@ -149,7 +149,7 @@ private:
 
 /**/
 
-class Downloader public QWidget, public QMPlay2Extensions
+class Downloader : public QWidget, public QMPlay2Extensions
 {
     Q_OBJECT
 

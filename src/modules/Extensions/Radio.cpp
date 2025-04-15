@@ -110,9 +110,7 @@ Radio::Radio(Module &module) :
     connect(m_net, SIGNAL(finished(NetworkReply *)), this, SLOT(replyFinished(NetworkReply *)));
 
     m_tabChangedOnVisibilityTimer->setSingleShot(true);
-    connect(m_tabChangedOnVisibilityTimer, &QTimer::timeout, this, [=] {
-        tabChanged(currentIndex());
-    });
+    connect(m_tabChangedOnVisibilityTimer, SIGNAL(timeout()), this, SLOT(triggerTabChanged()));
 }
 Radio::~Radio()
 {
@@ -222,6 +220,7 @@ void Radio::searchData()
     ui->radioView->setEnabled(false);
     ui->filterEdit->clear();
 }
+
 void Radio::searchFinished()
 {
     ui->radioView->setEnabled(true);
@@ -286,6 +285,7 @@ void Radio::on_addMyRadioStationButton_clicked()
             addMyRadioStation(name, address);
     }
 }
+
 void Radio::on_editMyRadioStationButton_clicked()
 {
     if (QListWidgetItem *item = ui->myRadioListWidget->currentItem())
@@ -301,10 +301,12 @@ void Radio::on_editMyRadioStationButton_clicked()
         }
     }
 }
+
 void Radio::on_removeMyRadioStationButton_clicked()
 {
     delete ui->myRadioListWidget->currentItem();
 }
+
 void Radio::on_loadMyRadioStationButton_clicked()
 {
     const QString filePath = QFileDialog::getOpenFileName(this, tr("Load radio station list"), QString(), g_fileDialogFilter);
@@ -313,6 +315,7 @@ void Radio::on_loadMyRadioStationButton_clicked()
         loadMyRadios(QSettings(filePath, QSettings::IniFormat).value("Radia").toStringList());
     }
 }
+
 void Radio::on_saveMyRadioStationButton_clicked()
 {
     QString filePath = QFileDialog::getSaveFileName(this, tr("Save radio station list"), QString(), g_fileDialogFilter);
@@ -328,6 +331,7 @@ void Radio::on_myRadioListWidget_itemDoubleClicked(QListWidgetItem *item)
 {
     firstTabItemDoubleClicked(item);
 }
+
 void Radio::on_qmplay2RadioListWidget_itemDoubleClicked(QListWidgetItem *item)
 {
     firstTabItemDoubleClicked(item);
@@ -371,14 +375,17 @@ void Radio::on_searchByComboBox_activated(int idx)
         ui->searchComboBox->setInsertPolicy(QComboBox::InsertAtBottom);
     }
 }
+
 void Radio::on_addRadioBrowserStationButton_clicked()
 {
     QDesktopServices::openUrl(QUrl("http://www.radio-browser.info/gui/#/add"));
 }
+
 void Radio::on_radioView_doubleClicked(const QModelIndex &index)
 {
     radioBrowserPlayOrEnqueue(index, "open");
 }
+
 void Radio::on_radioView_customContextMenuRequested(const QPoint &pos)
 {
     if (ui->radioView->currentIndex().isValid())
@@ -391,6 +398,7 @@ void Radio::radioBrowserPlay()
     if (index.isValid())
         radioBrowserPlayOrEnqueue(index, "open");
 }
+
 void Radio::radioBrowserAdd()
 {
     const QModelIndex index = ui->radioView->currentIndex();
@@ -401,18 +409,21 @@ void Radio::radioBrowserAdd()
         addMyRadioStation(title, url);
     }
 }
+
 void Radio::radioBrowserEnqueue()
 {
     const QModelIndex index = ui->radioView->currentIndex();
     if (index.isValid())
         radioBrowserPlayOrEnqueue(index, "enqueue");
 }
+
 void Radio::radioBrowserOpenHomePage()
 {
     const QModelIndex index = ui->radioView->currentIndex();
     if (index.isValid())
         QDesktopServices::openUrl(m_radioBrowserModel->getHomePageUrl(index));
 }
+
 void Radio::radioBrowserEdit()
 {
     const QModelIndex index = ui->radioView->currentIndex();
@@ -496,6 +507,7 @@ QStringList Radio::getMyRadios() const
         myRadios += item->text() + '\n' + item->data(Qt::UserRole).toString();
     return myRadios;
 }
+
 void Radio::loadMyRadios(const QStringList &radios)
 {
     ui->myRadioListWidget->clear();
@@ -539,4 +551,9 @@ bool Radio::eventFilter(QObject *watched, QEvent *event)
         }
     }
     return QTabWidget::eventFilter(watched, event);
+}
+
+void Radio::triggerTabChanged()
+{
+    tabChanged(currentIndex());
 }

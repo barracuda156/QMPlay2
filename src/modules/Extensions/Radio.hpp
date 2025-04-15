@@ -24,6 +24,7 @@
 #include <QPointer>
 #include <QIcon>
 #include <QMap>
+#include <QModelIndex>
 
 namespace Ui {
     class Radio;
@@ -36,20 +37,22 @@ class NetworkReply;
 class QTimer;
 class QMenu;
 
-class Radio final : public QTabWidget, public QMPlay2Extensions
+class Radio : public QTabWidget, public QMPlay2Extensions
 {
     Q_OBJECT
 
 public:
     Radio(Module &);
-    ~Radio();
+    ~Radio() final;
 
-    DockWidget *getDockWidget() override;
+    DockWidget *getDockWidget() override final;
 
 private slots:
     void visibilityChanged(const bool v);
 
     void tabChanged(int index);
+
+    void triggerTabChanged();
 
     void qmplay2RadioStationsFinished();
 
@@ -95,7 +98,7 @@ private:
     void loadMyRadios(const QStringList &radios);
 
 private:
-    bool eventFilter(QObject *watched, QEvent *event) override;
+    bool eventFilter(QObject *watched, QEvent *event) override final;
 
 private:
     const QString m_newStationTxt;

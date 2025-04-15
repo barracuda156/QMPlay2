@@ -21,7 +21,8 @@
 #include <Functions.hpp>
 #include <Packet.hpp>
 
-#include <QUrlQuery>
+#include <QUrl>
+#define QUrlQuery(url) url
 
 #include <cmath>
 

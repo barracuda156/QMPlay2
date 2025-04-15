@@ -49,7 +49,6 @@ public:
         Download,
         Aborted
     };
-    Q_ENUM(Error)
 
     enum class Wait
     {
@@ -57,13 +56,12 @@ public:
         Timeout,
         Error
     };
-    Q_ENUM(Wait)
 
-    ~NetworkReply();
+    ~NetworkReply() final;
 
     QString url() const;
 
-    void abort() override;
+    void abort() override final;
 
     bool hasError() const;
     Error error() const;

@@ -26,6 +26,8 @@
 #include <QVector>
 #include <QPair>
 
+#include <qnumeric.h> // qQNaN
+
 using QMPlay2Tag = QPair<QString, QString>;
 
 enum QMPlay2MediaType

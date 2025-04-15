@@ -408,15 +408,18 @@ Playlist::Entries FFDemux::fetchTracks(const QString &url, bool &ok)
             {
                 Playlist::Entry &entry = entries[i];
                 const bool lastItem = (i == entries.count() - 1);
-                const double start = indexes.value(i).second;
-                const double end = indexes.value(i + 1, {-1.0, -1.0}).first;
+                const double start = indexes.contains(i) ? indexes.value(i).second : -1.0;
+                double end = -1.0;
+                if (indexes.contains(i + 1))
+                    end = indexes.value(i + 1).first;
+
                 if (entry.url.isEmpty() || start < 0.0 || (end <= 0.0 && !lastItem))
                 {
-                    entries.removeAt(i);
+                    entries.remove(i);
                     continue;
                 }
                 const QString param = QString("CUE:%1:%2").arg(start).arg(end);
-                if (lastItem && end < 0.0) // Last entry doesn't have specified length in CUE file
+                if (lastItem && end < 0.0)
                 {
                     FormatContext *fmtCtx = createFmtCtx();
                     if (fmtCtx->open(entry.url, param))

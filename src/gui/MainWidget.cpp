@@ -1054,30 +1054,17 @@ void MainWidget::toggleFullScreen()
         videoDock->fullScreen(true);
         videoDock->show();
 
-#ifdef Q_OS_MACOS
-        menuBar->window->toggleVisibility->setEnabled(false);
-#endif
         menuBar->window->toggleCompactView->setEnabled(false);
         menuBar->window->toggleFullScreen->setShortcuts(QList<QKeySequence>() << menuBar->window->toggleFullScreen->shortcut() << QKeySequence("ESC"));
         fullScreen = true;
 
-#ifndef Q_OS_MACOS
         showFullScreen();
-#else
-        setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
-        setGeometry(window()->windowHandle()->screen()->geometry());
-        QMPlay2MacExtensions::showSystemUi(windowHandle(), false);
-        show();
-#endif
 
         if (playC.isPlaying())
             QMPlay2GUI.screenSaver->inhibit(1);
     }
     else
     {
-#ifdef Q_OS_MACOS
-        menuBar->window->toggleVisibility->setEnabled(true);
-#endif
         menuBar->window->toggleCompactView->setEnabled(true);
         menuBar->window->toggleFullScreen->setShortcuts(QList<QKeySequence>() << menuBar->window->toggleFullScreen->shortcut());
 
@@ -1085,19 +1072,12 @@ void MainWidget::toggleFullScreen()
         fullScreen = false;
 
 #ifndef Q_OS_ANDROID
-#ifdef Q_OS_MACOS
-        QMPlay2MacExtensions::showSystemUi(windowHandle(), true);
-        setWindowFlags(Qt::Window);
-#else
         showNormal();
 #endif // Q_OS_MACOS
         if (maximized)
             showMaximized();
         else
         {
-#ifdef Q_OS_MACOS
-            showNormal();
-#endif
             setGeometry(savedGeo);
         }
 #else // Q_OS_ANDROID

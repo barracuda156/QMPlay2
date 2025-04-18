@@ -395,7 +395,7 @@ void RadioBrowserModel::replyFinished(NetworkReply *reply)
                         if (!image.isNull())
                         {
                             const int s = elementHeight();
-                            const qreal dpr = m_widget->devicePixelRatio();
+                            const qreal dpr = 1.0;
 
                             column->icon = QPixmap(s * dpr, s * dpr);
                             column->icon.fill(Qt::transparent);

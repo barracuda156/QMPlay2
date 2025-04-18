@@ -311,14 +311,14 @@ void PlayClass::seek(double pos, bool allowAccurate)
 void PlayClass::chStream(const QString &s)
 {
     if (s.startsWith("audio"))
-        chosenAudioStream = s.rightRef(s.length() - 5).toInt();
+        chosenAudioStream = s.rightRef(s.length() - 5).toString().toInt();
     else if (s.startsWith("video"))
-        chosenVideoStream = s.rightRef(s.length() - 5).toInt();
+        chosenVideoStream = s.rightRef(s.length() - 5).toString().toInt();
     else if (s.startsWith("subtitles"))
-        chosenSubtitlesStream = s.rightRef(s.length() - 9).toInt();
+        chosenSubtitlesStream = s.rightRef(s.length() - 9).toString().toInt();
     else if (s.startsWith("fileSubs"))
     {
-        int idx = s.rightRef(s.length() - 8).toInt();
+        int idx = s.rightRef(s.length() - 5).toString().toInt();
         if (fileSubsList.count() > idx)
             loadSubsFile(fileSubsList[idx]);
     }

@@ -55,6 +55,8 @@
 #include <MenuBar.hpp>
 #include <Module.hpp>
 
+#include <stdlib.h>
+
 #include "ui_SettingsGeneral.h"
 #include "ui_SettingsPlayback.h"
 #include "ui_SettingsPlaybackModulesList.h"
@@ -686,7 +688,7 @@ void SettingsWidget::applyProxy()
     Settings &QMPSettings = QMPlay2Core.getSettings();
     if (!QMPSettings.getBool("Proxy/Use"))
     {
-        qunsetenv("http_proxy");
+        unsetenv("http_proxy");
     }
     else
     {

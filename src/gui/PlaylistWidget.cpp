@@ -57,20 +57,6 @@ static inline MenuBar::Playlist *playlistMenu()
     return QMPlay2GUI.menuBar->playlist;
 }
 
-/* PlaylistItem class */
-class PlaylistItem : public QTreeWidgetItem
-{
-public:
-    bool operator <(const QTreeWidgetItem &other) const override
-    {
-        if (treeWidget() && treeWidget()->sortColumn() == 2)
-        {
-            return (data(2, Qt::UserRole) < other.data(2, Qt::UserRole));
-        }
-        return QTreeWidgetItem::operator <(other);
-    }
-};
-
 /* UpdateEntryThr class */
 UpdateEntryThr::UpdateEntryThr(PlaylistWidget &pLW) :
     pendingUpdates(0),
@@ -915,7 +901,7 @@ void PlaylistWidget::setEntryFont(QTreeWidgetItem *tWI, const int flags)
 
 QTreeWidgetItem *PlaylistWidget::newGroup(const QString &name, const QString &url, QTreeWidgetItem *parent, int insertChildAt, QStringList *existingEntries)
 {
-    QTreeWidgetItem *tWI = new PlaylistItem;
+    QTreeWidgetItem *tWI = new QTreeWidgetItem;
 
     tWI->setFlags(tWI->flags() | Qt::ItemIsEditable);
     QMPlay2GUI.setTreeWidgetItemIcon(tWI, url.isEmpty() ? *QMPlay2GUI.groupIcon : *QMPlay2GUI.folderIcon, 0, this);
@@ -928,9 +914,10 @@ QTreeWidgetItem *PlaylistWidget::newGroup(const QString &name, const QString &ur
     QMetaObject::invokeMethod(this, "insertItem", Q_ARG(QTreeWidgetItem *, tWI), Q_ARG(QTreeWidgetItem *, parent), Q_ARG(int, insertChildAt));
     return tWI;
 }
+
 QTreeWidgetItem *PlaylistWidget::newEntry(const Playlist::Entry &entry, QTreeWidgetItem *parent, const Functions::DemuxersInfo &demuxersInfo, int insertChildAt, QStringList *existingEntries)
 {
-    QTreeWidgetItem *tWI = new PlaylistItem;
+    QTreeWidgetItem *tWI = new QTreeWidgetItem;
 
     QIcon icon;
     Functions::getDataIfHasPluginPrefix(entry.url, nullptr, nullptr, &icon, nullptr, demuxersInfo);

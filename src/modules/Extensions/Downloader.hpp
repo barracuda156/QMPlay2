@@ -93,6 +93,8 @@ private:
         QProgressBar *progressB;
     } *speedProgressW = nullptr;
 
+    QString m_processProgram;      // To store the program name
+    QStringList m_processArguments; // To store the process arguments
     QProcess *m_convertProcess; // QProcess is now fully included
     int m_convertProcessConn[2]; // Replace QMetaObject::Connection with int
     bool finished, readyToPlay, m_needsConversion = false;
@@ -174,6 +176,7 @@ private slots:
     void addUrl();
     void download();
     void itemDoubleClicked(QTreeWidgetItem *);
+    void handleButtonClicked(QAbstractButton *button);
 
 private:
     Settings m_sets;

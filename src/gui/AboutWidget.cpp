@@ -52,7 +52,8 @@ AboutWidget::AboutWidget()
 
     QTabWidget *tabW = new QTabWidget;
 
-    const QFont font(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    QFont font("Monospace");
+    font.setStyleHint(QFont::TypeWriter);
 
     logE = new QPlainTextEdit;
     logE->setFont(font);

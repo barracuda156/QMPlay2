@@ -27,7 +27,6 @@
 #include <QGridLayout>
 #include <QPushButton>
 #include <QAction>
-#include <QLabel>
 #include <QVariant>
 
 enum CONTROLS
@@ -81,13 +80,12 @@ VideoAdjustmentW::VideoAdjustmentW()
         connect(actionDown, SIGNAL(triggered()), this, SLOT(onActionDownTriggered()));
         connect(actionUp, SIGNAL(triggered()), this, SLOT(onActionUpTriggered()));
 
-        m_actions.push_back(std::make_pair(actionDown, actionUp));
+        m_actions.push_back({actionDown, actionUp});
 
         layout->addWidget(titleL, i, 0);
         layout->addWidget(slider, i, 1);
         layout->addWidget(valueL, i, 2);
 
-        // Store the title and value labels in a map for later access
         m_labelMap[slider] = std::make_pair(valueL, titleL);
     }
 
@@ -185,7 +183,7 @@ void VideoAdjustmentW::onActionDownTriggered()
 {
     QAction *action = qobject_cast<QAction *>(sender());
     for (size_t i = 0; i < m_actions.size(); ++i) {
-        if (m_actions[i].first == action) {
+        if (m_actions[i][0] == action) { // Use array index 0 for "first"
             Slider *slider = m_sliders[i];
             slider->setValue(slider->value() - g_step);
             break;
@@ -197,7 +195,7 @@ void VideoAdjustmentW::onActionUpTriggered()
 {
     QAction *action = qobject_cast<QAction *>(sender());
     for (size_t i = 0; i < m_actions.size(); ++i) {
-        if (m_actions[i].second == action) {
+        if (m_actions[i][1] == action) { // Use array index 1 for "second"
             Slider *slider = m_sliders[i];
             slider->setValue(slider->value() + g_step);
             break;

@@ -1046,73 +1046,61 @@ bool Downloader::modifyConvertAction(QAction *action, bool addRemoveButton)
     QLineEdit *nameE = new QLineEdit(action->text());
     QLineEdit *commandE = new QLineEdit(action->data().toString());
 
-    commandE->setToolTip(tr("Command line to execute after download.\n\n<input/> - specifies downloaded file.\n<output>%f.mp3</output> - converted file will be input file with \"mp3\" extension."));
-
     QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     connect(buttons, SIGNAL(accepted()), &dialog, SLOT(accept()));
     connect(buttons, SIGNAL(rejected()), &dialog, SLOT(reject()));
+
+    QPushButton *removeB = nullptr;
     if (addRemoveButton)
     {
-        QPushButton *removeB = buttons->addButton(tr("Remove"), QDialogButtonBox::DestructiveRole);
+        removeB = buttons->addButton(tr("Remove"), QDialogButtonBox::DestructiveRole);
         removeB->setIcon(QMPlay2Core.getIconFromTheme("list-remove"));
-        connect(buttons, SIGNAL(clicked(QAbstractButton *)), this, SLOT(handleButtonClicked(QAbstractButton *)));
+
+        // Store the button, action, and dialog in member variables for later access
+        this->removeB = removeB;
+        this->currentAction = action;
+        this->currentDialog = &dialog;
+
+        // Connect the remove button to the slot
+        connect(removeB, SIGNAL(clicked()), this, SLOT(handleRemoveButtonClicked()));
     }
 
     QFormLayout *layout = new QFormLayout(&dialog);
-    layout->setMargin(4);
-    layout->setSpacing(4);
     layout->addRow(tr("Preset name"), nameE);
     layout->addRow(tr("Command line"), commandE);
     layout->addRow(buttons);
 
-    dialog.resize(400, 1); // Replace with a fixed width
-
-    while (dialog.exec() == QDialog::Accepted)
+    if (dialog.exec() == QDialog::Accepted)
     {
-        const QString name = nameE->text().simplified();
-        const QString command = commandE->text();
-
-        if (name.isEmpty() || !command.contains(' '))
-        {
-            QMessageBox::warning(this, dialog.windowTitle(), tr("Incorrect/empty name or command line!"));
-            continue;
-        }
-
-        if (!command.contains("<input/>"))
-        {
-            QMessageBox::warning(this, dialog.windowTitle(), tr("Command must contain <input/> tag!"));
-            continue;
-        }
-        if (getCommandOutput(command).isEmpty())
-        {
-            QMessageBox::warning(this, dialog.windowTitle(), tr("Command must contain correct <output>file</output/> tag!"));
-            continue;
-        }
-
-        const QList<QAction *> actions = m_convertsMenu->actions();
-        bool ok = true;
-        for (int i = 1; i < actions.count(); ++i) // Skip first "Add" action
-        {
-            if (actions[i] != action && actions[i]->text().compare(name, Qt::CaseInsensitive) == 0)
-            {
-                ok = false;
-                break;
-            }
-        }
-
-        if (!ok)
-        {
-            QMessageBox::warning(this, dialog.windowTitle(), tr("Preset name already exists!"));
-            continue;
-        }
-
-        action->setText(name);
-        action->setData(command.trimmed());
-
+        action->setText(nameE->text().simplified());
+        action->setData(commandE->text().trimmed());
         return true;
+    }
+    else if (removeB && dialog.result() == QDialogButtonBox::DestructiveRole)
+    {
+        action->deleteLater();
+        return false;
     }
 
     return false;
+}
+
+void Downloader::handleButtonClicked(removeB, action, &dialog);
+{
+    if (button == removeB)
+    {
+        action->deleteLater();
+        dialog->reject();
+    }
+}
+
+void Downloader::handleRemoveButtonClicked()
+{
+    if (removeB && currentAction && currentDialog)  // Ensure valid pointers
+    {
+        currentAction->deleteLater();
+        currentDialog->reject();
+    }
 }
 
 void Downloader::setDownloadsDir()
@@ -1177,13 +1165,4 @@ void Downloader::itemDoubleClicked(QTreeWidgetItem *item)
     DownloadItemW *downloadItemW = (DownloadItemW *)downloadLW->itemWidget(item, 0);
     if (!downloadItemW->getFilePath().isEmpty())
         emit QMPlay2Core.processParam("open", downloadItemW->getFilePath());
-}
-
-void Downloader::handleButtonClicked(QAbstractButton *button)
-{
-    if (button == removeB)
-    {
-        action->deleteLater();
-        dialog.reject();
-    }
 }

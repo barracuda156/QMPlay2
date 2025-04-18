@@ -26,6 +26,7 @@
 #include <QToolButton>
 #include <QThread>
 #include <QWidget>
+#include <QPushButton>
 
 class QLabel;
 class QProcess;
@@ -177,6 +178,7 @@ private slots:
     void download();
     void itemDoubleClicked(QTreeWidgetItem *);
     void handleButtonClicked(QAbstractButton *button);
+    void handleRemoveButtonClicked();
 
 private:
     Settings m_sets;
@@ -189,6 +191,8 @@ private:
 
     QToolButton *m_convertsPresetsB;
     QMenu *m_convertsMenu;
+
+    QPushButton *removeB;
 };
 
 #define DownloaderName "QMPlay2 Downloader"

@@ -20,8 +20,10 @@
 
 #include <QWidget>
 
-#include <vector>
 #include <array>
+#include <map>
+#include <utility>
+#include <vector>
 
 class ModuleParams;
 class QAction;
@@ -51,6 +53,7 @@ private:
     std::vector<Slider *> m_sliders;
     std::vector<std::array<QAction *, 2>> m_actions;
     QAction *m_resetAction = nullptr;
+    std::map<Slider *, std::pair<QLabel *, QLabel *>> m_labelMap;
 
 private slots:
     void onSliderValueChanged(int value);

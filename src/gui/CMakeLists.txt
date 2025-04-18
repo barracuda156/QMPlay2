@@ -70,7 +70,6 @@ set(GUI_SRC
     ShortcutHandler.cpp
     KeyBindingsDialog.cpp
     Updater.cpp
-    EventFilterWorkarounds.cpp
 )
 
 set(GUI_FORMS # *.ui files
@@ -99,9 +98,11 @@ if(APPLE)
     list(APPEND GUI_HDR
         macOS/QMPlay2MacExtensions.hpp
     )
-    list(APPEND GUI_SRC
-        macOS/QMPlay2MacExtensions.mm
-    )
+    if(NOT USE_QT4)
+        list(APPEND GUI_SRC
+           macOS/QMPlay2MacExtensions.mm
+        )
+    endif()
 
     include_directories("macOS")
 endif()

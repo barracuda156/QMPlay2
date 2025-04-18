@@ -192,7 +192,9 @@ private:
     QToolButton *m_convertsPresetsB;
     QMenu *m_convertsMenu;
 
-    QPushButton *removeB;
+    QAction *currentAction;      // Pointer to the current action being modified
+    QDialog *currentDialog;      // Pointer to the current dialog being used
+    QPushButton *removeB; 
 };
 
 #define DownloaderName "QMPlay2 Downloader"

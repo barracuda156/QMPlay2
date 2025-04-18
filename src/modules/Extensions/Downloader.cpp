@@ -1057,9 +1057,8 @@ bool Downloader::modifyConvertAction(QAction *action, bool addRemoveButton)
         removeB->setIcon(QMPlay2Core.getIconFromTheme("list-remove"));
 
         // Store the button, action, and dialog in member variables for later access
-        this->removeB = removeB;
-        this->currentAction = action;
-        this->currentDialog = &dialog;
+        currentAction = action;
+        currentDialog = &dialog;
 
         // Connect the remove button to the slot
         connect(removeB, SIGNAL(clicked()), this, SLOT(handleRemoveButtonClicked()));
@@ -1085,12 +1084,12 @@ bool Downloader::modifyConvertAction(QAction *action, bool addRemoveButton)
     return false;
 }
 
-void Downloader::handleButtonClicked(removeB, action, &dialog);
+void Downloader::handleButtonClicked(QAbstractButton *button)
 {
-    if (button == removeB)
+    if (button == removeB && currentAction && currentDialog) // Ensure valid pointers
     {
-        action->deleteLater();
-        dialog->reject();
+        currentAction->deleteLater();
+        currentDialog->reject();
     }
 }
 

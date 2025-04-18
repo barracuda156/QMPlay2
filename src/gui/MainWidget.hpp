@@ -123,6 +123,8 @@ private slots:
 
     void hideDocksSlot();
     void doRestoreState(const QByteArray &data);
+    void doRestoreStateStep1();
+    void doRestoreStateStep2();
 
     void uncheckSuspend();
 private:
@@ -190,6 +192,8 @@ private:
     QAction *hideMenuAct;
 #endif
     QAction *lockWidgetsAct;
+
+    QByteArray m_restoreStateData; // Temporary storage for the state data
 
     Updater updater;
 

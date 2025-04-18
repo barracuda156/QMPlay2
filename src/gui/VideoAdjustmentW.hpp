@@ -51,4 +51,10 @@ private:
     std::vector<Slider *> m_sliders;
     std::vector<std::array<QAction *, 2>> m_actions;
     QAction *m_resetAction = nullptr;
+
+private slots:
+    void onSliderValueChanged(int value);
+    void onActionDownTriggered();
+    void onActionUpTriggered();
+    void onResetClicked();
 };

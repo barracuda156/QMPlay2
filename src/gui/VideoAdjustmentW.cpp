@@ -28,6 +28,7 @@
 #include <QPushButton>
 #include <QAction>
 #include <QLabel>
+#include <QVariant>
 
 enum CONTROLS
 {
@@ -69,21 +70,18 @@ VideoAdjustmentW::VideoAdjustmentW()
         slider->setRange(-100, 100);
         slider->setWheelStep(1);
         slider->setValue(0);
-        connect(slider, &Slider::valueChanged, this, [=](int v) {
-            valueL->setText(QString::number(v));
-            emit videoAdjustmentChanged(titleL->text() + QString::number(v));
-        });
+
+        // Old-style connect for Slider::valueChanged
+        connect(slider, SIGNAL(valueChanged(int)), this, SLOT(onSliderValueChanged(int)));
+
         m_sliders.push_back(slider);
 
         QAction *actionDown = new QAction(this);
-        connect(actionDown, &QAction::triggered, this, [=] {
-            slider->setValue(slider->value() - g_step);
-        });
-
         QAction *actionUp = new QAction(this);
-        connect(actionUp, &QAction::triggered, this, [=] {
-            slider->setValue(slider->value() + g_step);
-        });
+
+        // Old-style connect for QAction::triggered
+        connect(actionDown, SIGNAL(triggered()), this, SLOT(onActionDownTriggered()));
+        connect(actionUp, SIGNAL(triggered()), this, SLOT(onActionUpTriggered()));
 
         m_actions.push_back({actionDown, actionUp});
 
@@ -93,13 +91,12 @@ VideoAdjustmentW::VideoAdjustmentW()
     }
 
     QPushButton *resetB = new QPushButton(tr("Reset"));
-    connect(resetB, &QPushButton::clicked, this, [this] {
-        for (int i = 0; i < CONTROLS_COUNT; ++i)
-            m_sliders[i]->setValue(0);
-    });
+    // Old-style connect for QPushButton::clicked
+    connect(resetB, SIGNAL(clicked()), this, SLOT(onResetClicked()));
 
     m_resetAction = new QAction(tr("Reset video adjustments"), this);
-    connect(m_resetAction, &QAction::triggered, resetB, &QPushButton::click);
+    // Old-style connect for QAction::triggered
+    connect(m_resetAction, SIGNAL(triggered()), resetB, SLOT(click()));
 
     layout->addWidget(resetB, layout->rowCount(), 0, 1, 3);
     layout->addItem(new QSpacerItem(40, 0, QSizePolicy::Maximum, QSizePolicy::Minimum), layout->rowCount(), 2);
@@ -114,6 +111,7 @@ void VideoAdjustmentW::restoreValues()
     for (int i = 0; i < CONTROLS_COUNT; ++i)
         m_sliders[i]->setValue(QMPlay2Core.getSettings().getInt(QString("VideoAdjustment/") + g_controlsNames[i]));
 }
+
 void VideoAdjustmentW::saveValues()
 {
     for (int i = 0; i < CONTROLS_COUNT; ++i)
@@ -162,6 +160,7 @@ void VideoAdjustmentW::setKeyShortcuts()
 
     appendAction(m_resetAction, QString(), "reset", "0");
 }
+
 void VideoAdjustmentW::addActionsToWidget(QWidget *w)
 {
     for (int i = 0; i < CONTROLS_COUNT; ++i)
@@ -170,4 +169,40 @@ void VideoAdjustmentW::addActionsToWidget(QWidget *w)
             w->addAction(m_actions[i][j]);
     }
     w->addAction(m_resetAction);
+}
+
+void VideoAdjustmentW::onSliderValueChanged(int value)
+{
+    int index = m_sliders.indexOf(qobject_cast<Slider *>(sender()));
+    if (index != -1) {
+        QLabel *valueL = static_cast<QLabel *>(layout()->itemAtPosition(index, 2)->widget());
+        QLabel *titleL = static_cast<QLabel *>(layout()->itemAtPosition(index, 0)->widget());
+        valueL->setText(QString::number(value));
+        emit videoAdjustmentChanged(titleL->text() + QString::number(value));
+    }
+}
+
+void VideoAdjustmentW::onActionDownTriggered()
+{
+    int index = m_actions.indexOf(qobject_cast<QAction *>(sender()));
+    if (index != -1) {
+        Slider *slider = m_sliders[index];
+        slider->setValue(slider->value() - g_step);
+    }
+}
+
+void VideoAdjustmentW::onActionUpTriggered()
+{
+    int index = m_actions.indexOf(qobject_cast<QAction *>(sender()));
+    if (index != -1) {
+        Slider *slider = m_sliders[index];
+        slider->setValue(slider->value() + g_step);
+    }
+}
+
+void VideoAdjustmentW::onResetClicked()
+{
+    for (int i = 0; i < CONTROLS_COUNT; ++i) {
+        m_sliders[i]->setValue(0);
+    }
 }

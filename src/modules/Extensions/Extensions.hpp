@@ -64,6 +64,7 @@ private:
 
     QCheckBox *userNameB, *subtitlesB;
     QComboBox *m_preferredCodec, *qualityPreset;
+    QCheckBox *m_allowVp9Hdr;
 
 #ifdef USE_LASTFM
     QGroupBox *downloadCoversGB;

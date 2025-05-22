@@ -163,7 +163,8 @@ private:
     int m_sortByIdx = 0;
 
     QMutex m_itagsMutex;
-    QList<int> m_videoItags, m_audioItags, m_hlsItags, m_singleUrlItags;
+    bool m_preferredH264 = false;
+    QVector<int> m_videoItags, m_audioItags, m_hlsItags, m_singleUrlItags;
 };
 
 #define YouTubeName "YouTube Browser"

@@ -63,7 +63,7 @@ private:
 #endif
 
     QCheckBox *userNameB, *subtitlesB;
-    QComboBox *qualityPreset;
+    QComboBox *m_preferredCodec, *qualityPreset;
 
 #ifdef USE_LASTFM
     QGroupBox *downloadCoversGB;

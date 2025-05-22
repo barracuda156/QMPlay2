@@ -56,8 +56,10 @@ Lyrics::Lyrics(Module &module) :
 {
     SetModule(module);
 
-    connect(&QMPlay2Core, &QMPlay2CoreClass::updatePlaying,
-            this, &Lyrics::updatePlaying);
+    connect(&QMPlay2Core,
+        SIGNAL(updatePlaying(bool, const QString &, const QString &, const QString &, int, bool, const QString &, const QString &)),
+        this,
+        SLOT(updatePlaying(bool, const QString &, const QString &, const QString &, int, bool, const QString &, const QString &)));
     connect(&m_net, SIGNAL(finished(NetworkReply *)), this, SLOT(finished(NetworkReply *)));
 
     m_dW = new DockWidget;

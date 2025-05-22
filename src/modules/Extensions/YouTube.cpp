@@ -1067,7 +1067,7 @@ void YouTube::preparePlaylist(const QByteArray &data, QTreeWidgetItem *tWI)
     {
         const auto playlistRenderer = obj.toObject()["playlistVideoRenderer"].toObject();
 
-        const auto title = playlistRenderer["title"].toObject()["simpleText"].toString();
+        const auto title = playlistRenderer["title"].toObject()["runs"].toArray().at(0).toObject()["text"].toString();
         const auto videoId = playlistRenderer["videoId"].toString();
         if (title.isEmpty() || videoId.isEmpty())
             continue;

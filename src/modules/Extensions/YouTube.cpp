@@ -682,6 +682,10 @@ void YouTube::setItags(int qualityIdx)
         // Audio
         Opus_160 = 251,
         AAC_128 = 140,
+
+        // Video + Audio
+        H264_360P_AAC_128 = 18,
+        H264_720P_AAC_128 = 22,
     };
 
     enum
@@ -704,8 +708,8 @@ void YouTube::setItags(int qualityIdx)
     {
         if (!m_preferredH264)
         {
-            qualityPresets[Preset_480p]  << VP9_480p << H264_480p << VP9_360p << H264_360p << VP9_240p << H264_240p << VP9_144p << H264_144p;
-            qualityPresets[Preset_720p]  << VP9_720p << H264_720p << qualityPresets[Preset_480p];
+            qualityPresets[Preset_480p]  << VP9_480p << H264_480p << VP9_360p << H264_360p << H264_360P_AAC_128 << VP9_240p << H264_240p << VP9_144p << H264_144p;
+            qualityPresets[Preset_720p]  << VP9_720p << H264_720p << H264_720P_AAC_128 << qualityPresets[Preset_480p];
             qualityPresets[Preset_1080p] << VP9_1080p << H264_1080p << qualityPresets[Preset_720p];
             qualityPresets[Preset_1440p] << VP9_1440p << H264_1440p << qualityPresets[Preset_1080p];
             qualityPresets[Preset_2160p] << VP9_2160p << H264_2160p << qualityPresets[Preset_1440p];
@@ -718,8 +722,8 @@ void YouTube::setItags(int qualityIdx)
         }
         else
         {
-            qualityPresets[Preset_480p]  << H264_480p << VP9_480p << H264_360p << VP9_360p << H264_240p << VP9_240p << H264_144p << VP9_144p;
-            qualityPresets[Preset_720p]  << H264_720p << VP9_720p << qualityPresets[Preset_480p];
+            qualityPresets[Preset_480p]  << H264_480p << VP9_480p << H264_360p << VP9_360p << H264_360P_AAC_128 << H264_240p << VP9_240p << H264_144p << VP9_144p;
+            qualityPresets[Preset_720p]  << H264_720p << VP9_720p << H264_720P_AAC_128 << qualityPresets[Preset_480p];
             qualityPresets[Preset_1080p] << H264_1080p << VP9_1080p << qualityPresets[Preset_720p];
             qualityPresets[Preset_1440p] << H264_1440p << VP9_1440p << qualityPresets[Preset_1080p];
             qualityPresets[Preset_2160p] << H264_2160p << VP9_2160p << qualityPresets[Preset_1440p];
@@ -765,10 +769,6 @@ void YouTube::setItags(int qualityIdx)
     m_videoItags = qualityPresets[qualityIdx];
     m_audioItags = {Opus_160, AAC_128};
     m_hlsItags = liveQualityPresets[qualityIdx];
-    // Is it still needed?
-    m_singleUrlItags = {43, 18};
-    if (qualityIdx != Preset_480p)
-        m_singleUrlItags.prepend(22);
 }
 
 void YouTube::deleteReplies()
@@ -952,7 +952,6 @@ QStringList YouTube::getYouTubeVideo(const QString &param, const QString &url, I
     const auto videoItags = m_videoItags;
     const auto audioItags = m_audioItags;
     const auto hlsItags = m_hlsItags;
-    const auto singleUrlItags = m_singleUrlItags;
     m_itagsMutex.unlock();
 
     QHash<int, QPair<QString, QString>> itagsData;
@@ -990,22 +989,21 @@ QStringList YouTube::getYouTubeVideo(const QString &param, const QString &url, I
         }
     };
 
-    if (!isLive)
+    if (isLive)
     {
+        appendUrl(hlsItags);
+    }
+    else
+    {
+        appendUrl(audioItags);
         if (!audioOnly)
             appendUrl(videoItags);
-        appendUrl(audioItags);
     }
+
     if (urls.count() != 1 + (audioOnly ? 0 : 1))
     {
-        if (!urls.isEmpty())
-        {
-            urls.clear();
-            exts.clear();
-        }
-        appendUrl(hlsItags);
-        if (urls.isEmpty())
-            appendUrl(singleUrlItags);
+        urls.clear();
+        exts.clear();
     }
 
     if (urls.isEmpty())

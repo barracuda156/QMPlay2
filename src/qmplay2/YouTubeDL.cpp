@@ -32,6 +32,11 @@
 #include <QJsonDocument.h>
 #include <QJsonObject.h>
 
+/* Avoid downloading yt-dlp, it fails to work correctly. */
+#ifndef BUNDLED_YTDLP
+#define BUNDLED_YTDLP 0
+#endif
+
 constexpr const char *g_name = "YouTubeDL";
 static bool g_mustUpdate = true;
 static QMutex g_mutex(QMutex::Recursive);
@@ -44,6 +49,7 @@ QString YouTubeDL::getFilePath()
 #endif
     ;
 }
+
 QStringList YouTubeDL::getCommonArgs()
 {
     QStringList commonArgs {
@@ -268,7 +274,7 @@ bool YouTubeDL::prepare()
         if (m_aborted)
             return false;
     }
-
+#if BUNDLED_YTDLP
     if (!QFileInfo(m_ytDlPath).exists())
     {
         if (!download())
@@ -298,7 +304,7 @@ bool YouTubeDL::prepare()
     }
 
     ensureExecutable();
-
+#endif
     g_mutex.unlock();
     return true;
 }
@@ -306,7 +312,7 @@ bool YouTubeDL::prepare()
 bool YouTubeDL::download()
 {
     // Mutex must be locked here
-
+#if BUNDLED_YTDLP
     const QString downloadUrl = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"
 #ifdef Q_OS_WIN
     ".exe"
@@ -355,11 +361,13 @@ bool YouTubeDL::download()
 
     QMPlay2Core.setWorking(false);
     return false;
+#endif
 }
+
 bool YouTubeDL::update()
 {
     // Mutex must be locked here
-
+#if BUNDLED_YTDLP
     qDebug() << "\"youtube-dl\" updates will be checked";
     QMPlay2Core.setWorking(true);
 
@@ -404,6 +412,7 @@ bool YouTubeDL::update()
     }
 
     QMPlay2Core.setWorking(false);
+#endif
     return true;
 }
 

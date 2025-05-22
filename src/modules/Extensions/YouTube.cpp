@@ -1111,7 +1111,7 @@ QJsonDocument YouTube::getYtInitialData(const QByteArray &data)
     if (idx2 < 0)
         return QJsonDocument();
 
-    auto jsonData = data.mid(idx, idx2 - idx);
+    auto jsonData = data.mid(idx, idx2 - idx).trimmed();
     if (jsonData.endsWith(';'))
         jsonData.chop(1);
 

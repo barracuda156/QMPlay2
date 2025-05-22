@@ -1113,13 +1113,14 @@ QJsonDocument YouTube::getYtInitialData(const QByteArray &data)
     if (idx < 0)
         return QJsonDocument();
 
-    int idx2 = data.indexOf("\n", idx);
-    if (idx2 < 0)
-        return QJsonDocument();
+    QJsonParseError e = {};
+    auto jsonDoc = QJsonDocument::fromJson(data.mid(idx), &e);
 
-    auto jsonData = data.mid(idx, idx2 - idx).trimmed();
-    if (jsonData.endsWith(';'))
-        jsonData.chop(1);
+    if (Q_UNLIKELY(e.error == QJsonParseError::NoError))
+        return jsonDoc;
 
-    return QJsonDocument::fromJson(jsonData);
+    if (e.error == QJsonParseError::GarbageAtEnd && e.offset > 0)
+        return QJsonDocument::fromJson(data.mid(idx, e.offset));
+
+    return QJsonDocument();
 }

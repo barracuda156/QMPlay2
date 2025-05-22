@@ -26,6 +26,8 @@
 #include <QPointer>
 #include <QMutex>
 
+#include <QJsonDocument.h>
+
 class NetworkReply;
 class QProgressBar;
 class QActionGroup;

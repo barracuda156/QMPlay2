@@ -40,7 +40,6 @@
 #include <QDebug>
 
 #include <QJsonParseError.h>
-#include <QJsonDocument.h>
 #include <QJsonObject.h>
 #include <QJsonArray.h>
 

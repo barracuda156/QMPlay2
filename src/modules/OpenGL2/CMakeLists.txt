@@ -1,18 +1,4 @@
-cmake_minimum_required(VERSION 2.8.6)
-if(COMMAND cmake_policy)
-    if(POLICY CMP0003)
-        cmake_policy(SET CMP0003 NEW)
-    endif()
-    if(POLICY CMP0020)
-        cmake_policy(SET CMP0020 NEW)
-    endif()
-    if(POLICY CMP0042)
-        cmake_policy(SET CMP0042 NEW)
-    endif()
-    if(POLICY CMP0043)
-        cmake_policy(SET CMP0043 NEW)
-    endif()
-endif()
+cmake_minimum_required(VERSION 3.1)
 project(OpenGL2)
 
 set(OpenGL2_HDR
@@ -91,9 +77,8 @@ else() # Qt5 >= 5.6.0
     qt5_use_modules(${PROJECT_NAME} Gui Widgets)
 endif()
 
-add_dependencies(${PROJECT_NAME} libqmplay2)
 target_link_libraries(${PROJECT_NAME}
-    ${qmplay2lib}
+    libqmplay2
 )
 
 if(APPLE)

@@ -16,12 +16,20 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include <OpenGL2CommonQt5.hpp>
 
-#include <QtGlobal>
+#include <QOffscreenSurface>
+#include <QOpenGLContext>
 
-namespace Sphere
+bool OpenGL2CommonQt5::testGL()
 {
-	quint32 getSizes(quint32 slices, quint32 stacks, quint32 &verticesSize, quint32 &texcoordsSize, quint32 &indicesSize);
-	void generate(float radius, quint32 slices, quint32 stacks, float *vertices, float *texcoords, quint16 *indices);
+	QOpenGLContext glCtx;
+	if ((isOK = glCtx.create()))
+	{
+		QOffscreenSurface offscreenSurface;
+		offscreenSurface.create();
+		if ((isOK = glCtx.makeCurrent(&offscreenSurface)))
+			testGLInternal();
+	}
+	return isOK;
 }

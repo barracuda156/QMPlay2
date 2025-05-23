@@ -16,12 +16,32 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#ifndef OPENGL2OLDWIDGET_HPP
+#define OPENGL2OLDWIDGET_HPP
 
-#include <QtGlobal>
+#include <OpenGL2Common.hpp>
 
-namespace Sphere
+#include <QGLWidget>
+
+class OpenGL2OldWidget : public QGLWidget, public OpenGL2Common
 {
-	quint32 getSizes(quint32 slices, quint32 stacks, quint32 &verticesSize, quint32 &texcoordsSize, quint32 &indicesSize);
-	void generate(float radius, quint32 slices, quint32 stacks, float *vertices, float *texcoords, quint16 *indices);
-}
+	Q_OBJECT
+public:
+	OpenGL2OldWidget();
+        ~OpenGL2OldWidget() final;
+
+	QWidget *widget() override final;
+
+	bool testGL() override final;
+	bool setVSync(bool enable) override final;
+	void updateGL(bool requestDelayed) override final;
+
+	void initializeGL() override final;
+	void paintGL() override final;
+private:
+	void resizeGL(int w, int h) override final;
+
+	bool event(QEvent *e) override final;
+};
+
+#endif // OPENGL2OLDWIDGET_HPP

@@ -18,10 +18,10 @@
 
 #pragma once
 
-#include <QtGlobal>
+#include <OpenGL2Common.hpp>
 
-namespace Sphere
+class OpenGL2CommonQt5 : public OpenGL2Common
 {
-	quint32 getSizes(quint32 slices, quint32 stacks, quint32 &verticesSize, quint32 &texcoordsSize, quint32 &indicesSize);
-	void generate(float radius, quint32 slices, quint32 stacks, float *vertices, float *texcoords, quint16 *indices);
-}
+protected:
+	bool testGL() override final;
+};

@@ -1,6 +1,6 @@
 /*
     QMPlay2 is a video and audio player.
-    Copyright (C) 2010-2019  Błażej Szczygieł
+    Copyright (C) 2010-2017  Błażej Szczygieł
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published
@@ -19,7 +19,6 @@
 #pragma once
 
 #include <IOController.hpp>
-#include <QMPlay2Lib.hpp>
 
 #include <QCoreApplication>
 #include <QProcess>
@@ -33,7 +32,6 @@ class YouTubeDL : public BasicIO
 
 public:
     static QString getFilePath();
-    static QStringList getCommonArgs();
 
     static bool fixUrl(const QString &url, QString &outUrl, IOController<> *ioCtrl, QString *name, QString *extension, QString *error);
 
@@ -42,26 +40,11 @@ public:
 
     void addr(const QString &url, const QString &param, QString *streamUrl, QString *name, QString *extension, QString *err = nullptr);
 
-    QStringList exec(const QString &url, const QStringList &args, QString *silentErr = nullptr, bool rawOutput = false);
+    QStringList exec(const QString &url, const QStringList &args, QString *silentErr = nullptr, bool canUpdate = true);
 
 private:
     void abort() override final;
 
-private:
-    bool prepare();
-
-    bool download();
-    bool update();
-
-    void ensureExecutable();
-
-    bool onProcessCantStart();
-
-    void startProcess(QStringList args);
-
-private:
-    const QString m_ytDlPath;
-    const QStringList m_commonArgs;
     IOController<NetworkReply> m_reply;
     QProcess m_process;
     bool m_aborted;

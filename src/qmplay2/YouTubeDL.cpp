@@ -23,22 +23,17 @@
 #include <Functions.hpp>
 #include <CppUtils.hpp>
 
-#include <QRegExp>
-#include <QFileInfo>
-#include <QMutex>
-#include <QFile>
-
 #include <QJsonArray.h>
 #include <QJsonDocument.h>
 #include <QJsonObject.h>
 
-/* Avoid downloading yt-dlp, it fails to work correctly. */
-#ifndef BUNDLED_YTDLP
-#define BUNDLED_YTDLP 0
-#endif
+#include <QFile>
+#include <QFileInfo>
+#include <QMutex>
+#include <QRegExp>
 
 constexpr const char *g_name = "YouTubeDL";
-static bool g_mustUpdate = true;
+static bool g_mustUpdate = false;
 static QMutex g_mutex(QMutex::Recursive);
 
 QString YouTubeDL::getFilePath()
@@ -188,7 +183,10 @@ QStringList YouTubeDL::exec(const QString &url, const QStringList &args, QString
         }
         else
         {
-            result = result[0].split('\n', QString::SkipEmptyParts);
+            if (!result.isEmpty())
+                result = result[0].split('\n', QString::SkipEmptyParts);
+            else
+                result.clear();
 
             // Verify if URLs has printable characters, because sometimes we
             // can get binary garbage at output (especially on Openload).
@@ -274,7 +272,7 @@ bool YouTubeDL::prepare()
         if (m_aborted)
             return false;
     }
-#if BUNDLED_YTDLP
+
     if (!QFileInfo(m_ytDlPath).exists())
     {
         if (!download())
@@ -304,7 +302,7 @@ bool YouTubeDL::prepare()
     }
 
     ensureExecutable();
-#endif
+
     g_mutex.unlock();
     return true;
 }
@@ -312,7 +310,7 @@ bool YouTubeDL::prepare()
 bool YouTubeDL::download()
 {
     // Mutex must be locked here
-#if BUNDLED_YTDLP
+
     const QString downloadUrl = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"
 #ifdef Q_OS_WIN
     ".exe"
@@ -361,13 +359,12 @@ bool YouTubeDL::download()
 
     QMPlay2Core.setWorking(false);
     return false;
-#endif
 }
 
 bool YouTubeDL::update()
 {
     // Mutex must be locked here
-#if BUNDLED_YTDLP
+
     qDebug() << "\"youtube-dl\" updates will be checked";
     QMPlay2Core.setWorking(true);
 
@@ -401,9 +398,27 @@ bool YouTubeDL::update()
         }
         else if (m_process.exitCode() == 0 && !updateOutput.contains(QRegExp(R"(up\Wto\Wdate)")))
         {
-                QMPlay2Core.setWorking(false);
-                emit QMPlay2Core.sendMessage(tr("\"youtube-dl\" has been successfully updated!"), g_name);
-                return {};
+#ifdef Q_OS_WIN
+            const QString updatedFile = m_ytDlPath + ".new";
+            QFile::remove(Functions::filePath(m_ytDlPath) + "youtube-dl-updater.bat");
+            if (QFile::exists(updatedFile))
+            {
+                Functions::s_wait(0.2); // Wait 200 ms to be sure that file is closed
+                QFile::remove(m_ytDlPath);
+                if (QFile::rename(updatedFile, m_ytDlPath))
+                {
+#endif
+                    QMPlay2Core.setWorking(false);
+                    emit QMPlay2Core.sendMessage(tr("\"youtube-dl\" has been successfully updated!"), g_name);
+                    return {};
+#ifdef Q_OS_WIN
+                }
+            }
+            else
+            {
+                qDebug() << "Updated youtube-dl file:" + updatedFile + "not found!";
+            }
+#endif
         }
     }
     else if (updating && m_aborted)
@@ -412,7 +427,6 @@ bool YouTubeDL::update()
     }
 
     QMPlay2Core.setWorking(false);
-#endif
     return true;
 }
 
@@ -442,21 +456,6 @@ bool YouTubeDL::onProcessCantStart()
 void YouTubeDL::startProcess(QStringList args)
 {
     QString program = m_ytDlPath;
-
-#ifndef Q_OS_WIN
-    QFile ytDlFile(program);
-    if (ytDlFile.open(QFile::ReadOnly))
-    {
-        const auto shebang = ytDlFile.readLine(99).trimmed();
-        const int idx = shebang.lastIndexOf("python");
-        if (shebang.startsWith("#!") && idx > -1)
-        {
-            const auto pythonCmd = shebang.mid(idx);
-            // We do not want to fetch yt-dlp anyway.
-        }
-        ytDlFile.close();
-    }
-#endif
 
     m_process.start(program, args);
 }

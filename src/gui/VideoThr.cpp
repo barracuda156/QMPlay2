@@ -494,10 +494,10 @@ void VideoThr::run()
             tmp_time += delay;
             ++frames;
 
-            delay /= playC.speed;
-
             playC.frame_last_delay = delay;
             playC.frame_last_pts = packet.ts;
+
+            delay /= playC.speed;
 
             if (playC.skipAudioFrame < 0.0)
                 playC.skipAudioFrame = 0.0;

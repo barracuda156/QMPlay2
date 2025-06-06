@@ -91,18 +91,22 @@ bool VideoThr::setSpherical()
 {
 	return writer->modParam("Spherical", playC.spherical);
 }
+
 bool VideoThr::setFlip()
 {
 	return writer->modParam("Flip", playC.flip);
 }
+
 bool VideoThr::setRotate90()
 {
 	return writer->modParam("Rotate90", playC.rotate90);
 }
+
 void VideoThr::setVideoAdjustment()
 {
 	QMPlay2GUI.videoAdjustment->setModuleParam(writer);
 }
+
 void VideoThr::setFrameSize(int w, int h)
 {
 	W = w;
@@ -113,12 +117,14 @@ void VideoThr::setFrameSize(int w, int h)
 	gotFrameOrError = false;
 	++seq;
 }
+
 void VideoThr::setARatio(double aRatio, double sar)
 {
 	updateSubs();
 	writer->modParam("AspectRatio", aRatio);
 	lastSampleAspectRatio = sar;
 }
+
 void VideoThr::setZoom()
 {
 	updateSubs();
@@ -226,7 +232,7 @@ inline VideoWriter *VideoThr::videoWriter() const
 
 void VideoThr::run()
 {
-	bool skip = false, paused = false, oneFrame = false, useLastDelay = false, lastOSDListEmpty = true, maybeFlush = false, lastAVDesync = false, interlaced = false, err = false;
+	bool skip = false, paused = false, oneFrame = false, useLastDelay = false, lastOSDListEmpty = true, maybeFlush = false, lastAVDesync = false, interlaced = false, err = false, skipNonKey = false;
 	double tmp_time = 0.0, sync_last_pts = 0.0, frame_timer = -1.0, sync_timer = 0.0, framesDisplayedTime = 0.0;
 	QMutex emptyBufferMutex;
 	VideoFrame videoFrame;
@@ -390,21 +396,24 @@ void VideoThr::run()
 		deleteSubs = deleteOSD = false;
 		/**/
 
+		const bool flushVideo = playC.flushVideo;
+
 		filtersMutex.lock();
-		if (playC.flushVideo)
+		if (flushVideo || skipNonKey)
 		{
 			filters.clearBuffers();
-			frame_timer = -1.0;
+			if (flushVideo)
+				frame_timer = -1.0;
 		}
 
-		if (!packet.isEmpty() || maybeFlush)
+		if ((!packet.isEmpty() || maybeFlush) && (!skipNonKey || packet.hasKeyFrame))
 		{
 			VideoFrame decoded;
 			QByteArray newPixelFormat;
-			const int bytes_consumed = dec->decodeVideo(packet, decoded, newPixelFormat, playC.flushVideo, skip ? ~0 : (fast >> 1));
+			const int bytes_consumed = dec->decodeVideo(packet, decoded, newPixelFormat, flushVideo || skipNonKey, (skip && !skipNonKey) ? ~0 : (fast >> 1));
 			if (!newPixelFormat.isEmpty())
 				emit playC.pixelFormatUpdate(newPixelFormat);
-			if (playC.flushVideo)
+			if (flushVideo)
 			{
 				useLastDelay = true; //if seeking
 				playC.flushVideo = false;
@@ -430,7 +439,9 @@ void VideoThr::run()
 				gotFrameOrError = true;
 			}
 			else if (skip)
+			{
 				filters.removeLastFromInputBuffer();
+			}
 			if (bytes_consumed < 0)
 			{
 				gotFrameOrError = true;
@@ -440,6 +451,7 @@ void VideoThr::run()
 			{
 				tmp_br += bytes_consumed;
 			}
+			skipNonKey = false;
 		}
 
 		// This thread will wait for "DemuxerThr" which'll detect this error and restart with new decoder.
@@ -551,6 +563,8 @@ void VideoThr::run()
 						delay = 0.0;
 						if (fast >= 7)
 							skip = true;
+						if (fast >= 56 || (fast >= 28 && fDiff >= max_threshold * 4.0))
+							skipNonKey = true;
 					}
 					else if (diff > 0.0) //obraz idzie za szybko
 					{
@@ -608,7 +622,7 @@ void VideoThr::run()
 				{
 					oneFrame = canWrite = false;
 					QMetaObject::invokeMethod(this, "write", Q_ARG(VideoFrame, videoFrame), Q_ARG(quint32, seq));
-					if (canSkipFrames)
+					if (canSkipFrames && !skipNonKey)
 						++framesDisplayed;
 				}
 				if (canSkipFrames)
@@ -631,6 +645,7 @@ void VideoThr::write(VideoFrame videoFrame, quint32 lastSeq)
 		videoWriter()->writeVideo(videoFrame);
 	}
 }
+
 void VideoThr::screenshot(VideoFrame videoFrame)
 {
 	ImgScaler imgScaler;
@@ -660,6 +675,7 @@ void VideoThr::screenshot(VideoFrame videoFrame)
 		}
 	}
 }
+
 void VideoThr::pause()
 {
 	QMPlay2GUI.screenSaver->unInhibit(0);

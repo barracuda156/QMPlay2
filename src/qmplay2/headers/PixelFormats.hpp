@@ -20,14 +20,19 @@
 
 #include <QVector>
 
+extern "C"
+{
+	#include <libavutil/pixfmt.h>
+}
+
 enum class QMPlay2PixelFormat //Compatible with FFmpeg
 {
-	YUV420P =  0,
-	YUV422P =  4,
-	YUV444P =  5,
-	YUV410P =  6,
-	YUV411P =  7,
-	YUV440P = 33,
+	YUV420P = AV_PIX_FMT_YUV420P,
+	YUV422P = AV_PIX_FMT_YUV422P,
+	YUV444P = AV_PIX_FMT_YUV444P,
+	YUV410P = AV_PIX_FMT_YUV410P,
+	YUV411P = AV_PIX_FMT_YUV411P,
+	YUV440P = AV_PIX_FMT_YUV440P,
 
 	Count   =  6
 };

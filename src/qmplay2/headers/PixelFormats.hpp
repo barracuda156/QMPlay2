@@ -22,22 +22,27 @@
 
 #include <QVector>
 
+extern "C"
+{
+    #include <libavutil/pixfmt.h>
+}
+
 enum class QMPlay2PixelFormat
 {
     None = -1,
 
-    YUV420P,
-    YUVJ420P,
-    YUV422P,
-    YUVJ422P,
-    YUV444P,
-    YUVJ444P,
+    YUV420P = AV_PIX_FMT_YUV420P,
+    YUVJ420P = AV_PIX_FMT_YUVJ420P,
+    YUV422P = AV_PIX_FMT_YUV422P,
+    YUVJ422P = AV_PIX_FMT_YUVJ422P,
+    YUV444P = AV_PIX_FMT_YUV444P,
+    YUVJ444P = AV_PIX_FMT_YUVJ444P,
 
-    YUV410P,
-    YUV411P,
-    YUVJ411P,
-    YUV440P,
-    YUVJ440P,
+    YUV410P = AV_PIX_FMT_YUV410P,
+    YUV411P = AV_PIX_FMT_YUV411P,
+    YUVJ411P = AV_PIX_FMT_YUVJ411P,
+    YUV440P = AV_PIX_FMT_YUV440P,
+    YUVJ440P = AV_PIX_FMT_YUVJ440P,
 
     Count,
 };
@@ -53,6 +58,7 @@ enum class QMPlay2ColorSpace
     SMPTE240M,
     BT2020,
 };
+
 struct LumaCoefficients
 {
     float cR, cG, cB;

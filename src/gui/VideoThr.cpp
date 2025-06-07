@@ -231,7 +231,7 @@ inline VideoWriter *VideoThr::videoWriter() const
 
 void VideoThr::run()
 {
-    bool skip = false, paused = false, oneFrame = false, useLastDelay = false, lastOSDListEmpty = true, maybeFlush = false, lastAVDesync = false, interlaced = false, err = false;
+    bool skip = false, paused = false, oneFrame = false, useLastDelay = false, lastOSDListEmpty = true, maybeFlush = false, lastAVDesync = false, interlaced = false, err = false, skipNonKey = false;
     double tmp_time = 0.0, sync_last_pts = 0.0, frame_timer = -1.0, sync_timer = 0.0, framesDisplayedTime = 0.0;
     QMutex emptyBufferMutex;
     VideoFrame videoFrame;
@@ -398,17 +398,18 @@ void VideoThr::run()
         /**/
 
         filtersMutex.lock();
-        if (playC.flushVideo)
+        if (playC.flushVideo || skipNonKey)
         {
             filters.clearBuffers();
-            frame_timer = -1.0;
+            if (flushVideo)
+                frame_timer = -1.0;
         }
 
-        if (!packet.isEmpty() || maybeFlush)
+        if ((!packet.isEmpty() || maybeFlush) && (!skipNonKey || packet.hasKeyFrame()))
         {
             VideoFrame decoded;
             QByteArray newPixelFormat;
-            const int bytes_consumed = dec->decodeVideo(packet, decoded, newPixelFormat, playC.flushVideo, skip ? ~0 : (fast >> 1));
+            const int bytes_consumed = dec->decodeVideo(packet, decoded, newPixelFormat, playC.flushVideo || skipNonKey, (skip && !skipNonKey) ? ~0 : (fast >> 1));
             if (!newPixelFormat.isEmpty())
                 emit playC.pixelFormatUpdate(newPixelFormat);
             if (playC.flushVideo)
@@ -437,7 +438,9 @@ void VideoThr::run()
                 gotFrameOrError = true;
             }
             else if (skip)
+            {
                 filters.removeLastFromInputBuffer();
+            }
             if (bytes_consumed < 0)
             {
                 gotFrameOrError = true;
@@ -447,6 +450,7 @@ void VideoThr::run()
             {
                 tmp_br += bytes_consumed;
             }
+            skipNonKey = false;
         }
 
         // This thread will wait for "DemuxerThr" which'll detect this error and restart with new decoder.
@@ -559,6 +563,8 @@ void VideoThr::run()
                         delay = 0.0;
                         if (fast >= 7)
                             skip = true;
+                        if (fast >= 56 || (fast >= 28 && fDiff >= max_threshold * 4.0))
+                            skipNonKey = true;
                     }
                     else if (diff > 0.0) //obraz idzie za szybko
                     {
@@ -616,7 +622,7 @@ void VideoThr::run()
                 {
                     oneFrame = canWrite = false;
                     QMetaObject::invokeMethod(this, "write", Q_ARG(VideoFrame, videoFrame), Q_ARG(quint32, seq));
-                    if (canSkipFrames)
+                    if (canSkipFrames && !skipNonKey)
                         ++framesDisplayed;
                 }
                 if (canSkipFrames)

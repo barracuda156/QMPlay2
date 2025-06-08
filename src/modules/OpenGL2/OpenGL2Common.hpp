@@ -38,7 +38,7 @@
 	#include <GL/glext.h>
 #endif
 
-#if defined OPENGL_ES2 && !defined APIENTRY
+#if !defined APIENTRY
 	#define APIENTRY
 #endif
 

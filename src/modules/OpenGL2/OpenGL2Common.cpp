@@ -43,6 +43,13 @@
 
 #include <cmath>
 
+#ifndef GL_MAJOR_VERSION
+	#define GL_MAJOR_VERSION 0x821B
+#endif
+#ifndef GL_MINOR_VERSION
+	#define GL_MINOR_VERSION 0x821C
+#endif
+
 /* OpenGL|ES 2.0 doesn't have those definitions */
 #ifndef GL_MAP_WRITE_BIT
 	#define GL_MAP_WRITE_BIT 0x0002

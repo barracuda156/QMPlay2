@@ -18,18 +18,14 @@
 
 #include <OpenGL2Writer.hpp>
 
-#include <OpenGL2Window.hpp>
 #include <OpenGL2Widget.hpp>
 
 #include <HWAccelInterface.hpp>
 #include <VideoFrame.hpp>
 
-#include <QGuiApplication>
-
 OpenGL2Writer::OpenGL2Writer(Module &module)
     : drawable(nullptr)
     , allowPBO(true)
-    , forceRtt(false)
 {
     addParam("W");
     addParam("H");
@@ -42,6 +38,7 @@ OpenGL2Writer::OpenGL2Writer(Module &module)
 
     SetModule(module);
 }
+
 OpenGL2Writer::~OpenGL2Writer()
 {
     if (drawable)
@@ -65,21 +62,10 @@ bool OpenGL2Writer::set()
         m_hqScaling = newHqScaling;
         doReset = true;
     }
-
+#ifdef VSYNC_SETTINGS
     vSync = sets().getBool("VSync");
     if (drawable && !drawable->setVSync(vSync))
         doReset = true;
-
-    const bool newForceRtt = sets().getBool("ForceRtt");
-    if (forceRtt != newForceRtt)
-        doReset = true;
-    forceRtt = newForceRtt;
-
-#ifdef Q_OS_WIN
-    bool newPreventFullScreen = sets().getBool("PreventFullScreen");
-    if (preventFullScreen != newPreventFullScreen)
-        doReset = true;
-    preventFullScreen = newPreventFullScreen;
 #endif
 
     return !doReset && sets().getBool("Enabled");
@@ -182,6 +168,7 @@ void OpenGL2Writer::writeVideo(const VideoFrame &videoFrame)
     }
     drawable->updateGL(drawable->sphericalView);
 }
+
 void OpenGL2Writer::writeOSD(const QList<const QMPlay2OSD *> &osds)
 {
     QMutexLocker mL(&drawable->osdMutex);
@@ -205,8 +192,6 @@ QString OpenGL2Writer::name() const
     QString glStr = drawable->glVer ? QString("%1.%2").arg(drawable->glVer / 10).arg(drawable->glVer % 10) : "2";
     if (drawable->hwAccellnterface)
         glStr += " " + drawable->hwAccellnterface->name();
-    if (useRtt)
-        glStr += " (render-to-texture)";
 #ifdef OPENGL_ES2
     return "OpenGL|ES " + glStr;
 #else
@@ -216,27 +201,15 @@ QString OpenGL2Writer::name() const
 
 bool OpenGL2Writer::open()
 {
-    static const QString platformName = QGuiApplication::platformName();
-    useRtt = platformName.startsWith("wayland") || platformName == "android" || forceRtt;
-    if (useRtt)
-    {
-        //Don't use rtt when videoDock has native window
-        const QWidget *videoDock = QMPlay2Core.getVideoDock();
-        useRtt = !videoDock->internalWinId() || (videoDock == videoDock->window());
-    }
-    if (useRtt)
-        drawable = new OpenGL2Widget;
-    else
-        drawable = new OpenGL2Window;
+    drawable = new OpenGL2Widget;
     drawable->hwAccellnterface = m_hwAccelInterface;
-#ifdef Q_OS_WIN
-    drawable->preventFullScreen = preventFullScreen;
-#endif
     drawable->allowPBO = allowPBO;
     drawable->hqScaling = m_hqScaling;
     if (drawable->testGL())
     {
+#ifdef VSYNC_SETTINGS
         drawable->setVSync(vSync);
+#endif
         bool hasBrightness = false, hasContrast = false, hasSharpness = false;
         if (!drawable->videoAdjustmentKeys.isEmpty())
         {

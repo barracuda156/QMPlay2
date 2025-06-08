@@ -1,6 +1,6 @@
 /*
     QMPlay2 is a video and audio player.
-    Copyright (C) 2010-2019  Błażej Szczygieł
+    Copyright (C) 2010-2017  Błażej Szczygieł
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published
@@ -18,12 +18,13 @@
 
 #include "OpenGL2Widget.hpp"
 
-#include <QOpenGLContext>
+#include <QMPlay2Core.hpp>
 
 OpenGL2Widget::OpenGL2Widget()
 {
-    connect(&updateTimer, SIGNAL(timeout()), this, SLOT(update()));
+    connect(&updateTimer, SIGNAL(timeout()), this, SLOT(updateGL())); // updateGL() from the base class
 }
+
 OpenGL2Widget::~OpenGL2Widget()
 {
     makeCurrent();
@@ -34,46 +35,66 @@ QWidget *OpenGL2Widget::widget()
     return this;
 }
 
+bool OpenGL2Widget::testGL()
+{
+    makeCurrent();
+    if ((isOK = isValid()))
+        testGLInternal();
+    doneCurrent();
+    return isOK;
+}
+
 bool OpenGL2Widget::setVSync(bool enable)
 {
-    QSurfaceFormat fmt = format();
-    vSync = enable;
-    if (!isValid())
+#ifdef VSYNC_SETTINGS
+    bool doDoneCurrent = false;
+    if (QGLContext::currentContext() != context())
     {
-        fmt.setSwapBehavior(QSurfaceFormat::DoubleBuffer); //Probably it doesn't work
-        fmt.setSwapInterval(enable); //Does it work on QOpenGLWidget?
-        setFormat(fmt);
-        return true;
+        makeCurrent();
+        doDoneCurrent = true;
     }
-    return (fmt.swapInterval() == enable);
+    using SwapInterval = int (APIENTRY *)(int); // BOOL is just normal int in Windows, APIENTRY declares nothing on non-Windows platforms
+    SwapInterval swapInterval = NULL;
+    swapInterval = (SwapInterval)context()->getProcAddress("glXSwapIntervalMESA");
+    if (!swapInterval)
+        swapInterval = (SwapInterval)context()->getProcAddress("glXSwapIntervalSGI");
+    if (swapInterval)
+        swapInterval(enable);
+    if (doDoneCurrent)
+        doneCurrent();
+    vSync = enable;
+#else
+    Q_UNUSED(enable)
+#endif
+    return true;
 }
+
 void OpenGL2Widget::updateGL(bool requestDelayed)
 {
     if (requestDelayed)
-        QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
+        QCoreApplication::postEvent(this, new QEvent(QEvent::UpdateRequest), Qt::LowEventPriority);
     else
-        update();
+        QGLWidget::updateGL();
 }
 
 void OpenGL2Widget::initializeGL()
 {
-    connect(context(), SIGNAL(aboutToBeDestroyed()), this, SLOT(aboutToBeDestroyed()), Qt::DirectConnection);
     OpenGL2Common::initializeGL();
 }
+
 void OpenGL2Widget::paintGL()
 {
+    glClear(GL_COLOR_BUFFER_BIT);
     OpenGL2Common::paintGL();
 }
 
-void OpenGL2Widget::aboutToBeDestroyed()
+void OpenGL2Widget::resizeGL(int w, int h)
 {
-    makeCurrent();
-    contextAboutToBeDestroyed();
-    doneCurrent();
+    glViewport(0, 0, w, h);
 }
 
 bool OpenGL2Widget::event(QEvent *e)
 {
     dispatchEvent(e, parent());
-    return QOpenGLWidget::event(e);
+    return QGLWidget::event(e);
 }

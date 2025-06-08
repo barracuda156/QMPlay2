@@ -1,6 +1,6 @@
 /*
     QMPlay2 is a video and audio player.
-    Copyright (C) 2010-2019  Błażej Szczygieł
+    Copyright (C) 2010-2017  Błażej Szczygieł
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published
@@ -16,29 +16,34 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#ifndef OPENGL2WIDGET_HPP
+#define OPENGL2WIDGET_HPP
 
 #include <OpenGL2Common.hpp>
 
-#include <QSurfaceFormat>
-#include <QOpenGLWidget>
+#include <QGLWidget>
 
-class OpenGL2Widget final : public QOpenGLWidget, public OpenGL2Common
+class OpenGL2Widget : public QGLWidget, public OpenGL2Common
 {
     Q_OBJECT
+
 public:
     OpenGL2Widget();
-    ~OpenGL2Widget();
+        ~OpenGL2Widget() final;
 
-    QWidget *widget() override;
+    QWidget *widget() override final;
 
-    bool setVSync(bool enable) override;
-    void updateGL(bool requestDelayed) override;
+    bool testGL() override final;
+    bool setVSync(bool enable) override final;
+    void updateGL(bool requestDelayed) override final;
 
-    void initializeGL() override;
-    void paintGL() override;
-private slots:
-    void aboutToBeDestroyed();
+    void initializeGL() override final;
+    void paintGL() override final;
+
 private:
-    bool event(QEvent *e) override;
+    void resizeGL(int w, int h) override final;
+
+    bool event(QEvent *e) override final;
 };
+
+#endif // OPENGL2WIDGET_HPP

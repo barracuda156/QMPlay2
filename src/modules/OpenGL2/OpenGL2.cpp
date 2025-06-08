@@ -19,8 +19,6 @@
 #include <OpenGL2.hpp>
 #include <OpenGL2Writer.hpp>
 
-#include <QGuiApplication>
-
 OpenGL2::OpenGL2() :
     Module("OpenGL2")
 {
@@ -29,12 +27,8 @@ OpenGL2::OpenGL2() :
     init("Enabled", true);
     init("AllowPBO", true);
     init("HQScaling", false);
-    const QString platformName = QGuiApplication::platformName();
-    init("ForceRtt", (platformName == "cocoa" || platformName == "android"));
+#ifdef VSYNC_SETTINGS
     init("VSync", true);
-#ifdef Q_OS_WIN
-    if (QSysInfo::windowsVersion() >= QSysInfo::WV_6_0)
-        init("PreventFullScreen", true);
 #endif
 }
 
@@ -45,6 +39,7 @@ QList<OpenGL2::Info> OpenGL2::getModulesInfo(const bool showDisabled) const
         modulesInfo += Info(OpenGL2WriterName, WRITER, QStringList{"video"});
     return modulesInfo;
 }
+
 void *OpenGL2::createInstance(const QString &name)
 {
     if (name == OpenGL2WriterName && getBool("Enabled"))
@@ -76,35 +71,16 @@ ModuleSettingsWidget::ModuleSettingsWidget(Module &module) :
     hqScalingB = new QCheckBox(tr("High quality video scaling"));
     hqScalingB->setToolTip(tr("Trilinear filtering for minification and bicubic filtering for magnification."));
     hqScalingB->setChecked(sets().getBool("HQScaling"));
-
-    forceRttB = new QCheckBox(tr("Force render to texture if possible (not recommended)"));
-    forceRttB->setToolTip(tr("Always enabled on Wayland and Android platforms.\nSet visualizations to OpenGL mode if enabled."));
-    forceRttB->setChecked(sets().getBool("ForceRtt"));
-
+#ifdef VSYNC_SETTINGS
     vsyncB = new QCheckBox(tr("Vertical sync") +  " (VSync)");
     vsyncB->setChecked(sets().getBool("VSync"));
-
-#ifdef Q_OS_WIN
-    if (QSysInfo::windowsVersion() >= QSysInfo::WV_6_0)
-    {
-        preventFullScreenB = new QCheckBox(tr("Try to prevent exclusive full screen"));
-        preventFullScreenB->setChecked(sets().getBool("PreventFullScreen"));
-    }
-    else
-    {
-        preventFullScreenB = nullptr;
-    }
 #endif
-
     QGridLayout *layout = new QGridLayout(this);
     layout->addWidget(enabledB);
     layout->addWidget(allowPboB);
     layout->addWidget(hqScalingB);
-    layout->addWidget(forceRttB);
+#ifdef VSYNC_SETTINGS
     layout->addWidget(vsyncB);
-#ifdef Q_OS_WIN
-    if (preventFullScreenB)
-        layout->addWidget(preventFullScreenB);
 #endif
 }
 
@@ -113,10 +89,7 @@ void ModuleSettingsWidget::saveSettings()
     sets().set("Enabled", enabledB->isChecked());
     sets().set("AllowPBO", allowPboB->isChecked());
     sets().set("HQScaling", hqScalingB->isChecked());
-    sets().set("ForceRtt", forceRttB->isChecked());
+#ifdef VSYNC_SETTINGS
     sets().set("VSync", vsyncB->isChecked());
-#ifdef Q_OS_WIN
-    if (preventFullScreenB)
-        sets().set("PreventFullScreen", preventFullScreenB->isChecked());
 #endif
 }

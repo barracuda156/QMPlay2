@@ -20,15 +20,16 @@
 
 #include <Module.hpp>
 
-class OpenGL2 final : public Module
+class OpenGL2 : public Module
 {
 public:
     OpenGL2();
-private:
-    QList<Info> getModulesInfo(const bool) const override;
-    void *createInstance(const QString &) override;
 
-    SettingsWidget *getSettingsWidget() override;
+private:
+    QList<Info> getModulesInfo(const bool) const override final;
+    void *createInstance(const QString &) override final;
+
+    SettingsWidget *getSettingsWidget() override final;
 };
 
 /**/
@@ -37,18 +38,18 @@ private:
 
 class QCheckBox;
 
-class ModuleSettingsWidget final : public Module::SettingsWidget
+class ModuleSettingsWidget : public Module::SettingsWidget
 {
     Q_DECLARE_TR_FUNCTIONS(ModuleSettingsWidget)
+
 public:
     ModuleSettingsWidget(Module &);
+
 private:
-    void saveSettings() override;
+    void saveSettings() override final;
 
     QCheckBox *enabledB, *allowPboB, *hqScalingB;
-    QCheckBox *forceRttB;
+#ifdef VSYNC_SETTINGS
     QCheckBox *vsyncB;
-#ifdef Q_OS_WIN
-    QCheckBox *preventFullScreenB;
 #endif
 };

@@ -21,8 +21,7 @@
 #include <VideoFrame.hpp>
 #include <VideoAdjustment.hpp>
 
-#include <QOpenGLShaderProgram>
-
+#include <QGLShaderProgram>
 #include <QVariantAnimation>
 #include <QCoreApplication>
 #include <QImage>
@@ -33,7 +32,9 @@
     #include <GL/glext.h>
 #endif
 
-#if defined OPENGL_ES2 && !defined APIENTRY
+#define QOpenGLShaderProgram QGLShaderProgram
+
+#if !defined APIENTRY
     #define APIENTRY
 #endif
 
@@ -48,6 +49,7 @@ public:
     inline RotAnimation(OpenGL2Common &glCommon) :
         glCommon(glCommon)
     {}
+
 private:
     void updateCurrentValue(const QVariant &value) override;
 
@@ -70,6 +72,7 @@ class OpenGL2Common
     using GLMapBufferRange = void *(APIENTRY *)(GLenum, GLintptr, GLsizeiptr, GLbitfield);
     using GLMapBuffer      = void *(APIENTRY *)(GLenum, GLbitfield);
     using GLUnmapBuffer    = GLboolean(APIENTRY *)(GLenum);
+
 public:
     OpenGL2Common();
     virtual ~OpenGL2Common();
@@ -78,7 +81,7 @@ public:
 
     virtual QWidget *widget() = 0;
 
-    bool testGL();
+    virtual bool testGL() = 0;
     virtual bool setVSync(bool enable) = 0;
     virtual void updateGL(bool requestDelayed) = 0;
 
@@ -86,6 +89,7 @@ public:
     void clearImg();
 
     void setSpherical(bool spherical);
+
 protected:
     void initializeGL();
     void paintGL();
@@ -110,9 +114,12 @@ protected:
     GLMapBuffer glMapBuffer = nullptr;
     GLUnmapBuffer glUnmapBuffer = nullptr;
 
+#ifdef VSYNC_SETTINGS
     bool vSync;
+#endif
 
     void dispatchEvent(QEvent *e, QObject *p);
+
 private:
     void maybeSetMipmaps(qreal dpr);
 
@@ -133,6 +140,7 @@ private:
     inline void resetSphereVbo();
     inline void deleteSphereVbo();
     void loadSphere();
+
 public:
     HWAccelInterface *hwAccellnterface;
     QStringList videoAdjustmentKeys;
@@ -154,10 +162,6 @@ public:
 
     quint32 pbo[4];
     bool allowPBO, hasPbo, hqScaling = false;
-
-#ifdef Q_OS_WIN
-    bool preventFullScreen;
-#endif
 
     bool isPaused, isOK, hwAccelError, hasImage, doReset, setMatrix, correctLinesize, canUseHueSharpness, m_useMipmaps = false;
     int subsX, subsY, W, H, subsW, subsH, outW, outH, verticesIdx;

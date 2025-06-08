@@ -26,9 +26,8 @@
 #include <VideoFrame.hpp>
 #include <Functions.hpp>
 
-#include <QOffscreenSurface>
-#include <QOpenGLContext>
-#include <QOpenGLShader>
+#include <QGLContext>
+#include <QGLShader>
 #include <QResizeEvent>
 #include <QMatrix4x4>
 #include <QMatrix3x3>
@@ -37,6 +36,16 @@
 #include <QWidget>
 
 #include <cmath>
+
+#define QOpenGLContext QGLContext
+#define QOpenGLShader QGLShader
+
+#ifndef GL_MAJOR_VERSION
+    #define GL_MAJOR_VERSION 0x821B
+#endif
+#ifndef GL_MINOR_VERSION
+    #define GL_MINOR_VERSION 0x821C
+#endif
 
 /* OpenGL|ES 2.0 doesn't have those definitions */
 #ifndef GL_MAP_WRITE_BIT
@@ -88,7 +97,9 @@ OpenGL2Common::OpenGL2Common() :
     supportsShaders(false), canCreateNonPowerOfTwoTextures(false),
     glActiveTexture(nullptr),
 #endif
+#ifdef VSYNC_SETTINGS
     vSync(true),
+#endif
     hwAccellnterface(nullptr),
     shaderProgramVideo(nullptr), shaderProgramOSD(nullptr),
     texCoordYCbCrLoc(-1), positionYCbCrLoc(-1), texCoordOSDLoc(-1), positionOSDLoc(-1),
@@ -96,9 +107,6 @@ OpenGL2Common::OpenGL2Common() :
     target(0),
     Deinterlace(0),
     allowPBO(true), hasPbo(false),
-#ifdef Q_OS_WIN
-    preventFullScreen(false),
-#endif
     isPaused(false), isOK(false), hwAccelError(false), hasImage(false), doReset(true), setMatrix(true), correctLinesize(false), canUseHueSharpness(true),
     subsX(-1), subsY(-1), W(-1), H(-1), subsW(-1), subsH(-1), outW(-1), outH(-1), verticesIdx(0),
     glVer(0),
@@ -118,6 +126,7 @@ OpenGL2Common::OpenGL2Common() :
     rotAnimation.setEasingCurve(QEasingCurve::OutQuint);
     rotAnimation.setDuration(1000.0);
 }
+
 OpenGL2Common::~OpenGL2Common()
 {
     contextAboutToBeDestroyed();
@@ -130,24 +139,11 @@ void OpenGL2Common::deleteMe()
     delete this;
 }
 
-bool OpenGL2Common::testGL()
-{
-    QOpenGLContext glCtx;
-    if ((isOK = glCtx.create()))
-    {
-        QOffscreenSurface offscreenSurface;
-        offscreenSurface.create();
-        if ((isOK = glCtx.makeCurrent(&offscreenSurface)))
-            testGLInternal();
-    }
-    return isOK;
-}
-
 void OpenGL2Common::newSize(const QSize &size)
 {
     const bool canUpdate = !size.isValid();
     const QSize winSize = canUpdate ? widget()->size() : size;
-    const qreal dpr = widget()->devicePixelRatioF();
+    const qreal dpr = 1.0;
     if (!isRotate90())
     {
         Functions::getImageSize(aspectRatio, zoom, winSize.width(), winSize.height(), W, H, &subsX, &subsY);
@@ -167,6 +163,7 @@ void OpenGL2Common::newSize(const QSize &size)
             updateTimer.start(40);
     }
 }
+
 void OpenGL2Common::clearImg()
 {
     hasImage = false;
@@ -319,7 +316,9 @@ void OpenGL2Common::initializeGL()
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     }
 
+#ifdef VSYNC_SETTINGS
     setVSync(vSync);
+#endif
 
     doReset = true;
     resetSphereVbo();
@@ -383,7 +382,7 @@ void OpenGL2Common::paintGL()
                 if (hqScaling)
                 {
                     // Must be set before "HWAccelInterface::init()" and must have "m_textureSize"
-                    maybeSetMipmaps(widget()->devicePixelRatioF());
+                    maybeSetMipmaps(1.0);
                 }
 
                 /* Prepare textures, register GL textures */
@@ -426,7 +425,7 @@ void OpenGL2Common::paintGL()
                 texCoordYCbCr[2] = texCoordYCbCr[6] = (videoFrame.linesize[0] == widths[0]) ? 1.0f : (widths[0] / (videoFrame.linesize[0] + 1.0f));
 
                 if (hqScaling)
-                    maybeSetMipmaps(widget()->devicePixelRatioF());
+                    maybeSetMipmaps(1.0);
             }
             resetDone = true;
             hasImage = false;
@@ -567,7 +566,7 @@ void OpenGL2Common::paintGL()
         }
         if (hqScaling)
         {
-            const qreal dpr = widget()->devicePixelRatioF();
+            const qreal dpr = 1.0;
             if (!resetDone)
                 maybeSetMipmaps(dpr);
             const bool useBicubic = (W * dpr > m_textureSize.width() || H * dpr > m_textureSize.height());
@@ -663,7 +662,7 @@ void OpenGL2Common::paintGL()
                 glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
         }
 
-        const QSizeF winSizeSubs = winSize * widget()->devicePixelRatioF();
+        const QSizeF winSizeSubs = winSize * 1.0;
         const float left   = (bounds.left() + subsX) * 2.0f / winSizeSubs.width() - osdOffset.x();
         const float right  = (bounds.right() + subsX + 1) * 2.0f / winSizeSubs.width() - osdOffset.x();
         const float top    = (bounds.top() + subsY) * 2.0f / winSizeSubs.height() - osdOffset.y();
@@ -817,36 +816,6 @@ void OpenGL2Common::testGLInternal()
     QWidget *w = widget();
     w->grabGesture(Qt::PinchGesture);
     w->setMouseTracking(true);
-#ifdef Q_OS_WIN
-    /*
-     * This property is read by QMPlay2 and it ensures that toolbar will be visible
-     * on fullscreen in Windows Vista and newer on nVidia and AMD drivers.
-    */
-    const bool canPreventFullScreen = (qstrcmp(w->metaObject()->className(), "QOpenGLWidget") != 0);
-    const QSysInfo::WinVersion winVer = QSysInfo::windowsVersion();
-    if (canPreventFullScreen && winVer >= QSysInfo::WV_6_0)
-    {
-        Qt::CheckState compositionEnabled;
-        if (!preventFullScreen)
-            compositionEnabled = Qt::PartiallyChecked;
-        else
-        {
-            compositionEnabled = Qt::Checked;
-            if (winVer <= QSysInfo::WV_6_1) //Windows 8 and 10 can't disable DWM composition
-            {
-                using DwmIsCompositionEnabledProc = HRESULT (WINAPI *)(BOOL *pfEnabled);
-                DwmIsCompositionEnabledProc DwmIsCompositionEnabled = (DwmIsCompositionEnabledProc)GetProcAddress(GetModuleHandleA("dwmapi.dll"), "DwmIsCompositionEnabled");
-                if (DwmIsCompositionEnabled)
-                {
-                    BOOL enabled = false;
-                    if (DwmIsCompositionEnabled(&enabled) == S_OK && !enabled)
-                        compositionEnabled = Qt::PartiallyChecked;
-                }
-            }
-        }
-        w->setProperty("preventFullScreen", (int)compositionEnabled);
-    }
-#endif
 }
 
 bool OpenGL2Common::initGLProc()
@@ -881,6 +850,7 @@ bool OpenGL2Common::initGLProc()
 
     return true;
 }
+
 #ifndef OPENGL_ES2
 void OpenGL2Common::showOpenGLMissingFeaturesMessage()
 {
@@ -1006,6 +976,7 @@ void OpenGL2Common::mousePress(QMouseEvent *e)
         }
     }
 }
+
 void OpenGL2Common::mouseMove(QMouseEvent *e)
 {
     if ((moveVideo || moveOSD) && (e->buttons() & Qt::LeftButton))
@@ -1027,6 +998,7 @@ void OpenGL2Common::mouseMove(QMouseEvent *e)
         updateGL(true);
     }
 }
+
 void OpenGL2Common::mouseRelease(QMouseEvent *e)
 {
     if ((moveVideo || moveOSD) && e->button() == Qt::LeftButton)
@@ -1051,6 +1023,7 @@ void OpenGL2Common::mousePress360(QMouseEvent *e)
         mousePos = e->pos();
     }
 }
+
 void OpenGL2Common::mouseMove360(QMouseEvent *e)
 {
     if (mouseWrapped)
@@ -1072,7 +1045,6 @@ void OpenGL2Common::mouseMove360(QMouseEvent *e)
         mouseTime = currTime;
 
         mousePos = newMousePos;
-        if (e->source() == Qt::MouseEventNotSynthesized)
         {
             if (canWrapMouse)
                 mouseWrapped = Functions::wrapMouse(widget(), mousePos, 1);
@@ -1084,6 +1056,7 @@ void OpenGL2Common::mouseMove360(QMouseEvent *e)
         updateGL(true);
     }
 }
+
 void OpenGL2Common::mouseRelease360(QMouseEvent *e)
 {
     if (buttonPressed && e->button() == Qt::LeftButton)
@@ -1099,11 +1072,13 @@ void OpenGL2Common::mouseRelease360(QMouseEvent *e)
         buttonPressed = false;
     }
 }
+
 inline void OpenGL2Common::resetSphereVbo()
 {
     memset(sphereVbo, 0, sizeof sphereVbo);
     nIndices = 0;
 }
+
 inline void OpenGL2Common::deleteSphereVbo()
 {
     if (nIndices > 0)
@@ -1112,6 +1087,7 @@ inline void OpenGL2Common::deleteSphereVbo()
         resetSphereVbo();
     }
 }
+
 void OpenGL2Common::loadSphere()
 {
     const quint32 slices = 50;

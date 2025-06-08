@@ -27,8 +27,10 @@ class OpenGL2Common;
 class OpenGL2Writer final : public VideoWriter
 {
     Q_DECLARE_TR_FUNCTIONS(OpenGL2Writer)
+
 public:
     OpenGL2Writer(Module &);
+
 private:
     ~OpenGL2Writer();
 
@@ -58,10 +60,8 @@ private:
     OpenGL2Common *drawable;
     bool allowPBO;
     bool m_hqScaling = false;
-    bool forceRtt, useRtt;
+#ifdef VSYNC_SETTINGS
     bool vSync;
-#ifdef Q_OS_WIN
-    bool preventFullScreen;
 #endif
 };
 

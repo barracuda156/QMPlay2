@@ -25,8 +25,6 @@
 #include <QTreeWidget>
 #include <QToolButton>
 #include <QThread>
-#include <QWidget>
-#include <QPushButton>
 
 class QLabel;
 class QProcess;
@@ -38,8 +36,9 @@ class DownloaderThread;
 class DownloadItemW : public QWidget
 {
     Q_OBJECT
+
 public:
-    explicit DownloadItemW(DownloaderThread *downloaderThr, QString name, const QIcon &icon, QDataStream *stream, QString preset);
+    DownloadItemW(DownloaderThread *downloaderThr, QString name, const QIcon &icon, QDataStream *stream, QString preset);
     ~DownloadItemW();
 
     void setName(const QString &);
@@ -67,16 +66,18 @@ public:
     void write(QDataStream &);
 
     bool dontDeleteDownloadThr;
+
 signals:
     void start();
     void stop();
+
 private slots:
     void toggleStartStop();
-    void handleConversionFinished(int exitCode, QProcess::ExitStatus);
-    void handleConversionError(QProcess::ProcessError);
+    void onConvertProcessFinished(int exitCode);
+    void onConvertProcessError(QProcess::ProcessError error);
+
 private:
     void downloadStop(bool);
-
     void startConversion();
     void deleteConvertProcess();
 
@@ -94,11 +95,8 @@ private:
         QProgressBar *progressB;
     } *speedProgressW = nullptr;
 
-    QString m_processProgram;      // To store the program name
-    QStringList m_processArguments; // To store the process arguments
-    QProcess *m_convertProcess; // QProcess is now fully included
-    int m_convertProcessConn[2]; // Replace QMetaObject::Connection with int
-    bool finished, readyToPlay, m_needsConversion = false;
+    QProcess *m_convertProcess = nullptr;
+    bool finished, readyToPlay, m_needsConversion;
     QString m_convertPreset;
     QString filePath;
     QString m_convertedFilePath;
@@ -109,11 +107,13 @@ private:
 class DownloadListW : public QTreeWidget
 {
     friend class Downloader;
+
 public:
     inline QString getDownloadsDirPath()
     {
         return downloadsDirPath;
     }
+
 private:
     QString downloadsDirPath;
 };
@@ -124,6 +124,7 @@ class DownloaderThread : public QThread
 {
     Q_OBJECT
     enum {ADD_ENTRY, NAME, SET, SET_POS, SET_SPEED, DOWNLOAD_ERROR, FINISH};
+
 public:
     DownloaderThread(QDataStream *stream, const QString &url, DownloadListW *downloadLW, const QMenu *convertsMenu, const QString &name = QString(), const QString &prefix = QString(), const QString &param = QString(), const QString &preset = QString());
     ~DownloaderThread() final;
@@ -131,12 +132,15 @@ public:
     void serialize(QDataStream &stream);
 
     const QList<QAction *> convertActions();
+
 signals:
     void listSig(int, qint64 val = 0, const QString &filePath = QString());
+
 private slots:
     void listSlot(int, qint64, const QString &);
     void stop();
     void finished();
+
 private:
     void run() override final;
 
@@ -177,8 +181,6 @@ private slots:
     void addUrl();
     void download();
     void itemDoubleClicked(QTreeWidgetItem *);
-    void handleButtonClicked(QAbstractButton *button);
-    void handleRemoveButtonClicked();
 
 private:
     Settings m_sets;
@@ -192,9 +194,11 @@ private:
     QToolButton *m_convertsPresetsB;
     QMenu *m_convertsMenu;
 
-    QAction *currentAction;      // Pointer to the current action being modified
-    QDialog *currentDialog;      // Pointer to the current dialog being used
-    QPushButton *removeB; 
+    QAction *createPreset(const QString &name, const QString &data);
+
+    QAction *createAction(const QString &actionName, const QString &preset,
+                          const QString &name, const QString &url,
+                          const QString &prefix, const QString &param);
 };
 
 #define DownloaderName "QMPlay2 Downloader"

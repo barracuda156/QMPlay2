@@ -26,6 +26,11 @@
 #define TAGLIB19 (TAGLIB_VERSION >= 0x109)
 #define TAGLIB1B (TAGLIB_VERSION >= 0x10B)
 
+/* Find taglib */
+#ifndef TAGLIB_FULL_INCLUDE_PATH
+#define TAGLIB_FULL_INCLUDE_PATH
+#endif
+
 #ifdef TAGLIB_FULL_INCLUDE_PATH
     #include <taglib/taglib.h>
 #else

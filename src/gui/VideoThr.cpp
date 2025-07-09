@@ -401,11 +401,11 @@ void VideoThr::run()
         if (playC.flushVideo || skipNonKey)
         {
             filters.clearBuffers();
-            if (flushVideo)
+            if (playC.flushVideo)
                 frame_timer = -1.0;
         }
 
-        if ((!packet.isEmpty() || maybeFlush) && (!skipNonKey || packet.hasKeyFrame()))
+        if ((!packet.isEmpty() || maybeFlush) && (!skipNonKey || packet.hasKeyFrame))
         {
             VideoFrame decoded;
             QByteArray newPixelFormat;

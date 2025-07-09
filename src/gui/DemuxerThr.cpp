@@ -452,7 +452,8 @@ void DemuxerThr::run()
         playC.paused = false;
 
     const bool isHls = (demuxer->name() == "hls");
-    QElapsedTimer waitForDataTimer;
+    QTime waitForDataTimer;
+    bool waitForDataTimerValid = false;
     bool firstWaitForData = true;
     bool canWaitForData = true;
 
@@ -543,14 +544,17 @@ void DemuxerThr::run()
             {
                 // Wait a bit longer for HLS streams to prevent stuttering on every HLS chunk. Do a short
                 // sleep and continue, because reading from demuxer might block for HLS chunk length.
-                if (!waitForDataTimer.isValid())
+                if (!waitForDataTimerValid)
+                {
                     waitForDataTimer.start();
-                if (waitForDataTimer.elapsed() / 1e3 <= playIfBuffered)
+                    waitForDataTimerValid = true;
+                }
+                if (waitForDataTimer.elapsed() / 1000.0 <= playIfBuffered)
                 {
                     msleep(50);
                     continue;
                 }
-                waitForDataTimer.invalidate();
+                waitForDataTimerValid = false;
                 canWaitForData = false;
             }
 

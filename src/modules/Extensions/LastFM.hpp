@@ -32,6 +32,7 @@ class QImage;
 class LastFM : public QObject, public QMPlay2Extensions
 {
     Q_OBJECT
+
 public:
     class Scrobble
     {
@@ -48,6 +49,7 @@ public:
     };
 
     LastFM(Module &module);
+
 private:
     bool set() override final;
 
@@ -59,6 +61,7 @@ private:
     void updateNowPlayingAndScrobble(const Scrobble &scrobble);
 
     void clear();
+
 private slots:
     void updatePlaying(bool play, const QString &title, const QString &artist, const QString &album, int length, bool needCover, const QString &fileName);
 
@@ -67,6 +70,9 @@ private slots:
     void scrobbleFinished();
 
     void processScrobbleQueue();
+
+    void onReplyDestroyed(QObject* obj);
+
 private:
     NetworkReply *coverReply, *loginReply;
     QList<NetworkReply *> m_scrobbleReplies;

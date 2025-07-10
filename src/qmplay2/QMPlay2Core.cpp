@@ -251,7 +251,8 @@ void QMPlay2CoreClass::init(bool loadModules, bool modulesInSubdirs, const QStri
     av_log_set_level(AV_LOG_ERROR);
     av_log_set_callback(avQMPlay2LogHandler);
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58, 9, 100)
-    av_register_all();
+// For w/e reason the check does not work correctly.
+//    av_register_all();
 #endif
     avformat_network_init();
 

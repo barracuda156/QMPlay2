@@ -54,7 +54,7 @@ void FFDec::destroyDecoder()
     av_packet_free(&packet);
     if (codecIsOpen)
     {
-        avcodec_close(codec_ctx);
+        avcodec_free_context(&codec_ctx);
         codecIsOpen = false;
     }
     av_freep(&codec_ctx);
@@ -67,10 +67,9 @@ void FFDec::clearFrames()
     m_frames.clear();
 }
 
-
 AVCodec *FFDec::init(StreamInfo &streamInfo)
 {
-    AVCodec *codec = avcodec_find_decoder_by_name(streamInfo.codec_name);
+    auto codec = const_cast< AVCodec *>(avcodec_find_decoder_by_name(streamInfo.codec_name));
     if (codec)
     {
         codec_ctx = avcodec_alloc_context3(codec);

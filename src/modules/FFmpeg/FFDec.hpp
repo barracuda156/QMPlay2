@@ -23,7 +23,11 @@
 #include <QString>
 #include <QList>
 
-struct AVCodecContext;
+extern "C"
+{
+    #include <libavcodec/avcodec.h>
+}
+
 struct AVPacket;
 struct AVCodec;
 struct AVFrame;

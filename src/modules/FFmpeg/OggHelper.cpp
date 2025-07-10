@@ -21,6 +21,7 @@
 extern "C"
 {
     #include <libavformat/avio.h>
+    #include <libavutil/mem.h>
 }
 
 static int readPacket(void *opaque, uint8_t *buf, int bufSize)
@@ -29,6 +30,7 @@ static int readPacket(void *opaque, uint8_t *buf, int bufSize)
     const int64_t pos = avio_tell(oggHelper->io);
     return avio_read(oggHelper->io, buf, oggHelper->size > 0 ? qMin<int>(bufSize, oggHelper->size - pos) : bufSize);
 }
+
 static int64_t seekPacket(void *opaque, int64_t offset, int whence)
 {
     OggHelper *oggHelper = (OggHelper *)opaque;

@@ -29,6 +29,7 @@
 extern "C"
 {
     #include <libavformat/avformat.h>
+    #include <libavcodec/avcodec.h>
     #include <libavutil/replaygain.h>
     #include <libavutil/spherical.h>
     #include <libavutil/pixdesc.h>
@@ -591,7 +592,7 @@ bool FormatContext::read(Packet &encoded, int &idx)
 
     if (stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO && stream->codecpar->format == AV_PIX_FMT_PAL8)
     {
-        int size = 0;
+        size_t size = 0;
         const auto data = av_packet_get_side_data(packet, AV_PKT_DATA_PALETTE, &size);
         if (size > 0 && data)
             encoded.palette = QByteArray((const char *)data, size);
@@ -704,7 +705,7 @@ bool FormatContext::open(const QString &_url, const QString &param)
         isLocal = true;
     else
     {
-        inputFmt = av_find_input_format(scheme);
+        inputFmt = const_cast<AVInputFormat *>(av_find_input_format(scheme));
         if (inputFmt)
             url = _url.right(_url.length() - scheme.length() - 3);
         isLocal = false;

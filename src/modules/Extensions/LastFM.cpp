@@ -29,8 +29,19 @@ Q_DECLARE_METATYPE(LastFM::Scrobble)
 
 #include <QCryptographicHash>
 #include <QStringList>
-#include <QUrlQuery>
+#include <QUrl>
 #include <QImage>
+
+static QString buildQueryString(const QList<QPair<QString, QString> > &params)
+{
+    QStringList result;
+    for (int i = 0; i < params.size(); ++i)
+    {
+        const QPair<QString, QString> &pair = params.at(i);
+        result << QUrl::toPercentEncoding(pair.first) + "=" + QUrl::toPercentEncoding(pair.second);
+    }
+    return result.join("&");
+}
 
 LastFM::LastFM(Module &module) :
     coverReply(nullptr),
@@ -53,7 +64,10 @@ bool LastFM::set()
     imageSizes.clear();
     if (sets().getBool("LastFM/AllowBigCovers"))
         imageSizes += "mega";
-    imageSizes += {"extralarge", "large", "medium", "small"};
+    imageSizes += "extralarge";
+    imageSizes += "large";
+    imageSizes += "medium";
+    imageSizes += "small";
 
     const QString _user = sets().getString("LastFM/Login");
     const QString _md5pass = sets().getString("LastFM/Password");
@@ -161,19 +175,20 @@ void LastFM::updateNowPlayingAndScrobble(const Scrobble &scrobble)
         QCryptographicHash::Md5
     ).toHex();
 
-    QUrlQuery updateNowPlayingQuery;
-    updateNowPlayingQuery.addQueryItem("method", "track.updatenowplaying");
-    updateNowPlayingQuery.addQueryItem("artist", scrobble.artist);
-    updateNowPlayingQuery.addQueryItem("track", scrobble.title);
-    updateNowPlayingQuery.addQueryItem("album", scrobble.album.isEmpty() ? "" : scrobble.album);
-    updateNowPlayingQuery.addQueryItem("duration", duration);
-    updateNowPlayingQuery.addQueryItem("api_key", api_key);
-    updateNowPlayingQuery.addQueryItem("api_sig", apiSig);
-    updateNowPlayingQuery.addQueryItem("sk", session_key);
+    QList<QPair<QString, QString> > updateNowPlayingParams;
+    updateNowPlayingParams << qMakePair(QString("method"), QString("track.updatenowplaying"));
+    updateNowPlayingParams << qMakePair(QString("artist"), scrobble.artist);
+    updateNowPlayingParams << qMakePair(QString("track"), scrobble.title);
+    updateNowPlayingParams << qMakePair(QString("album"), scrobble.album.isEmpty() ? "" : scrobble.album);
+    updateNowPlayingParams << qMakePair(QString("duration"), duration);
+    updateNowPlayingParams << qMakePair(QString("api_key"), QString(api_key));
+    updateNowPlayingParams << qMakePair(QString("api_sig"), QString(apiSig));
+    updateNowPlayingParams << qMakePair(QString("sk"), session_key);
 
-    reply = net.start(audioScrobbler2URL, updateNowPlayingQuery.toString(QUrl::EncodeDelimiters).toUtf8(), NetworkAccess::UrlEncoded);
-    connect(reply, &NetworkReply::finished,
-            reply, &NetworkReply::deleteLater);
+    QString updateNowPlayingQueryString = buildQueryString(updateNowPlayingParams);
+
+    reply = net.start(audioScrobbler2URL, updateNowPlayingQueryString.toUtf8(), NetworkAccess::UrlEncoded);
+    connect(reply, SIGNAL(finished()), reply, SLOT(deleteLater()));
 
     // scrobble
     const auto ts = QString::number(scrobble.startTime);
@@ -185,25 +200,30 @@ void LastFM::updateNowPlayingAndScrobble(const Scrobble &scrobble)
         QCryptographicHash::Md5
     ).toHex();
 
-    QUrlQuery scrobbleQuery;
-    scrobbleQuery.addQueryItem("method", "track.scrobble");
-    scrobbleQuery.addQueryItem("artist", scrobble.artist);
-    scrobbleQuery.addQueryItem("track", scrobble.title);
-    scrobbleQuery.addQueryItem("timestamp", ts);
-    scrobbleQuery.addQueryItem("album", scrobble.album.isEmpty() ? "" : scrobble.album);
-    scrobbleQuery.addQueryItem("api_key", api_key);
-    scrobbleQuery.addQueryItem("api_sig", apiSig);
-    scrobbleQuery.addQueryItem("sk", session_key);
+    QList<QPair<QString, QString> > scrobbleParams;
+    scrobbleParams << qMakePair(QString("method"), QString("track.scrobble"));
+    scrobbleParams << qMakePair(QString("artist"), scrobble.artist);
+    scrobbleParams << qMakePair(QString("track"), scrobble.title);
+    scrobbleParams << qMakePair(QString("timestamp"), ts);
+    scrobbleParams << qMakePair(QString("album"), scrobble.album.isEmpty() ? "" : scrobble.album);
+    scrobbleParams << qMakePair(QString("api_key"), QString(api_key));
+    scrobbleParams << qMakePair(QString("api_sig"), QString(apiSig));
+    scrobbleParams << qMakePair(QString("sk"), session_key);
 
-    reply = net.start(audioScrobbler2URL, scrobbleQuery.toString(QUrl::EncodeDelimiters).toUtf8(), NetworkAccess::UrlEncoded);
+    QString scrobbleQueryString = buildQueryString(scrobbleParams);
+
+    reply = net.start(audioScrobbler2URL, scrobbleQueryString.toUtf8(), NetworkAccess::UrlEncoded);
     reply->setProperty("scrobble", QVariant::fromValue(scrobble));
     m_scrobbleReplies.push_back(reply);
-    connect(reply, &NetworkReply::destroyed,
-            this, [=] {
+    connect(reply, SIGNAL(destroyed(QObject*)), this, SLOT(onReplyDestroyed(QObject*)));
+    connect(reply, SIGNAL(finished()), this, SLOT(scrobbleFinished()));
+}
+
+void LastFM::onReplyDestroyed(QObject* obj)
+{
+    NetworkReply* reply = qobject_cast<NetworkReply*>(obj);
+    if (reply)
         m_scrobbleReplies.removeOne(reply);
-    });
-    connect(reply, &NetworkReply::finished,
-            this, &LastFM::scrobbleFinished);
 }
 
 void LastFM::clear()
@@ -274,7 +294,7 @@ void LastFM::albumFinished()
             emit QMPlay2Core.updateCover(taa[0], taa[1], taa[2], reply);
         else
         {
-            for (const QString &size : asConst(imageSizes))
+            foreach (const QString &size, imageSizes)
             {
                 int idx = reply.indexOf(size);
                 if (idx > -1)
@@ -316,6 +336,7 @@ void LastFM::albumFinished()
     coverReply->deleteLater();
     coverReply = nullptr;
 }
+
 void LastFM::loginFinished()
 {
     if (loginReply->hasError())
@@ -351,6 +372,7 @@ void LastFM::loginFinished()
     loginReply->deleteLater();
     loginReply = nullptr;
 }
+
 void LastFM::scrobbleFinished()
 {
     const auto reply = qobject_cast<NetworkReply *>(sender());
